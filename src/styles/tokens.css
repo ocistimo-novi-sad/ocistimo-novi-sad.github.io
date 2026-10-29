@@ -1,0 +1,97 @@
+/* ---------------------------------------------------------------------------
+   Design tokens
+   Restrained, editorial palette: warm paper, deep forest green, charcoal ink,
+   hairline borders. Rectangular geometry throughout (2 to 4 px radii only).
+--------------------------------------------------------------------------- */
+
+:root {
+  --paper: #f3f2ed;
+  --paper-2: #ebeae3;
+  --surface: #ffffff;
+  --surface-2: #f8f7f2;
+  --surface-3: #f0efe8;
+
+  --ink: #1c221e;
+  --ink-2: #363d38;
+  --muted: #6e736c;
+  --muted-2: #747972;
+
+  --line: #d9dad3;
+  --line-strong: #c4c6bc;
+
+  --forest: #234c3b;
+  --forest-2: #1a3b2d;
+  --forest-3: #2f6049;
+  --forest-tint: #e8ede5;
+  --forest-tint-2: #dce6d8;
+
+  --alert: #b94a3b;
+  --alert-strong: #9d3a2d;
+  --alert-tint: #f7eae6;
+
+  --amber: #8f6420;
+  --amber-tint: #f6eedd;
+
+  --steel: #2d5c78;
+  --steel-tint: #e6eef2;
+
+  --radius: 2px;
+  --radius-md: 3px;
+
+  --shadow-1: 0 1px 2px rgba(28, 34, 30, 0.06);
+  --shadow-2: 0 1px 2px rgba(28, 34, 30, 0.08), 0 14px 34px -22px rgba(28, 34, 30, 0.4);
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui,
+    sans-serif;
+  --font-mono: 'SFMono-Regular', ui-monospace, 'Cascadia Mono', 'Roboto Mono', Menlo, Consolas,
+    monospace;
+
+  --header-h: 58px;
+  --panel-w: 372px;
+  --drawer-w: 428px;
+  --tabbar-h: 58px;
+
+  --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+
+  --z-map-ui: 450;
+  --z-panel: 600;
+  --z-drawer: 800;
+  --z-modal: 1000;
+  --z-toast: 1100;
+}
+
+/* Category identity is carried by a muted earth/ink colour plus an icon. */
+[data-category='waste'],
+.pin--waste,
+.legend-swatch--waste {
+  --cat: #8a6a2f;
+  --cat-tint: #f2ecdf;
+}
+
+[data-category='graffiti'],
+.pin--graffiti,
+.legend-swatch--graffiti {
+  --cat: #4c5e7d;
+  --cat-tint: #e9ecf2;
+}
+
+[data-category='damaged_infrastructure'],
+.pin--damaged_infrastructure,
+.legend-swatch--damaged_infrastructure {
+  --cat: #a8503f;
+  --cat-tint: #f5e8e4;
+}
+
+[data-category='neglected_area'],
+.pin--neglected_area,
+.legend-swatch--neglected_area {
+  --cat: #3f6b4a;
+  --cat-tint: #e7eee5;
+}
+
+[data-category='other'],
+.pin--other,
+.legend-swatch--other {
+  --cat: #6e736c;
+  --cat-tint: #edeEE9;
+}

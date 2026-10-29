@@ -1,0 +1,214 @@
+rules_version = '2';
+
+// Očistimo Novi Sad: Firestore Security Rules
+// Deploy with:  firebase deploy --only firestore:rules
+// These rules are the real access control boundary; the frontend checks are
+// only there for a good user experience.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------------
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Administrator status is derived only from the existence of
+    // /admins/{uid}. Clients cannot create or modify that collection.
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Novi Sad municipality, with a small margin. Prevents reports and
+    // cleanup actions from being placed anywhere else on the planet.
+    function validCoordinates(lat, lng) {
+      return lat is number && lng is number
+        && lat >= 45.05 && lat <= 45.45
+        && lng >= 19.55 && lng <= 20.05;
+    }
+
+    function validReportStatus(value) {
+      return value in [
+        'new', 'verified', 'planned', 'in_progress', 'resolved', 'not_suitable'
+      ];
+    }
+
+    function validActionStatus(value) {
+      return value in ['planned', 'in_progress', 'completed', 'cancelled'];
+    }
+
+    // Field level validation shared by action creates and updates.
+    function validActionFields(data) {
+      return data.title is string
+        && data.title.size() >= 5
+        && data.title.size() <= 120
+        && data.description is string
+        && data.description.size() <= 2000
+        && data.date is timestamp
+        && data.meetingPoint is string
+        && data.meetingPoint.size() <= 160
+        && validCoordinates(data.latitude, data.longitude)
+        && validActionStatus(data.status)
+        && data.reportIds is list
+        && data.reportIds.size() <= 50
+        && data.supplies is list
+        && data.supplies.size() <= 20
+        && data.organizerName is string
+        && data.organizerName.size() <= 80
+        && data.organizerNote is string
+        && data.organizerNote.size() <= 600;
+    }
+
+    // ---------------------------------------------------------------------
+    // Administrator allow list. Read your own record to learn whether you
+    // are an admin; only admins may list the collection. Writes are done
+    // from the Firebase console / Admin SDK only.
+    // ---------------------------------------------------------------------
+    match /admins/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list: if isAdmin();
+      allow write: if false;
+    }
+
+    // ---------------------------------------------------------------------
+    // Public profiles. Kept minimal and readable only by their owner.
+    // ---------------------------------------------------------------------
+    match /users/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list: if isAdmin();
+
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly([
+             'displayName', 'photoURL', 'createdAt', 'lastSeenAt'
+           ])
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 80
+        && request.resource.data.createdAt == request.time
+        && (!('photoURL' in request.resource.data)
+            || request.resource.data.photoURL is string);
+
+      allow update: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['displayName', 'photoURL', 'lastSeenAt'])
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 80;
+
+      allow delete: if false;
+    }
+
+    // ---------------------------------------------------------------------
+    // Reports: public read, authenticated create, moderation by administrators only.
+    // ---------------------------------------------------------------------
+    match /reports/{reportId} {
+      allow read: if true;
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+             'title', 'description', 'category', 'status',
+             'latitude', 'longitude', 'createdAt', 'createdBy',
+             'createdByName', 'imageUrls', 'address'
+           ])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 5
+        && request.resource.data.title.size() <= 90
+        && request.resource.data.description is string
+        && request.resource.data.description.size() >= 20
+        && request.resource.data.description.size() <= 1200
+        && request.resource.data.category in [
+             'waste', 'graffiti', 'damaged_infrastructure', 'neglected_area', 'other'
+           ]
+        && request.resource.data.status == 'new'
+        && validCoordinates(
+             request.resource.data.latitude,
+             request.resource.data.longitude
+           )
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.createdBy == request.auth.uid
+        && (
+             !('createdByName' in request.resource.data)
+             || (
+               request.resource.data.createdByName is string
+               && request.resource.data.createdByName.size() <= 60
+             )
+           )
+        && request.resource.data.imageUrls is list
+        && request.resource.data.imageUrls.size() <= 3
+        && (
+             !('address' in request.resource.data)
+             || (
+               request.resource.data.address is string
+               && request.resource.data.address.size() <= 160
+             )
+           );
+
+      // Only administrators moderate. Creator IDs and timestamps can never
+      // be rewritten; status changes must be attributed.
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status', 'moderatedAt', 'moderatedBy'])
+        && validReportStatus(request.resource.data.status)
+        && request.resource.data.moderatedAt == request.time
+        && request.resource.data.moderatedBy == request.auth.uid;
+
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // Content flags: one flag per user per report, admins handle them.
+    // ---------------------------------------------------------------------
+    match /flags/{flagId} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+             'reportId', 'reason', 'note', 'status', 'createdBy', 'createdAt'
+           ])
+        && request.resource.data.reportId is string
+        && flagId == request.auth.uid + '__' + request.resource.data.reportId
+        && request.resource.data.reason in [
+             'spam', 'duplicate', 'misleading', 'inappropriate', 'other'
+           ]
+        && request.resource.data.note is string
+        && request.resource.data.note.size() <= 500
+        && request.resource.data.status == 'open'
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+
+      allow read: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // Cleanup actions: public read, admins create/edit/cancel.
+    // ---------------------------------------------------------------------
+    match /actions/{actionId} {
+      allow read: if true;
+
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly([
+             'title', 'description', 'date', 'meetingPoint', 'latitude',
+             'longitude', 'status', 'reportIds', 'supplies',
+             'organizerName', 'organizerNote', 'createdAt', 'createdBy'
+           ])
+        && validActionFields(request.resource.data)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.createdBy == request.auth.uid;
+
+      allow update: if isAdmin()
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.createdBy == resource.data.createdBy
+        && validActionFields(request.resource.data);
+
+      allow delete: if isAdmin();
+    }
+
+    // Everything not matched above is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

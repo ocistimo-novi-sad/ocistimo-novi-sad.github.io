@@ -1,0 +1,694 @@
+/* Map shell, Leaflet overrides, custom markers and map UI */
+
+.map-shell {
+  position: absolute;
+  inset: 0;
+  background: var(--paper-2);
+}
+
+.map {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  background: #eceae3;
+  font-family: var(--font-sans);
+}
+
+/* Mute the standard OSM tile palette so markers and UI stay dominant. */
+.leaflet-tile-pane {
+  filter: grayscale(0.86) saturate(0.5) brightness(1.03) contrast(0.95);
+}
+
+.leaflet-container {
+  background: #eceae3;
+  font-family: var(--font-sans);
+}
+
+.leaflet-container a {
+  color: var(--forest);
+}
+
+/* --- Attribution --------------------------------------------------------- */
+
+.leaflet-control-attribution {
+  margin: 0 !important;
+  padding: 2px 6px !important;
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: var(--muted) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 10px !important;
+  line-height: 1.5 !important;
+}
+
+.leaflet-control-attribution a {
+  color: var(--forest) !important;
+  text-decoration: underline;
+  text-underline-offset: 1px;
+}
+
+.leaflet-bottom {
+  z-index: 410;
+}
+
+/* --- Controls ------------------------------------------------------------ */
+
+.map-controls {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: var(--z-map-ui);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+
+.map-controls button {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-2);
+  transition:
+    background-color 0.12s var(--ease),
+    color 0.12s var(--ease);
+}
+
+.map-controls button:last-child {
+  border-bottom: 0;
+}
+
+.map-controls button:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--forest);
+}
+
+.map-controls button:disabled {
+  opacity: 0.55;
+}
+
+.map-area-toggle {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: var(--z-map-ui);
+}
+
+.map-area-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 9px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  color: var(--ink-2);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.map-area-btn:hover {
+  background: var(--surface-2);
+}
+
+.map-area-btn.is-active {
+  border-color: var(--forest);
+  background: var(--forest-tint);
+  color: var(--forest);
+}
+
+/* --- Mobile search bar --------------------------------------------------- */
+
+.map-mobile-bar {
+  position: absolute;
+  top: 10px;
+  right: 54px;
+  left: 10px;
+  z-index: var(--z-map-ui);
+}
+
+.map-mobile-search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  color: var(--muted);
+  font-size: 12px;
+  text-align: left;
+}
+
+.map-mobile-search svg {
+  color: var(--muted-2);
+}
+
+.map-mobile-search__count {
+  margin-left: auto;
+  padding: 1px 5px;
+  border: 1px solid var(--forest);
+  background: var(--forest-tint);
+  color: var(--forest);
+  font-family: var(--font-mono);
+  font-size: 9px;
+}
+
+/* --- Picking mode banner ------------------------------------------------- */
+
+.pick-banner {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  z-index: 520;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  max-width: min(540px, calc(100% - 28px));
+  padding: 9px 10px 9px 11px;
+  border-left: 2px solid #8fb59d;
+  background: var(--forest);
+  color: #f4f3ed;
+  box-shadow: var(--shadow-2);
+  transform: translateX(-50%);
+}
+
+.pick-banner__text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.pick-banner__text strong {
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.pick-banner__text span {
+  color: rgba(244, 243, 237, 0.72);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  line-height: 1.4;
+  white-space: normal;
+}
+
+.pick-banner .btn {
+  flex: 0 0 auto;
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #f4f3ed;
+}
+
+.pick-banner .btn:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* --- Legend -------------------------------------------------------------- */
+
+.map-legend {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  z-index: 400;
+  width: 188px;
+  padding: 9px 11px 10px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+
+.map-legend__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 7px;
+}
+
+.map-legend__head button {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+
+.map-legend__head button:hover {
+  color: var(--ink);
+}
+
+.map-legend ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.map-legend li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink-2);
+  font-size: 10.5px;
+}
+
+.legend-swatch {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--line);
+  background: var(--cat-tint);
+  color: var(--cat);
+}
+
+.map-legend__note {
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid var(--line);
+  color: var(--muted-2);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.map-legend-open {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  z-index: 400;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 7px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* --- Readout ------------------------------------------------------------- */
+
+.map-readout {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.03em;
+  transform: translateX(-50%);
+}
+
+.map-readout__coords {
+  min-width: 198px;
+  text-align: center;
+}
+
+.map-readout__sep {
+  width: 1px;
+  height: 10px;
+  background: var(--line-strong);
+}
+
+/* --- Map overlays / states ----------------------------------------------- */
+
+.map-loading {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  z-index: 480;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  color: var(--muted);
+  font-size: 11px;
+  transform: translateX(-50%);
+}
+
+.map-state {
+  position: absolute;
+  inset: 0;
+  z-index: 430;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  pointer-events: none;
+}
+
+.map-state__card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  width: min(340px, 100%);
+  padding: 20px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+  pointer-events: auto;
+}
+
+.map-state__card h2 {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.map-state__card p {
+  margin-bottom: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.map-state__icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin-bottom: 2px;
+  border: 1px solid var(--line);
+  color: var(--forest);
+}
+
+.map-state__icon.is-alert {
+  border-color: #e7cfc9;
+  background: var(--alert-tint);
+  color: var(--alert);
+}
+
+.map-error-banner {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 9px;
+  border: 1px solid #e3c8c2;
+  background: var(--alert-tint);
+  color: #7a2f23;
+  font-size: 11px;
+  transform: translateX(-50%);
+}
+
+.map-error-banner button {
+  color: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* --- Markers ------------------------------------------------------------- */
+
+.ns-icon {
+  border: 0;
+  background: transparent;
+}
+
+.pin {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid var(--cat);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 1px 3px rgba(20, 28, 22, 0.26),
+    0 0 0 1px rgba(255, 255, 255, 0.7);
+  color: var(--cat);
+  transition: transform 0.12s var(--ease);
+}
+
+.pin__glyph {
+  display: grid;
+  place-items: center;
+}
+
+.pin:hover {
+  transform: scale(1.06);
+}
+
+.pin__badge {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  display: grid;
+  place-items: center;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--muted-2);
+  color: #fff;
+}
+
+.pin__badge--new {
+  background: #7c817a;
+}
+
+.pin__badge--verified {
+  background: #2e6b4c;
+}
+
+.pin__badge--planned {
+  background: #9a6a1f;
+}
+
+.pin__badge--in_progress {
+  background: #2d5c78;
+}
+
+.pin__badge--resolved {
+  width: 13px;
+  height: 13px;
+  background: var(--forest);
+}
+
+.pin__badge--muted {
+  width: 13px;
+  height: 13px;
+  background: var(--muted);
+}
+
+.pin.is-selected {
+  border-width: 2px;
+  box-shadow:
+    0 0 0 4px rgba(35, 76, 59, 0.16),
+    0 2px 7px rgba(20, 28, 22, 0.28);
+  transform: scale(1.12);
+}
+
+.leaflet-marker-icon:focus-visible .pin,
+.leaflet-marker-icon:focus-visible .action-pin,
+.leaflet-marker-icon:focus-visible .cluster {
+  outline: 3px solid var(--forest);
+  outline-offset: 2px;
+}
+
+.cluster {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border: 1.5px solid #fff;
+  border-radius: var(--radius);
+  background: var(--forest);
+  box-shadow: 0 1px 4px rgba(20, 28, 22, 0.3);
+  color: #f5f4ef;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.cluster[data-size='sm'] {
+  font-size: 12px;
+}
+
+.cluster[data-size='md'] {
+  background: var(--forest-2);
+  font-size: 13px;
+}
+
+.cluster[data-size='lg'] {
+  background: var(--ink);
+  font-size: 13px;
+}
+
+.cluster:hover {
+  background: var(--forest-3);
+}
+
+.action-pin {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid #fff;
+  border-radius: var(--radius);
+  background: var(--forest);
+  box-shadow: 0 1px 4px rgba(20, 28, 22, 0.3);
+  color: #f4f3ed;
+}
+
+.action-pin.is-selected {
+  background: var(--forest-2);
+  box-shadow:
+    0 0 0 4px rgba(35, 76, 59, 0.18),
+    0 2px 6px rgba(20, 28, 22, 0.3);
+}
+
+.temp-pin {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  color: var(--forest);
+}
+
+.temp-pin__ring {
+  position: absolute;
+  inset: 0;
+  border: 1.5px dashed var(--forest);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  animation: temp-pulse 2.4s ease-in-out infinite;
+}
+
+.temp-pin__glyph {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 27px;
+  height: 27px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--forest);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  color: #f4f3ed;
+}
+
+@keyframes temp-pulse {
+  0%,
+  100% {
+    opacity: 0.65;
+    transform: scale(0.86);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.user-dot {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border: 2.5px solid #fff;
+  border-radius: 50%;
+  background: var(--forest);
+  box-shadow: 0 0 0 1px rgba(35, 76, 59, 0.4);
+}
+
+/* --- Tooltips ------------------------------------------------------------ */
+
+.leaflet-tooltip.ns-tooltip {
+  max-width: 240px;
+  overflow: hidden;
+  padding: 5px 7px;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--ink);
+  box-shadow: 0 4px 14px rgba(20, 28, 22, 0.3);
+  color: #f4f3ed;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leaflet-tooltip.ns-tooltip::before {
+  display: none;
+}
+
+.ns-tooltip__label {
+  color: #a9c3b3;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Picking mode cursor */
+.map-shell.is-picking .leaflet-container {
+  cursor: crosshair;
+}
+
+.map-shell.is-picking .leaflet-interactive {
+  cursor: crosshair;
+}
+
+/* When the detail/compose drawer sits over the map on desktop, keep the map
+   controls and status UI inside the still-visible part of the map. */
+@media (min-width: 901px) {
+  .app.has-drawer .map-controls {
+    right: calc(var(--drawer-w) + 14px);
+  }
+
+  .app.has-drawer .leaflet-bottom.leaflet-right {
+    right: var(--drawer-w);
+  }
+
+  .app.has-drawer .map-readout,
+  .app.has-drawer .map-loading,
+  .app.has-drawer .map-error-banner {
+    left: calc((100% - var(--drawer-w)) / 2);
+  }
+
+  .app.has-drawer .pick-banner {
+    left: calc((100% - var(--drawer-w)) / 2);
+    max-width: min(520px, calc(100% - var(--drawer-w) - 28px));
+  }
+
+  .app.has-drawer .map-state {
+    right: var(--drawer-w);
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1150px) {
+  :root {
+    --drawer-w: 384px;
+  }
+}
+
