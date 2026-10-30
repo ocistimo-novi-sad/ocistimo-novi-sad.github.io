@@ -12,17 +12,13 @@
   z-index: 0;
   width: 100%;
   height: 100%;
-  background: #eceae3;
+  background: #f2efe9;
   font-family: var(--font-sans);
 }
 
-/* Mute the standard OSM tile palette so markers and UI stay dominant. */
-.leaflet-tile-pane {
-  filter: grayscale(0.86) saturate(0.5) brightness(1.03) contrast(0.95);
-}
-
+/* Standard OSM tiles in full colour; the land tone fills the gaps while tiles load. */
 .leaflet-container {
-  background: #eceae3;
+  background: #f2efe9;
   font-family: var(--font-sans);
 }
 
@@ -252,12 +248,53 @@
   gap: 4px;
 }
 
-.map-legend li {
+.map-legend__item {
   display: flex;
   align-items: center;
   gap: 7px;
+  width: 100%;
+  margin: 0 -4px;
+  padding: 2px 4px;
+  box-sizing: content-box;
+  border-radius: var(--radius);
   color: var(--ink-2);
   font-size: 10.5px;
+  text-align: left;
+  transition:
+    background-color 0.12s var(--ease),
+    opacity 0.12s var(--ease);
+}
+
+.map-legend__item:hover {
+  background: var(--surface-2);
+}
+
+.map-legend__item.is-off {
+  opacity: 0.42;
+}
+
+.map-legend__item.is-off .legend-swatch {
+  background: transparent;
+}
+
+.map-legend__label {
+  flex: 1;
+  min-width: 0;
+}
+
+.map-legend__count {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+}
+
+.map-legend__reset {
+  margin-top: 6px;
+  color: var(--forest);
+  font-size: 10px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .legend-swatch {
@@ -438,13 +475,13 @@
   place-items: center;
   width: 32px;
   height: 32px;
-  border: 1.5px solid var(--cat);
+  border: 2px solid #fff;
   border-radius: 50%;
-  background: #fff;
+  background: var(--cat);
   box-shadow:
-    0 1px 3px rgba(20, 28, 22, 0.26),
-    0 0 0 1px rgba(255, 255, 255, 0.7);
-  color: var(--cat);
+    0 1px 4px rgba(20, 28, 22, 0.38),
+    0 0 0 1px rgba(20, 28, 22, 0.12);
+  color: #fff;
   transition: transform 0.12s var(--ease);
 }
 
@@ -454,7 +491,12 @@
 }
 
 .pin:hover {
-  transform: scale(1.06);
+  transform: scale(1.1);
+}
+
+/* Lift the hovered marker above its neighbours in dense areas. */
+.leaflet-marker-icon:hover {
+  z-index: 1000 !important;
 }
 
 .pin__badge {
@@ -500,10 +542,10 @@
 }
 
 .pin.is-selected {
-  border-width: 2px;
+  border-width: 2.5px;
   box-shadow:
-    0 0 0 4px rgba(35, 76, 59, 0.16),
-    0 2px 7px rgba(20, 28, 22, 0.28);
+    0 0 0 4px rgba(35, 76, 59, 0.28),
+    0 2px 8px rgba(20, 28, 22, 0.36);
   transform: scale(1.12);
 }
 
@@ -514,19 +556,32 @@
   outline-offset: 2px;
 }
 
+/* Clusters: a ring split by category share (conic-gradient set inline) around the count. */
 .cluster {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 4px;
+  border-radius: 50%;
+  background: var(--forest);
+  box-shadow:
+    0 0 0 2px #fff,
+    0 1px 5px rgba(20, 28, 22, 0.4);
+  transition: transform 0.12s var(--ease);
+}
+
+.cluster__count {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
   border: 1.5px solid #fff;
-  border-radius: var(--radius);
+  border-radius: 50%;
   background: var(--forest);
-  box-shadow: 0 1px 4px rgba(20, 28, 22, 0.3);
   color: #f5f4ef;
   font-family: var(--font-mono);
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.02em;
 }
 
@@ -535,16 +590,26 @@
 }
 
 .cluster[data-size='md'] {
-  background: var(--forest-2);
   font-size: 13px;
+}
+
+.cluster[data-size='md'] .cluster__count {
+  background: var(--forest-2);
 }
 
 .cluster[data-size='lg'] {
-  background: var(--ink);
   font-size: 13px;
 }
 
+.cluster[data-size='lg'] .cluster__count {
+  background: var(--ink);
+}
+
 .cluster:hover {
+  transform: scale(1.08);
+}
+
+.cluster:hover .cluster__count {
   background: var(--forest-3);
 }
 
@@ -648,6 +713,50 @@
   font-size: 8px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.ns-tooltip__meta {
+  color: rgba(244, 243, 237, 0.68);
+  font-size: 10px;
+}
+
+.leaflet-tooltip.ns-tooltip--rich {
+  width: max-content;
+  max-width: 260px;
+  padding: 6px 8px 6px 6px;
+  white-space: normal;
+}
+
+.ns-tooltip__rich {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ns-tooltip__thumb {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.08);
+  object-fit: cover;
+}
+
+.ns-tooltip__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  padding-left: 2px;
+}
+
+.ns-tooltip__title {
+  overflow: hidden;
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Picking mode cursor */

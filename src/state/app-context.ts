@@ -3,6 +3,7 @@ import type { Map as LeafletMap } from 'leaflet';
 import type { useAuth } from '../hooks/useAuth';
 import type { DataPhase } from '../hooks/useReports';
 import type {
+  Category,
   CleanupAction,
   Coordinates,
   Filters,
@@ -48,6 +49,7 @@ export interface AppContextValue {
 
   filters: Filters;
   updateFilters: (patch: Partial<Filters>) => void;
+  toggleCategory: (category: Category) => void;
   resetFilters: () => void;
 
   selectedReport: Report | null;

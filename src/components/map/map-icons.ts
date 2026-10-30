@@ -1,4 +1,5 @@
 import L, { type DivIcon } from 'leaflet';
+import { CATEGORIES } from '../../config';
 import { CATEGORY_GLYPH, glyphMarkup } from '../../lib/glyphs';
 import type { Category, Report, ReportStatus } from '../../types';
 
@@ -44,11 +45,28 @@ export function reportIcon(
   return icon;
 }
 
-export function clusterIcon(count: number): DivIcon {
-  const size = count < 10 ? 36 : count < 100 ? 42 : 48;
+export type CategoryCounts = Partial<Record<Category, number>>;
+
+/** Conic-gradient ring showing each category's share, in legend order. */
+function categoryRing(counts: CategoryCounts, total: number): string {
+  if (total <= 0) return 'var(--forest)';
+  const stops: string[] = [];
+  let start = 0;
+  for (const category of CATEGORIES) {
+    const value = counts[category.id] ?? 0;
+    if (value <= 0) continue;
+    const end = start + (value / total) * 100;
+    stops.push(`var(--cat-${category.id}) ${start.toFixed(2)}% ${end.toFixed(2)}%`);
+    start = end;
+  }
+  return stops.length > 0 ? `conic-gradient(${stops.join(', ')})` : 'var(--forest)';
+}
+
+export function clusterIcon(count: number, counts: CategoryCounts = {}): DivIcon {
+  const size = count < 10 ? 38 : count < 100 ? 44 : 50;
   return L.divIcon({
     className: 'ns-icon',
-    html: `<span class="cluster" data-size="${count < 10 ? 'sm' : count < 100 ? 'md' : 'lg'}"><span class="cluster__count">${count}</span></span>`,
+    html: `<span class="cluster" data-size="${count < 10 ? 'sm' : count < 100 ? 'md' : 'lg'}" style="background: ${categoryRing(counts, count)}"><span class="cluster__count">${count}</span></span>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
     tooltipAnchor: [0, -size / 2],
