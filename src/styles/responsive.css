@@ -230,9 +230,11 @@
     background: var(--line-strong);
   }
 
+  /* Above the full-width handle, otherwise taps on X expand the drawer. */
   .drawer__close {
     top: 8px;
     right: 10px;
+    z-index: 5;
     width: 32px;
     height: 32px;
   }
