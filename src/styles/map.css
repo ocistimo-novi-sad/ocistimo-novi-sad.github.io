@@ -831,7 +831,7 @@
   flex: 0 0 auto;
   width: 46px;
   height: 46px;
-  border-radius: 7px;
+  border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.08);
   object-fit: cover;
 }
