@@ -116,7 +116,7 @@
 .demo-pill {
   margin-left: 4px;
   padding: 1px 4px;
-  border: 1px solid #e0cfaa;
+  border: 1px solid var(--amber-line);
   background: var(--amber-tint);
   color: var(--amber);
   font-family: var(--font-mono);
@@ -659,15 +659,15 @@
 }
 
 .notice--info {
-  border-color: #cddac8;
+  border-color: var(--forest-line);
   background: var(--forest-tint);
-  color: #2c4a3a;
+  color: var(--forest-2);
 }
 
 .notice--warn {
-  border-color: #e4d5b6;
+  border-color: var(--amber-line);
   background: var(--amber-tint);
-  color: #6b4c13;
+  color: var(--amber-ink);
 }
 
 .form-section {
@@ -710,7 +710,7 @@
   width: 18px;
   height: 18px;
   margin-left: auto;
-  border: 1px solid #c6d3c1;
+  border: 1px solid var(--forest-line);
   border-radius: 50%;
   background: var(--forest-tint);
   color: var(--forest);
@@ -735,7 +735,7 @@
 }
 
 .location-pick.is-set {
-  border-color: #c6d3c1;
+  border-color: var(--forest-line);
   background: var(--forest-tint);
 }
 
@@ -993,9 +993,9 @@
   align-items: flex-start;
   gap: 7px;
   padding: 8px 9px;
-  border: 1px solid #e3c8c2;
+  border: 1px solid var(--alert-line);
   background: var(--alert-tint);
-  color: #7a2f23;
+  color: var(--alert-ink);
   font-size: 11px;
   line-height: 1.45;
 }

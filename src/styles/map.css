@@ -396,7 +396,7 @@
 }
 
 .map-state__icon.is-alert {
-  border-color: #e7cfc9;
+  border-color: var(--alert-line);
   background: var(--alert-tint);
   color: var(--alert);
 }
@@ -410,9 +410,9 @@
   align-items: center;
   gap: 7px;
   padding: 5px 9px;
-  border: 1px solid #e3c8c2;
+  border: 1px solid var(--alert-line);
   background: var(--alert-tint);
-  color: #7a2f23;
+  color: var(--alert-ink);
   font-size: 11px;
   transform: translateX(-50%);
 }
@@ -472,19 +472,19 @@
 }
 
 .pin__badge--new {
-  background: #7c817a;
+  background: var(--status-new);
 }
 
 .pin__badge--verified {
-  background: #2e6b4c;
+  background: var(--status-verified);
 }
 
 .pin__badge--planned {
-  background: #9a6a1f;
+  background: var(--status-planned);
 }
 
 .pin__badge--in_progress {
-  background: #2d5c78;
+  background: var(--status-in_progress);
 }
 
 .pin__badge--resolved {

@@ -1,55 +1,89 @@
 /* ---------------------------------------------------------------------------
    Design tokens
-   Restrained, editorial palette: warm paper, deep forest green, charcoal ink,
-   hairline borders. Rectangular geometry throughout (2 to 4 px radii only).
+   Warm and approachable: light paper, deep forest green, charcoal ink, soft
+   rounded surfaces. Text never drops below --fs-2xs (11px).
 --------------------------------------------------------------------------- */
 
 :root {
-  --paper: #f3f2ed;
-  --paper-2: #ebeae3;
+  --paper: #f6f4ee;
+  --paper-2: #eeebe3;
   --surface: #ffffff;
-  --surface-2: #f8f7f2;
-  --surface-3: #f0efe8;
+  --surface-2: #f9f8f4;
+  --surface-3: #f1efe8;
 
   --ink: #1c221e;
-  --ink-2: #363d38;
-  --muted: #6e736c;
-  --muted-2: #747972;
+  --ink-2: #353c37;
+  /* Both muted tones keep at least 4.5:1 on --surface and --paper. */
+  --muted: #5f645d;
+  --muted-2: #6a6f68;
 
-  --line: #d9dad3;
-  --line-strong: #c4c6bc;
+  --line: #e2e0d8;
+  --line-strong: #cdcbc1;
 
   --forest: #234c3b;
   --forest-2: #1a3b2d;
   --forest-3: #2f6049;
-  --forest-tint: #e8ede5;
-  --forest-tint-2: #dce6d8;
+  --forest-tint: #e7efe5;
+  --forest-tint-2: #d9e7d5;
+  --forest-line: #c6d6c1;
 
-  --alert: #b94a3b;
-  --alert-strong: #9d3a2d;
-  --alert-tint: #f7eae6;
+  --alert: #b0443a;
+  --alert-strong: #973428;
+  --alert-tint: #f9e9e5;
+  --alert-line: #ebcbc4;
+  --alert-ink: #7a2f23;
 
-  --amber: #8f6420;
-  --amber-tint: #f6eedd;
+  --amber: #8a5f17;
+  --amber-tint: #f8eedb;
+  --amber-line: #e8d6b0;
+  --amber-ink: #6a4b14;
 
   --steel: #2d5c78;
-  --steel-tint: #e6eef2;
+  --steel-tint: #e6eef3;
+  --steel-line: #c5d8e2;
 
-  --radius: 2px;
-  --radius-md: 3px;
+  /* Report statuses: dots, badges and the marker corner badge. */
+  --status-new: #7c817a;
+  --status-verified: #2e6b4c;
+  --status-planned: #9a6a1f;
+  --status-in_progress: var(--steel);
+  --status-resolved: var(--forest);
+  --status-not_suitable: #9a9e97;
 
-  --shadow-1: 0 1px 2px rgba(28, 34, 30, 0.06);
-  --shadow-2: 0 1px 2px rgba(28, 34, 30, 0.08), 0 14px 34px -22px rgba(28, 34, 30, 0.4);
+  /* Type scale */
+  --fs-2xs: 11px;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-base: 14px;
+  --fs-md: 15px;
+  --fs-lg: 17px;
+  --fs-xl: 20px;
+  --fs-2xl: 24px;
+
+  --lh-tight: 1.3;
+  --lh-body: 1.55;
+
+  --radius: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
+
+  --shadow-1: 0 1px 2px rgba(48, 40, 28, 0.06), 0 1px 3px rgba(48, 40, 28, 0.05);
+  --shadow-2: 0 2px 6px rgba(48, 40, 28, 0.06), 0 16px 36px -18px rgba(48, 40, 28, 0.3);
+  --shadow-3: 0 28px 72px -28px rgba(48, 40, 28, 0.45);
 
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui,
     sans-serif;
   --font-mono: 'SFMono-Regular', ui-monospace, 'Cascadia Mono', 'Roboto Mono', Menlo, Consolas,
     monospace;
 
-  --header-h: 58px;
-  --panel-w: 372px;
-  --drawer-w: 428px;
-  --tabbar-h: 58px;
+  /* Minimum interactive size; raised to 44px on touch layouts. */
+  --tap: 36px;
+
+  --header-h: 60px;
+  --panel-w: 384px;
+  --drawer-w: 440px;
+  --tabbar-h: 62px;
 
   --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
 
@@ -58,40 +92,59 @@
   --z-drawer: 800;
   --z-modal: 1000;
   --z-toast: 1100;
+
+  /* Category colours, shared by the per-category blocks below and the map clusters.
+     Each keeps at least 4.5:1 against white and against its own tint. */
+  --cat-waste: #85621a;
+  --cat-waste-tint: #f6eedb;
+  --cat-graffiti: #46608c;
+  --cat-graffiti-tint: #e8edf5;
+  --cat-damaged_infrastructure: #b04a37;
+  --cat-damaged_infrastructure-tint: #f8e7e2;
+  --cat-neglected_area: #3a7049;
+  --cat-neglected_area-tint: #e4efe4;
+  --cat-other: #63685f;
+  --cat-other-tint: #eeeee9;
 }
 
-/* Category identity is carried by a muted earth/ink colour plus an icon. */
+@media (max-width: 900px) {
+  :root {
+    --tap: 44px;
+  }
+}
+
+/* Category identity is carried by a colour plus an icon. */
 [data-category='waste'],
 .pin--waste,
 .legend-swatch--waste {
-  --cat: #8a6a2f;
-  --cat-tint: #f2ecdf;
+  --cat: var(--cat-waste);
+  --cat-tint: var(--cat-waste-tint);
 }
 
 [data-category='graffiti'],
 .pin--graffiti,
 .legend-swatch--graffiti {
-  --cat: #4c5e7d;
-  --cat-tint: #e9ecf2;
+  --cat: var(--cat-graffiti);
+  --cat-tint: var(--cat-graffiti-tint);
 }
 
 [data-category='damaged_infrastructure'],
 .pin--damaged_infrastructure,
 .legend-swatch--damaged_infrastructure {
-  --cat: #a8503f;
-  --cat-tint: #f5e8e4;
+  --cat: var(--cat-damaged_infrastructure);
+  --cat-tint: var(--cat-damaged_infrastructure-tint);
 }
 
 [data-category='neglected_area'],
 .pin--neglected_area,
 .legend-swatch--neglected_area {
-  --cat: #3f6b4a;
-  --cat-tint: #e7eee5;
+  --cat: var(--cat-neglected_area);
+  --cat-tint: var(--cat-neglected_area-tint);
 }
 
 [data-category='other'],
 .pin--other,
 .legend-swatch--other {
-  --cat: #6e736c;
-  --cat-tint: #edeEE9;
+  --cat: var(--cat-other);
+  --cat-tint: var(--cat-other-tint);
 }

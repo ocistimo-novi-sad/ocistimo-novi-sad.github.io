@@ -94,7 +94,7 @@
 
 .env-badge {
   padding: 3px 6px;
-  border: 1px solid #e4d6b8;
+  border: 1px solid var(--amber-line);
   border-radius: var(--radius);
   background: var(--amber-tint);
   color: var(--amber);
@@ -332,9 +332,9 @@
   align-items: flex-start;
   gap: 7px;
   padding: 8px 9px;
-  border: 1px solid #e6d8bd;
+  border: 1px solid var(--amber-line);
   background: var(--amber-tint);
-  color: #6a4b14;
+  color: var(--amber-ink);
   font-size: 10.5px;
   line-height: 1.4;
 }
@@ -927,7 +927,7 @@
     top: 6px;
     left: calc(50% + 6px);
     padding: 0 3px;
-    border: 1px solid #c6d3c1;
+    border: 1px solid var(--forest-line);
     background: var(--forest-tint-2);
     color: var(--forest);
     font-family: var(--font-mono);

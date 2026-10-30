@@ -503,19 +503,19 @@ fieldset {
 }
 
 .status-dot--new {
-  background: #7c817a;
+  background: var(--status-new);
 }
 
 .status-dot--verified {
-  background: #2e6b4c;
+  background: var(--status-verified);
 }
 
 .status-dot--planned {
-  background: #9a6a1f;
+  background: var(--status-planned);
 }
 
 .status-dot--in_progress {
-  background: #2d5c78;
+  background: var(--status-in_progress);
 }
 
 .status-dot--resolved {
@@ -523,7 +523,7 @@ fieldset {
 }
 
 .status-dot--not_suitable {
-  background: #9a9e97;
+  background: var(--status-not_suitable);
 }
 
 .status-badge {
@@ -544,19 +544,19 @@ fieldset {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #7c817a;
+  background: var(--status-new);
 }
 
 .status-badge--verified .status-badge__dot {
-  background: #2e6b4c;
+  background: var(--status-verified);
 }
 
 .status-badge--planned .status-badge__dot {
-  background: #9a6a1f;
+  background: var(--status-planned);
 }
 
 .status-badge--in_progress .status-badge__dot {
-  background: #2d5c78;
+  background: var(--status-in_progress);
 }
 
 .status-badge--resolved .status-badge__dot {
@@ -564,12 +564,12 @@ fieldset {
 }
 
 .status-badge--not_suitable .status-badge__dot {
-  background: #9a9e97;
+  background: var(--status-not_suitable);
 }
 
 .status-badge--resolved {
   color: var(--forest);
-  border-color: #c6d3c1;
+  border-color: var(--forest-line);
   background: var(--forest-tint);
 }
 
@@ -599,19 +599,19 @@ fieldset {
 
 .action-status--planned {
   color: var(--amber);
-  border-color: #e0cfaa;
+  border-color: var(--amber-line);
   background: var(--amber-tint);
 }
 
 .action-status--in_progress {
   color: var(--steel);
-  border-color: #c5d8e2;
+  border-color: var(--steel-line);
   background: var(--steel-tint);
 }
 
 .action-status--completed {
   color: var(--forest);
-  border-color: #c4d3c2;
+  border-color: var(--forest-line);
   background: var(--forest-tint);
 }
 
@@ -736,7 +736,7 @@ label.popover__row:hover {
 .skeleton {
   display: block;
   border-radius: 1px;
-  background: linear-gradient(90deg, var(--surface-3) 25%, #f8f7f2 50%, var(--surface-3) 75%);
+  background: linear-gradient(90deg, var(--surface-3) 25%, var(--surface-2) 50%, var(--surface-3) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite linear;
 }
