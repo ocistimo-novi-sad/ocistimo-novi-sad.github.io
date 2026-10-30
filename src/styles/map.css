@@ -16,15 +16,11 @@
   font-family: var(--font-sans);
 }
 
-/* Standard OSM tiles, toned down towards the paper palette so the coloured
-   category pins carry the colour. The land tone fills the gaps while tiles load. */
+/* Standard OSM tiles in their original colours. The land tone fills the gaps
+   while tiles load. */
 .leaflet-container {
   background: #f2efe9;
   font-family: var(--font-sans);
-}
-
-.leaflet-tile-pane {
-  filter: saturate(0.55) sepia(0.06) brightness(1.03) contrast(0.96);
 }
 
 .leaflet-container a {
