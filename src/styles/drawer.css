@@ -10,10 +10,15 @@
   flex-direction: column;
   width: var(--drawer-w);
   max-width: calc(100% - 24px);
-  border-left: 1px solid var(--line-strong);
+  border-left: 1px solid var(--line);
   background: var(--surface);
-  box-shadow: -14px 0 36px -30px rgba(20, 28, 22, 0.5);
+  box-shadow: -18px 0 40px -30px rgba(48, 40, 28, 0.45);
   animation: drawer-in 0.18s var(--ease);
+}
+
+/* The drawer receives focus programmatically when it opens. */
+.drawer:focus {
+  outline: none;
 }
 
 @keyframes drawer-in {

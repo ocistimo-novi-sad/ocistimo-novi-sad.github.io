@@ -2,7 +2,7 @@
 
 @media (max-width: 1180px) {
   :root {
-    --panel-w: 344px;
+    --panel-w: 356px;
   }
 
   .app-nav {
@@ -12,7 +12,7 @@
 
 @media (max-width: 1024px) {
   :root {
-    --panel-w: 326px;
+    --panel-w: 336px;
   }
 
   .app-header {
@@ -20,7 +20,7 @@
   }
 
   .nav-link {
-    padding: 0 9px;
+    padding: 0 11px;
   }
 
   .brand__city {
@@ -32,13 +32,13 @@
 
 @media (max-width: 900px) {
   :root {
-    --header-h: 54px;
+    --header-h: 56px;
     --drawer-w: 100%;
   }
 
   .app-header {
     gap: 8px;
-    padding: 0 10px;
+    padding: 0 12px;
   }
 
   .app-header__actions {
@@ -57,16 +57,10 @@
     gap: 0;
   }
 
-  .brand__name {
-    font-size: var(--fs-sm);
-    letter-spacing: 0.1em;
-  }
-
   .btn--report {
     width: auto;
-    height: 36px;
     gap: 5px;
-    padding: 0 10px;
+    padding: 0 14px;
   }
 
   .btn--report .btn__text {
@@ -75,7 +69,7 @@
 
   .btn--report .btn__text-short {
     display: inline;
-    font-size: var(--fs-sm);
+    font-size: var(--fs-base);
   }
 
   .app-header__actions .btn--icon {
@@ -100,6 +94,7 @@
   }
 
   .panel__head {
+    gap: 10px;
     padding: 12px 14px 10px;
   }
 
@@ -112,15 +107,47 @@
   }
 
   .panel__list-head {
-    padding: 10px 14px 5px;
+    padding: 12px 14px 4px;
   }
 
-  .report-card {
-    padding: 12px 14px 12px 12px;
+  .report-list,
+  .action-list {
+    padding: 2px 4px;
   }
 
-  .action-card {
-    padding: 12px 14px;
+  /* Demo notice collapses to a single line on phones. */
+  .demo-note p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .demo-note .demo-note__close {
+    width: 32px;
+    height: 32px;
+    margin: -8px -6px -8px 0;
+  }
+
+  /* Category chips scroll sideways in one row instead of wrapping. */
+  .category-chips {
+    flex-wrap: nowrap;
+    margin: 0 -14px;
+    padding: 0 14px;
+    overflow-x: auto;
+    scroll-padding-inline: 14px;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 28px), transparent);
+    mask-image: linear-gradient(90deg, transparent 0, #000 14px, #000 calc(100% - 28px), transparent);
+  }
+
+  .category-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .category-chips .chip {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
   }
 
   .map-slot {
@@ -129,24 +156,25 @@
   }
 
   .map-controls {
-    top: 58px;
-    right: 10px;
+    top: 66px;
+    right: 12px;
   }
 
   .map-controls button {
-    width: 38px;
-    height: 38px;
+    width: var(--tap);
+    height: var(--tap);
   }
 
   .map-mobile-bar {
-    top: 10px;
-    right: 58px;
-    left: 10px;
+    top: 12px;
+    right: 64px;
+    left: 12px;
   }
 
   .map-mobile-search {
-    height: 38px;
-    font-size: var(--fs-sm);
+    height: var(--tap);
+    font-size: var(--fs-base);
+    box-shadow: var(--shadow-2);
   }
 
   .map-area-toggle,
@@ -166,13 +194,14 @@
   }
 
   .pick-banner {
-    top: 10px;
-    right: 58px;
-    left: 10px;
+    top: 12px;
+    right: 64px;
+    left: 12px;
     max-width: none;
     transform: none;
   }
 
+  /* Bottom sheet. The three heights match SNAPS in Drawer.tsx. */
   .drawer {
     position: fixed;
     top: auto;
@@ -181,59 +210,78 @@
     left: 0;
     width: 100%;
     max-width: none;
-    height: 64vh;
-    border-top: 1px solid var(--line-strong);
+    height: 64dvh;
+    border-top: 1px solid var(--line);
     border-left: 0;
-    box-shadow: 0 -20px 44px -32px rgba(20, 28, 22, 0.55);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    box-shadow: 0 -18px 44px -28px rgba(48, 40, 28, 0.5);
     animation: sheet-in 0.2s var(--ease);
+    transition: height 0.24s var(--ease);
   }
 
-  .drawer.is-expanded {
-    height: 92vh;
+  .drawer.is-peek {
+    height: 40dvh;
   }
 
   .drawer--compose {
-    height: 58vh;
+    height: 58dvh;
   }
 
-  .drawer--compose.is-expanded {
-    height: 92vh;
+  .drawer.is-full,
+  .drawer--compose.is-full {
+    height: 92dvh;
+  }
+
+  .drawer.is-dragging {
+    transition: none;
+    user-select: none;
   }
 
   .drawer__handle {
     position: absolute;
     top: 0;
-    right: 0;
-    left: 0;
+    right: 56px;
+    left: 56px;
     z-index: 4;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    height: 24px;
+    height: 30px;
     color: var(--muted-2);
+    cursor: grab;
+    touch-action: none;
+  }
+
+  .drawer.is-dragging .drawer__handle {
+    cursor: grabbing;
   }
 
   .drawer__grip {
     display: block;
-    width: 34px;
-    height: 3px;
+    width: 40px;
+    height: 5px;
+    border-radius: var(--radius-pill);
     background: var(--line-strong);
   }
 
   .drawer__close {
-    top: 8px;
-    right: 10px;
-    width: 32px;
-    height: 32px;
+    top: 10px;
+    right: 12px;
+    width: 40px;
+    height: 40px;
   }
 
   .drawer__scroll {
-    padding: 26px 16px 16px;
+    padding: 32px 16px 16px;
   }
 
   .drawer__foot {
     padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .compose-foot__row .btn {
+    height: 48px;
   }
 
   .detail-title {
@@ -249,7 +297,7 @@
   .field input[type='datetime-local'],
   .field textarea,
   .field select {
-    min-height: 42px;
+    min-height: var(--tap);
     font-size: 16px;
   }
 
@@ -258,62 +306,52 @@
   }
 
   .search-field {
-    height: 40px;
+    height: var(--tap);
   }
 
   .search-field input {
     font-size: 16px;
   }
 
-  .btn {
-    height: 38px;
-  }
-
   .btn--sm {
-    height: 32px;
-    padding: 0 10px;
-    font-size: var(--fs-sm);
-  }
-
-  .btn--icon {
-    width: 36px;
     height: 36px;
-    padding: 0;
+    padding: 0 12px;
+    font-size: var(--fs-sm);
   }
 
   .icon-btn {
-    width: 32px;
-    height: 32px;
+    width: var(--tap);
+    height: var(--tap);
   }
 
   .chip {
-    height: 32px;
-    padding: 0 10px;
-    font-size: var(--fs-sm);
+    height: 40px;
+    padding: 0 14px;
+    font-size: var(--fs-base);
   }
 
   .filter-btn,
   .select-field {
-    height: 32px;
-    font-size: var(--fs-sm);
+    height: var(--tap);
+    padding: 0 16px;
   }
 
   .filter-btn,
   .select-field select {
-    font-size: var(--fs-sm);
+    font-size: var(--fs-base);
   }
 
   .popover__row {
-    min-height: 36px;
+    min-height: var(--tap);
   }
 
   .segmented__item {
-    height: 34px;
+    height: 40px;
   }
 
   .category-option {
-    min-height: 44px;
-    font-size: var(--fs-sm);
+    min-height: 48px;
+    font-size: var(--fs-base);
   }
 
   .photo-draft,
@@ -333,6 +371,7 @@
     border-right: 0;
     border-bottom: 0;
     border-left: 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     animation: sheet-in 0.18s var(--ease);
   }
 
@@ -343,33 +382,33 @@
   }
 
   .modal__head {
-    padding: 14px;
+    padding: 16px;
   }
 
   .modal__body {
-    padding: 14px;
+    padding: 14px 16px;
   }
 
   .modal__foot {
-    padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
   }
 
   .modal__close {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
   }
 
   .admin-form {
-    margin: -14px;
+    margin: -14px -16px;
   }
 
   .admin-form__scroll {
     max-height: calc(100dvh - 320px);
-    padding: 14px;
+    padding: 14px 16px;
   }
 
   .admin-form__actions {
-    padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
   }
 
   .admin-form__actions .btn {
@@ -399,7 +438,7 @@
   }
 
   .toasts {
-    bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(var(--tabbar-h) + 12px + env(safe-area-inset-bottom, 0px));
   }
 
   .app.has-drawer .toasts {
@@ -410,9 +449,14 @@
     padding: 12px;
   }
 
+  .lightbox__close {
+    width: 44px;
+    height: 44px;
+  }
+
   .lightbox__nav {
-    width: 34px;
-    height: 46px;
+    width: 44px;
+    height: 56px;
   }
 
   .lightbox__nav--prev {
@@ -433,28 +477,12 @@
     gap: 8px;
   }
 
-  .brand__name {
-    font-size: var(--fs-sm);
-  }
-
   .detail-title {
     font-size: var(--fs-xl);
   }
 
   .compose-title {
     font-size: var(--fs-xl);
-  }
-
-  .drawer {
-    height: 68vh;
-  }
-
-  .drawer--compose {
-    height: 56vh;
-  }
-
-  .map-controls {
-    top: 56px;
   }
 
   .auth-foot {
@@ -503,7 +531,7 @@
   }
 
   .segmented__item {
-    font-size: var(--fs-xs);
+    font-size: var(--fs-sm);
   }
 
   .compose-foot__row .btn {
@@ -511,41 +539,18 @@
   }
 
   .report-card__media {
-    width: 40px;
-    height: 40px;
-  }
-
-  .tabbar__count {
-    top: 5px;
-  }
-}
-
-@media (max-height: 640px) and (max-width: 900px) {
-  .drawer {
-    height: 74vh;
-  }
-
-  .drawer--compose {
-    height: 70vh;
-  }
-
-  .drawer.is-expanded,
-  .drawer--compose.is-expanded {
-    height: 96vh;
+    width: 52px;
+    height: 52px;
   }
 }
 
 @media (max-width: 380px) {
   .btn--report {
-    width: 36px;
+    width: var(--tap);
     padding: 0;
   }
 
   .btn--report .btn__text-short {
     display: none;
-  }
-
-  .brand__name {
-    letter-spacing: 0.09em;
   }
 }

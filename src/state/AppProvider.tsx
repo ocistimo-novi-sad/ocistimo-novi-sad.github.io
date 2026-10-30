@@ -131,7 +131,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       let projected = map.project([coordinates.latitude, coordinates.longitude], zoom);
       if (options?.accountForDrawer) {
         if (window.innerWidth > 900) {
-          const drawerWidth = window.innerWidth > 1150 ? 428 : 384;
+          const drawerWidth =
+            parseFloat(
+              getComputedStyle(document.documentElement).getPropertyValue('--drawer-w'),
+            ) || 440;
           projected = projected.add([drawerWidth / 2, 0]);
         } else {
           projected = projected.add([0, 220]);

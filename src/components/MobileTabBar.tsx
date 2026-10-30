@@ -1,43 +1,64 @@
+import type { ReactNode } from 'react';
 import { HandHeart, Map, Rows3 } from 'lucide-react';
-import { useApp } from '../state/app-context';
+import { useApp, type MobileTab } from '../state/app-context';
+
+function TabButton({
+  tab,
+  label,
+  icon,
+  count,
+}: {
+  tab: MobileTab;
+  label: string;
+  icon: ReactNode;
+  count?: number;
+}) {
+  const { mobileTab, setMobileTab } = useApp();
+  const active = mobileTab === tab;
+
+  return (
+    <button
+      type="button"
+      className={`tabbar__item${active ? ' is-active' : ''}`}
+      aria-current={active ? 'page' : undefined}
+      onClick={() => setMobileTab(tab)}
+    >
+      <span className="tabbar__icon">
+        {icon}
+        {count ? (
+          <span className="tabbar__count" aria-hidden="true">
+            {count}
+          </span>
+        ) : null}
+      </span>
+      <span>
+        {label}
+        {count ? <span className="visually-hidden"> ({count})</span> : null}
+      </span>
+    </button>
+  );
+}
 
 export function MobileTabBar() {
-  const { mobileTab, setMobileTab, reports, actions, selectedReport, selectedAction, composeOpen } =
-    useApp();
+  const { reports, actions, selectedReport, selectedAction, composeOpen } = useApp();
 
   if (selectedReport || selectedAction || composeOpen) return null;
 
   return (
     <nav className="tabbar" aria-label="Navigacija na mobilnom telefonu">
-      <button
-        type="button"
-        className={`tabbar__item${mobileTab === 'map' ? ' is-active' : ''}`}
-        aria-current={mobileTab === 'map' ? 'page' : undefined}
-        onClick={() => setMobileTab('map')}
-      >
-        <Map size={18} aria-hidden="true" />
-        <span>Mapa</span>
-      </button>
-      <button
-        type="button"
-        className={`tabbar__item${mobileTab === 'reports' ? ' is-active' : ''}`}
-        aria-current={mobileTab === 'reports' ? 'page' : undefined}
-        onClick={() => setMobileTab('reports')}
-      >
-        <Rows3 size={18} aria-hidden="true" />
-        <span>Prijave</span>
-        {reports.length > 0 ? <span className="tabbar__count">{reports.length}</span> : null}
-      </button>
-      <button
-        type="button"
-        className={`tabbar__item${mobileTab === 'actions' ? ' is-active' : ''}`}
-        aria-current={mobileTab === 'actions' ? 'page' : undefined}
-        onClick={() => setMobileTab('actions')}
-      >
-        <HandHeart size={18} aria-hidden="true" />
-        <span>Akcije</span>
-        {actions.length > 0 ? <span className="tabbar__count">{actions.length}</span> : null}
-      </button>
+      <TabButton tab="map" label="Mapa" icon={<Map size={22} aria-hidden="true" />} />
+      <TabButton
+        tab="reports"
+        label="Prijave"
+        icon={<Rows3 size={22} aria-hidden="true" />}
+        count={reports.length}
+      />
+      <TabButton
+        tab="actions"
+        label="Akcije"
+        icon={<HandHeart size={22} aria-hidden="true" />}
+        count={actions.length}
+      />
     </nav>
   );
 }

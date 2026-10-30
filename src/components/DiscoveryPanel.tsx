@@ -1,9 +1,53 @@
-import { Info, RefreshCw } from 'lucide-react';
+import { useState } from 'react';
+import { Info, RefreshCw, X } from 'lucide-react';
 import { formatReportCount } from '../lib/format';
 import { isFirebaseConfigured } from '../services/firebase';
 import { useApp } from '../state/app-context';
 import { FiltersBar } from './FiltersBar';
 import { LoadMoreButton, ReportList } from './ReportList';
+
+const DEMO_NOTE_KEY = 'ns-cisto.demo-note-dismissed.v1';
+
+function readDemoNoteDismissed(): boolean {
+  try {
+    return window.localStorage.getItem(DEMO_NOTE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function DemoNote() {
+  const { openModal } = useApp();
+  const [dismissed, setDismissed] = useState(readDemoNoteDismissed);
+  if (dismissed) return null;
+
+  const dismiss = () => {
+    setDismissed(true);
+    try {
+      window.localStorage.setItem(DEMO_NOTE_KEY, '1');
+    } catch {
+      // Storage can be unavailable (private mode); hiding for this session is enough.
+    }
+  };
+
+  return (
+    <div className="demo-note">
+      <Info size={15} aria-hidden="true" />
+      <p>Demo režim: prijave ostaju u ovom pregledaču.</p>
+      <button type="button" onClick={() => openModal({ kind: 'info' })}>
+        Detalji
+      </button>
+      <button
+        type="button"
+        className="demo-note__close"
+        onClick={dismiss}
+        aria-label="Sakrij obaveštenje o demo režimu"
+      >
+        <X size={14} aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
 
 export function DiscoveryPanel() {
   const {
@@ -12,7 +56,6 @@ export function DiscoveryPanel() {
     selectedReport,
     reloadReports,
     reportsPhase,
-    openModal,
     startCompose,
   } = useApp();
 
@@ -40,17 +83,7 @@ export function DiscoveryPanel() {
           </button>
         </div>
 
-        {!isFirebaseConfigured ? (
-          <div className="demo-note">
-            <Info size={14} aria-hidden="true" />
-            <p>
-              Demo režim: prijave ostaju u ovom pregledaču.
-            </p>
-            <button type="button" onClick={() => openModal({ kind: 'info' })}>
-              Detalji
-            </button>
-          </div>
-        ) : null}
+        {!isFirebaseConfigured ? <DemoNote /> : null}
 
         <FiltersBar />
       </div>
