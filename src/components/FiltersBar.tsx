@@ -188,6 +188,7 @@ export function FiltersBar() {
               key={category.id}
               type="button"
               className={`chip${active ? ' is-active' : ''}`}
+              data-category={category.id}
               onClick={() => toggleCategory(category.id)}
               aria-pressed={active}
               title={category.hint}

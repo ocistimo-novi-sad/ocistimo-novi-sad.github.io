@@ -10,7 +10,7 @@ export function BrandMark({ size = 26 }: { size?: number }) {
       focusable="false"
       className="brand-mark"
     >
-      <rect width="64" height="64" fill="#234C3B" />
+      <rect width="64" height="64" rx="14" fill="#234C3B" />
       <circle cx="32" cy="28" r="12.5" fill="none" stroke="#F3F2ED" strokeWidth="3" />
       <circle cx="32" cy="28" r="4.5" fill="#F3F2ED" />
       <path d="M32 40.5V50" stroke="#F3F2ED" strokeWidth="3" />

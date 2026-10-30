@@ -12,7 +12,7 @@ import type {
  */
 export const APP = {
   name: 'Očistimo Novi Sad',
-  wordmark: 'OČISTIMO',
+  wordmark: 'Očistimo',
   city: 'Novi Sad',
   tagline: 'Mapa problema i akcija čišćenja u Novom Sadu',
   center: { latitude: 45.2671, longitude: 19.8335 } satisfies Coordinates,

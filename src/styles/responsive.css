@@ -58,7 +58,7 @@
   }
 
   .brand__name {
-    font-size: 12.5px;
+    font-size: var(--fs-sm);
     letter-spacing: 0.1em;
   }
 
@@ -75,7 +75,7 @@
 
   .btn--report .btn__text-short {
     display: inline;
-    font-size: 12px;
+    font-size: var(--fs-sm);
   }
 
   .app-header__actions .btn--icon {
@@ -146,7 +146,7 @@
 
   .map-mobile-search {
     height: 38px;
-    font-size: 12.5px;
+    font-size: var(--fs-sm);
   }
 
   .map-area-toggle,
@@ -272,7 +272,7 @@
   .btn--sm {
     height: 32px;
     padding: 0 10px;
-    font-size: 12px;
+    font-size: var(--fs-sm);
   }
 
   .btn--icon {
@@ -289,18 +289,18 @@
   .chip {
     height: 32px;
     padding: 0 10px;
-    font-size: 12px;
+    font-size: var(--fs-sm);
   }
 
   .filter-btn,
   .select-field {
     height: 32px;
-    font-size: 12px;
+    font-size: var(--fs-sm);
   }
 
   .filter-btn,
   .select-field select {
-    font-size: 12px;
+    font-size: var(--fs-sm);
   }
 
   .popover__row {
@@ -313,7 +313,7 @@
 
   .category-option {
     min-height: 44px;
-    font-size: 12px;
+    font-size: var(--fs-sm);
   }
 
   .photo-draft,
@@ -434,15 +434,15 @@
   }
 
   .brand__name {
-    font-size: 11.5px;
+    font-size: var(--fs-sm);
   }
 
   .detail-title {
-    font-size: 19px;
+    font-size: var(--fs-xl);
   }
 
   .compose-title {
-    font-size: 18px;
+    font-size: var(--fs-xl);
   }
 
   .drawer {
@@ -467,7 +467,7 @@
   }
 
   .info-hero h3 {
-    font-size: 17px;
+    font-size: var(--fs-lg);
   }
 
   .status-row__label {
@@ -503,7 +503,7 @@
   }
 
   .segmented__item {
-    font-size: 11px;
+    font-size: var(--fs-xs);
   }
 
   .compose-foot__row .btn {

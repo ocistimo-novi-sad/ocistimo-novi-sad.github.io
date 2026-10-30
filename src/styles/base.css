@@ -21,8 +21,8 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 14px;
-  line-height: 1.5;
+  font-size: var(--fs-md);
+  line-height: var(--lh-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
@@ -84,6 +84,7 @@ fieldset {
 :focus-visible {
   outline: 2px solid var(--forest);
   outline-offset: 2px;
+  border-radius: var(--radius);
 }
 
 ::selection {
@@ -108,17 +109,16 @@ fieldset {
 ::-webkit-scrollbar-thumb {
   background: var(--line-strong);
   border: 3px solid var(--surface);
+  border-radius: var(--radius-pill);
 }
 
 /* --- Typography helpers -------------------------------------------------- */
 
 .eyebrow {
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  font-weight: 500;
-  letter-spacing: 0.13em;
-  line-height: 1.3;
-  text-transform: uppercase;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: var(--lh-tight);
   color: var(--muted);
 }
 
@@ -155,20 +155,20 @@ fieldset {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  height: 34px;
-  padding: 0 12px;
+  height: var(--tap);
+  padding: 0 14px;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--ink);
-  font-size: 12.5px;
-  font-weight: 500;
-  letter-spacing: 0.005em;
+  font-size: var(--fs-sm);
+  font-weight: 600;
   white-space: nowrap;
   transition:
     background-color 0.14s var(--ease),
     border-color 0.14s var(--ease),
-    color 0.14s var(--ease);
+    color 0.14s var(--ease),
+    transform 0.1s var(--ease);
 }
 
 .btn:hover:not(:disabled) {
@@ -178,6 +178,7 @@ fieldset {
 
 .btn:active:not(:disabled) {
   background: var(--surface-3);
+  transform: translateY(1px);
 }
 
 .btn:disabled {
@@ -225,9 +226,9 @@ fieldset {
 }
 
 .btn--sm {
-  height: 28px;
-  padding: 0 9px;
-  font-size: 11.5px;
+  height: 30px;
+  padding: 0 10px;
+  font-size: var(--fs-xs);
 }
 
 .btn--block {
@@ -235,7 +236,7 @@ fieldset {
 }
 
 .btn--icon {
-  width: 32px;
+  width: var(--tap);
   padding: 0;
 }
 
@@ -252,7 +253,7 @@ fieldset {
   align-items: center;
   gap: 4px;
   color: var(--forest);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   font-weight: 500;
   text-decoration: underline;
   text-decoration-thickness: 1px;
@@ -277,8 +278,8 @@ fieldset {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
@@ -301,8 +302,8 @@ fieldset {
 }
 
 .icon-btn--ghost {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-color: transparent;
   background: transparent;
   color: var(--muted);
@@ -347,7 +348,7 @@ fieldset {
 .field label,
 .field__label {
   color: var(--ink-2);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   font-weight: 600;
   letter-spacing: 0.005em;
 }
@@ -355,29 +356,27 @@ fieldset {
 .field__optional {
   margin-left: 4px;
   color: var(--muted-2);
-  font-family: var(--font-mono);
-  font-size: 8.5px;
+  font-size: var(--fs-xs);
   font-weight: 400;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .field__counter {
   color: var(--muted-2);
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: var(--fs-2xs);
   white-space: nowrap;
 }
 
 .field__hint {
   color: var(--muted);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   line-height: 1.45;
 }
 
 .field__error {
   color: var(--alert);
-  font-size: 11.5px;
+  font-size: var(--fs-sm);
   font-weight: 500;
   line-height: 1.4;
 }
@@ -394,7 +393,7 @@ fieldset {
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--ink);
-  font-size: 13px;
+  font-size: var(--fs-base);
   transition:
     border-color 0.14s var(--ease),
     box-shadow 0.14s var(--ease);
@@ -447,14 +446,14 @@ fieldset {
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  height: 26px;
-  padding: 0 8px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
   background: var(--surface);
   color: var(--ink-2);
-  font-size: 11.5px;
+  font-size: var(--fs-sm);
   font-weight: 500;
   white-space: nowrap;
   transition:
@@ -468,6 +467,10 @@ fieldset {
   background: var(--surface-2);
 }
 
+.chip svg {
+  color: var(--cat, currentColor);
+}
+
 .chip.is-active {
   background: var(--forest);
   border-color: var(--forest);
@@ -478,16 +481,29 @@ fieldset {
   color: #dbe5d7;
 }
 
+/* An active category chip takes on its own category colour. */
+.chip[data-category].is-active {
+  background: var(--cat-tint);
+  border-color: var(--cat);
+  box-shadow: inset 0 0 0 1px var(--cat);
+  color: var(--cat);
+  font-weight: 600;
+}
+
+.chip[data-category].is-active svg {
+  color: var(--cat);
+}
+
 .category-tag {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 2px 6px;
+  padding: 2px 8px;
   border: 1px solid rgba(28, 34, 30, 0.09);
-  border-radius: var(--radius);
+  border-radius: var(--radius-pill);
   background: var(--cat-tint);
   color: var(--cat);
-  font-size: 10.5px;
+  font-size: var(--fs-xs);
   font-weight: 600;
   letter-spacing: 0.01em;
   white-space: nowrap;
@@ -519,7 +535,7 @@ fieldset {
 }
 
 .status-dot--resolved {
-  background: var(--forest);
+  background: var(--status-resolved);
 }
 
 .status-dot--not_suitable {
@@ -530,19 +546,19 @@ fieldset {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 2px 6px;
+  padding: 2px 8px;
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: var(--radius-pill);
   background: var(--surface-2);
   color: var(--ink-2);
-  font-size: 10.5px;
+  font-size: var(--fs-xs);
   font-weight: 500;
   white-space: nowrap;
 }
 
 .status-badge__dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--status-new);
 }
@@ -560,7 +576,7 @@ fieldset {
 }
 
 .status-badge--resolved .status-badge__dot {
-  background: var(--forest);
+  background: var(--status-resolved);
 }
 
 .status-badge--not_suitable .status-badge__dot {
@@ -578,22 +594,20 @@ fieldset {
 }
 
 .status-badge.is-compact {
-  padding: 1px 5px;
+  padding: 1px 7px;
   gap: 4px;
-  font-size: 10px;
+  font-size: var(--fs-xs);
 }
 
 .action-status {
   display: inline-flex;
   align-items: center;
-  padding: 2px 5px;
+  padding: 2px 8px;
   border: 1px solid;
-  border-radius: var(--radius);
-  font-family: var(--font-mono);
-  font-size: 8.5px;
-  font-weight: 500;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
+  border-radius: var(--radius-pill);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.01em;
   white-space: nowrap;
 }
 
@@ -632,32 +646,32 @@ fieldset {
   top: calc(100% + 5px);
   left: 0;
   z-index: 700;
-  width: 198px;
-  padding: 4px;
-  border: 1px solid var(--line-strong);
+  width: 228px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
   background: var(--surface);
   box-shadow: var(--shadow-2);
 }
 
 .popover__title {
-  padding: 6px 7px 5px;
-  color: var(--muted-2);
-  font-family: var(--font-mono);
-  font-size: 8.5px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  padding: 6px 8px 5px;
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .popover__row {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   width: 100%;
-  min-height: 29px;
-  padding: 0 7px;
-  border-radius: 1px;
+  min-height: 34px;
+  padding: 0 8px;
+  border-radius: var(--radius);
   color: var(--ink-2);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   text-align: left;
 }
 
@@ -672,16 +686,16 @@ label.popover__row:hover {
 }
 
 .popover__row input {
-  width: 13px;
-  height: 13px;
+  width: 15px;
+  height: 15px;
   margin: 0;
   accent-color: var(--forest);
 }
 
 .popover__check {
-  width: 13px;
+  width: 15px;
   color: var(--forest);
-  font-size: 11px;
+  font-size: var(--fs-xs);
   text-align: center;
 }
 
@@ -699,23 +713,24 @@ label.popover__row:hover {
 .empty-state__icon {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   margin-bottom: 4px;
-  border: 1px solid var(--line);
-  color: var(--muted);
+  border-radius: 50%;
+  background: var(--forest-tint);
+  color: var(--forest);
 }
 
 .empty-state__title {
   color: var(--ink);
-  font-size: 13.5px;
+  font-size: var(--fs-md);
   font-weight: 600;
 }
 
 .empty-state__text {
   max-width: 290px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--fs-sm);
   line-height: 1.55;
 }
 
@@ -724,18 +739,16 @@ label.popover__row:hover {
 }
 
 .section-label {
-  margin-bottom: 7px;
+  margin-bottom: 8px;
   color: var(--muted);
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .skeleton {
   display: block;
-  border-radius: 1px;
+  border-radius: var(--radius);
   background: linear-gradient(90deg, var(--surface-3) 25%, var(--surface-2) 50%, var(--surface-3) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite linear;
@@ -769,11 +782,12 @@ label.popover__row:hover {
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  padding: 10px 10px 10px 11px;
+  padding: 12px 12px 12px 14px;
   border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
   background: var(--ink);
   color: #f4f3ed;
-  font-size: 12px;
+  font-size: var(--fs-sm);
   line-height: 1.45;
   box-shadow: var(--shadow-2);
   pointer-events: auto;

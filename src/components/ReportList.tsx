@@ -8,14 +8,14 @@ import {
   SearchX,
   TriangleAlert,
 } from 'lucide-react';
-import { CATEGORY_MAP, STATUS_MAP } from '../config';
+import { CATEGORY_MAP } from '../config';
 import { formatRelativeTime } from '../lib/format';
 import { optimizedImageUrl } from '../services/images';
 import { useApp } from '../state/app-context';
 import type { Report } from '../types';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { EmptyState, Spinner } from './ui/EmptyState';
-import { StatusDot } from './ui/StatusBadge';
+import { StatusBadge } from './ui/StatusBadge';
 
 function shortPlace(report: Report): string {
   if (!report.address) return 'Novi Sad';
@@ -51,7 +51,7 @@ function ReportCard({
             onError={() => setImageFailed(true)}
           />
         ) : (
-          <CategoryGlyph category={report.category} size={16} />
+          <CategoryGlyph category={report.category} size={20} />
         )}
       </span>
 
@@ -62,13 +62,7 @@ function ReportCard({
         </span>
         <span className="report-card__title">{report.title}</span>
         <span className="report-card__bottom">
-          <span className="report-card__status">
-            <StatusDot status={report.status} />
-            {STATUS_MAP[report.status].label}
-          </span>
-          <span className="dot-sep" aria-hidden="true">
-            ·
-          </span>
+          <StatusBadge status={report.status} compact />
           <span className="report-card__place">{shortPlace(report)}</span>
           {report.imageUrls.length > 1 ? (
             <span className="report-card__photos">
