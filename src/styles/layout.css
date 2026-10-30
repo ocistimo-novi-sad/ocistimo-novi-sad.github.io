@@ -43,6 +43,7 @@
 
 .brand__name {
   color: var(--ink);
+  font-family: var(--font-display);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.12em;
