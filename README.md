@@ -6,6 +6,18 @@ Kuka i Motika je zamišljen kao praktičan alat za građane koji žele da prijav
 
 Ideja projekta je jednostavna: umesto da informacije o zapuštenim mestima ostanu rasute po porukama i društvenim mrežama, sve prijave mogu da budu pregledno prikazane na jednoj mapi. Tako zajednica lakše može da proceni gde je pomoć potrebna i da organizuje konkretnu akciju.
 
+## Sadržaj
+
+- [Pregled aplikacije](#pregled-aplikacije)
+- [Kako funkcioniše](#kako-funkcioniše)
+- [Kategorije problema](#kategorije-problema)
+- [Statusi prijava i akcija](#statusi-prijava-i-akcija)
+- [Uloga zajednice i moderacija](#uloga-zajednice-i-moderacija)
+- [Pristupačnost i korišćenje na različitim uređajima](#pristupačnost-i-korišćenje-na-različitim-uređajima)
+- [Trenutno stanje i ograničenja](#trenutno-stanje-i-ograničenja)
+- [Zašto ovaj projekat postoji](#zašto-ovaj-projekat-postoji)
+- [Licenca i zahvalnice](#licenca-i-zahvalnice)
+
 ## Pregled aplikacije
 
 ![Desktop prikaz aplikacije Kuka i Motika](docs/preview.png)
@@ -20,41 +32,55 @@ Ideja projekta je jednostavna: umesto da informacije o zapuštenim mestima ostan
 
 ### 1. Pregled mape
 
-Glavni deo aplikacije je interaktivna mapa Novog Sada. Na njoj se nalaze oznake koje prikazuju prijavljene probleme. Korisnici mogu da pomeraju mapu, zumiraju određeno područje i otvore pojedinačnu prijavu izborom oznake ili stavke iz liste.
+Glavni deo aplikacije je interaktivna mapa Novog Sada (OpenStreetMap podloga). Na njoj se nalaze oznake koje prikazuju prijavljene probleme i planirane akcije čišćenja. Korisnici mogu da pomeraju mapu, zumiraju određeno područje i otvore pojedinačnu prijavu izborom oznake ili stavke iz liste.
+
+- **Grupisanje oznaka** — kada je na jednom mestu mnogo prijava, oznake se spajaju u grupu sa brojem prijava; klik na grupu približava mapu.
+- **Pregled pri prelasku mišem** — oznaka prikazuje kategoriju, naslov i, ako postoji, sličicu fotografije.
+- **Legenda** — na desktop prikazu legenda prikazuje broj prijava po kategoriji i omogućava da se pojedine kategorije uključe ili isključe direktno sa mape.
+- **Kontrole mape** — zumiranje, povratak na prikaz celog grada i „Moja lokacija“.
 
 Mapa i lista prijava rade zajedno: izbor prijave u listi usmerava mapu na njenu lokaciju, dok izbor oznake na mapi otvara detalje odgovarajuće prijave.
 
+Na vrhu liste nalazi se kratak pregled napretka zajednice: ukupan broj prijava, broj rešenih, udeo rešenih prijava i broj predstojećih akcija.
+
 ### 2. Prijavljivanje problema
 
-Korisnik bira lokaciju na mapi i popunjava prijavu. Ona može da sadrži:
+Korisnik bira lokaciju na mapi (ili koristi svoju trenutnu lokaciju) i popunjava prijavu. Ona može da sadrži:
 
-- naslov i opis problema;
+- naslov (5–90 znakova) i opis problema (20–1200 znakova);
 - kategoriju;
-- lokaciju označenu na mapi;
-- adresu, ako je poznata;
-- do tri fotografije, kada je funkcija za slanje fotografija podešena.
+- lokaciju označenu na mapi, unutar područja Novog Sada;
+- adresu ili orijentir, opciono;
+- do tri fotografije (JPG, PNG ili WebP, najviše 5 MB po fotografiji), kada je funkcija za slanje fotografija podešena.
 
-Pre slanja, korisnik može da proveri podatke i prilagodi lokaciju oznake. Aplikacija proverava obavezna polja i prikazuje poruku o uspešnom slanju ili objašnjenje greške.
+Pre slanja, korisnik može da proveri podatke i prilagodi lokaciju oznake. Aplikacija proverava obavezna polja, prikazuje napredak otpremanja fotografija i poruku o uspešnom slanju ili objašnjenje greške. Ako korisnik zatvori formu sa unetim podacima, aplikacija traži potvrdu pre odbacivanja.
 
 ### 3. Pronalaženje relevantnih prijava
 
-Prijave se mogu pretraživati, filtrirati i sortirati. Dostupne su opcije za pregled po kategoriji i statusu, kao i sortiranje prema vremenu prijave, udaljenosti ili statusu. Lista je podeljena na stranice kako bi pregled ostao praktičan i kada broj prijava poraste.
+Prijave se mogu pretraživati (po naslovu, opisu, adresi, kategoriji i statusu, bez obzira na dijakritike), filtrirati i sortirati:
+
+- filter po jednoj ili više kategorija i statusa;
+- sortiranje: najnovije, najstarije, najbliže ili po statusu;
+- prikaz samo onih prijava koje su na vidljivom delu mape;
+- dugme „Očisti“ za brzo uklanjanje svih filtera.
+
+Taster `/` prebacuje fokus na polje za pretragu. Prijave se učitavaju u delovima, a dugme „Učitaj još prijava“ donosi sledeći deo kada broj prijava poraste.
 
 ### 4. Detalji i praćenje statusa
 
-Svaka prijava ima prikaz sa opisom, fotografijama kada su dostupne, lokacijom i trenutnim statusom. Lokaciju je moguće otvoriti i na OpenStreetMap mapi, a koordinate kopirati radi lakšeg deljenja.
+Svaka prijava ima prikaz sa opisom, fotografijama (sa uvećanim prikazom), lokacijom i trenutnim statusom. Lokaciju je moguće otvoriti i na OpenStreetMap mapi, a koordinate kopirati radi lakšeg deljenja. Ako je prijava uključena u akciju čišćenja, detalji prikazuju i povezanu akciju.
 
 Statusi pomažu da se razlikuje tek prijavljen problem od potvrđenog problema ili onog koji je već uključen u plan akcije.
 
 ### 5. Organizovanje akcija
 
-Aplikacija sadrži i deo za planirane i završene akcije čišćenja. Svaka akcija može da prikaže:
+Aplikacija sadrži poseban prikaz za akcije čišćenja, podeljen na **predstojeće** i **završene**. Svaka akcija može da prikaže:
 
 - naziv i opis;
 - datum i vreme;
-- mesto okupljanja;
+- mesto okupljanja, sa oznakom na mapi;
 - potrebnu opremu i potrepštine;
-- podatke o organizatoru;
+- podatke o organizatoru i njegovu napomenu;
 - povezane prijave koje se tokom akcije mogu rešavati.
 
 Povezivanje više prijava sa jednom akcijom olakšava planiranje rada na nekoliko problema u istom delu grada.
@@ -69,43 +95,58 @@ Prijave su grupisane prema vrsti problema:
 | **Navijački grafiti** | Navijački natpisi, simboli i poruke |
 | **Nalepnice i posteri** | Nalepnice, plakati i oglasi zalepljeni na javnim površinama |
 | **Divlja deponija** | Nelegalno odložen otpad, građevinski šut i krupno smeće |
-| **Oštećena infrastruktura** | Polomljene klupe, oštećene kante ili drugi javni inventar |
-| **Ostalo** | Drugi vidljivi problemi koji zaslužuju pažnju zajednice |
+| **Oštećena infrastruktura** | Polomljene klupe, staze, igrališta i drugi javni inventar |
+| **Ostalo** | Drugi vidljivi problemi u javnom prostoru |
 
-## Statusi prijava
+## Statusi prijava i akcija
 
-- **Novo** — problem je prijavljen i čeka pregled.
-- **Potvrđeno** — prijava je pregledana i problem je potvrđen.
-- **Planirano** — prijava je povezana sa planom rešavanja ili akcijom.
-- **U toku** — rad na rešavanju problema je počeo.
-- **Rešeno** — problem je otklonjen.
-- **Nije pogodno za volontersku akciju** — potrebna je druga vrsta intervencije.
+### Prijave
+
+- **Nova** — prijava je poslata i čeka pregled.
+- **Proverena** — problem je potvrđen na terenu.
+- **Planirana akcija** — prijava je uključena u planirano čišćenje.
+- **U toku** — radovi ili akcija su počeli.
+- **Rešeno** — problem je uklonjen.
+- **Nije za akciju** — problem nije pogodan za volontersko čišćenje i potrebna je druga vrsta intervencije.
 
 Sama prijava ne znači da je problem zvanično potvrđen, niti da je nadležna služba obaveštena.
 
+### Akcije
+
+- **Planirano**, **U toku**, **Završeno** i **Otkazano**.
+
 ## Uloga zajednice i moderacija
 
-Sajt je namenjen javnom pregledanju prijava, dok je za kreiranje prijave i prijavljivanje neprikladnog sadržaja potrebno prijavljivanje Google nalogom kada je aplikacija povezana sa Firebaseom.
+Prijave i akcije može da pregleda svako, bez naloga. Za slanje prijave i prijavljivanje neprikladnog sadržaja potrebno je prijavljivanje Google nalogom (kada je aplikacija povezana sa Firebaseom). Uz prijavu se javno prikazuje ime iz naloga, ali ne i adresa e-pošte.
 
-Administratori mogu da pregledaju prijavljeni sadržaj, menjaju statuse problema i upravljaju akcijama čišćenja. Time se smanjuje mogućnost da neprimeren sadržaj ili netačne prijave ostanu bez reakcije.
+Svaki prijavljeni korisnik može da označi prijavu kao sporan sadržaj, jednom po prijavi, uz jedan od razloga: spam ili reklama, dupla prijava, netačna ili obmanjujuća prijava, neprimeren sadržaj ili drugo.
+
+Administratori u panelu „Administracija“ mogu da:
+
+- menjaju statuse prijava;
+- pregledaju označen sadržaj i odbace ga ili zatvore kao rešen;
+- kreiraju, uređuju i otkazuju akcije čišćenja i povezuju ih sa prijavama.
+
+Time se smanjuje mogućnost da neprimeren sadržaj ili netačne prijave ostanu bez reakcije. Ova pravila nisu samo u interfejsu — sprovode ih Firestore Security Rules (vidi [Bezbednost i pravila pristupa](#bezbednost-i-pravila-pristupa)).
 
 Korisnici treba da objavljuju samo informacije relevantne za problem na javnom prostoru. Fotografije i opisi ne treba nepotrebno da otkrivaju lične podatke ili prikazuju ljude na način koji ugrožava njihovu privatnost.
 
 ## Pristupačnost i korišćenje na različitim uređajima
 
-Interfejs je na srpskom jeziku, latinicom, i prilagođava se desktop računarima, tabletima i mobilnim telefonima. Na manjim ekranima korisnik može da pređe između mape i liste, dok se detalji i forma za prijavu prikazuju u panelima prilagođenim mobilnom uređaju.
+Interfejs je na srpskom jeziku, latinicom, i prilagođava se desktop računarima, tabletima i mobilnim telefonima. Na manjim ekranima donja navigacija (Mapa, Prijave, Akcije) omogućava brz prelazak između prikaza, dok se detalji i forma za prijavu prikazuju u panelima prilagođenim mobilnom uređaju.
 
-Dizajn je usmeren na preglednost i brzo korišćenje: mapa ostaje u prvom planu, kontrole su jasno grupisane, a boje i oznake pomažu u razlikovanju kategorija i statusa.
+Dizajn je usmeren na preglednost i brzo korišćenje: mapa ostaje u prvom planu, kontrole su jasno grupisane, a boje i ikonice pomažu u razlikovanju kategorija i statusa. Kontrole imaju opisne oznake za čitače ekrana, a dijalozi i paneli se mogu zatvoriti tasterom `Esc`.
 
 ## Trenutno stanje i ograničenja
 
-- Aplikacija sadrži demonstracioni režim sa primerima prijava i akcija.
-- U demonstracionom režimu nove prijave čuvaju se samo u lokalnom pregledaču. Ne dele se sa drugim korisnicima i nisu trajno sačuvane u zajedničkoj bazi.
+- Aplikacija sadrži demonstracioni režim sa primerima prijava i akcija. On se uključuje automatski kada Firebase nije podešen.
+- U demonstracionom režimu nove prijave čuvaju se samo u lokalnom pregledaču (`localStorage`). Ne dele se sa drugim korisnicima i nisu trajno sačuvane u zajedničkoj bazi.
 - Pravo zajedničko čuvanje prijava i prijavljivanje korisnika zahtevaju povezivanje aplikacije sa Firebase projektom.
-- Slanje fotografija je opciono i dostupno je tek kada je podešen odgovarajući servis za slike.
+- Slanje fotografija je opciono i dostupno je tek kada je podešen servis za slike (Cloudinary). Bez njega se prijave šalju bez fotografija.
 - Aplikacija trenutno nema komentare, obaveštenja putem e-pošte ni evidenciju prisustva volontera.
-- Pretraga adresa nije automatska; korisnik može da označi lokaciju na mapi i, po potrebi, unese adresu kao tekst.
-- Promene se ne osvežavaju automatski u realnom vremenu; aplikacija koristi osvežavanje podataka nakon relevantnih radnji ili na zahtev korisnika.
+- Pretraga adresa nije automatska; korisnik označava lokaciju na mapi i, po potrebi, unosi adresu kao tekst.
+- Promene se ne osvežavaju automatski u realnom vremenu; podaci se osvežavaju nakon relevantnih radnji ili dugmetom za osvežavanje.
+- Prijave i akcije moraju biti unutar područja Novog Sada (približno 45.05–45.45° S, 19.55–20.05° I).
 
 ## Zašto ovaj projekat postoji
 
@@ -113,7 +154,9 @@ Dizajn je usmeren na preglednost i brzo korišćenje: mapa ostaje u prvom planu,
 
 Kuka i Motika nastoji da poveže tri koraka na jednom mestu: **uočavanje problema, njegovo dokumentovanje i organizovanje zajedničke akcije**. Cilj je da se ljudima olakša da pređu sa opažanja problema na konkretnu pomoć svom naselju i gradu.
 
-## Zahvalnice
+## Licenca i zahvalnice
+
+Projekat je objavljen kao javno dobro pod licencom [The Unlicense](LICENSE).
 
 - Kartografski podaci i podloga mape: [OpenStreetMap contributors](https://www.openstreetmap.org/copyright).
 - Ikonice: [Lucide](https://lucide.dev/).
