@@ -331,7 +331,7 @@ export function createDemoActions(): CleanupAction[] {
       status: 'completed',
       reportIds: ['r-stajaliste-grafit', 'r-kanta-novonaselje'],
       supplies: ['Rukavice', 'Vreće za otpad', 'Sredstvo za pranje'],
-      organizerName: 'Zajednica Očistimo Novi Sad',
+      organizerName: 'Zajednica Kuka i Motika',
       organizerNote: 'Hvala svima koji su učestvovali. Rezultati su vidljivi na lokacijama prijava.',
       createdAt: hoursAgo(600),
       createdBy: 'demo-admin',

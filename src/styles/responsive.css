@@ -62,6 +62,13 @@
     letter-spacing: 0.1em;
   }
 
+  /* The nav is hidden on mobile, so there is room for the city line again */
+  .brand__city {
+    display: block;
+    margin-top: 3px;
+    font-size: 7.5px;
+  }
+
   .btn--report {
     width: auto;
     height: 36px;

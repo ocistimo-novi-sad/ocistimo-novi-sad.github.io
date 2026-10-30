@@ -152,7 +152,7 @@ export function ActionDetail() {
           </span>
           <div>
             <p className="organizer__name">
-              {action.organizerName || 'Administracija Očistimo Novi Sad'}
+              {action.organizerName || 'Administracija Kuka i Motika'}
             </p>
             {action.organizerNote ? (
               <p className="organizer__note">{action.organizerNote}</p>

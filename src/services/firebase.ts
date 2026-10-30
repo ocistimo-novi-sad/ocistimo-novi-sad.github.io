@@ -51,7 +51,7 @@ if (isFirebaseConfigured) {
     }
     auth = getAuth(app);
   } catch (error) {
-    console.error('[Očistimo Novi Sad] Firebase initialization failed', error);
+    console.error('[Kuka i Motika] Firebase initialization failed', error);
   }
 }
 

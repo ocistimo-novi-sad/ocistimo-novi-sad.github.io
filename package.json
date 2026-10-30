@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Očistimo Novi Sad: mapa problema i akcija čišćenja u Novom Sadu",
+  "description": "Kuka i Motika: mapa problema i akcija čišćenja u Novom Sadu",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
