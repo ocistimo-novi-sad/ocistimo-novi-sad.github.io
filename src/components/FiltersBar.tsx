@@ -186,7 +186,7 @@ export function FiltersBar() {
               title={category.hint}
             >
               <CategoryGlyph category={category.id} size={12} />
-              {category.shortLabel}
+              {category.label}
             </button>
           );
         })}

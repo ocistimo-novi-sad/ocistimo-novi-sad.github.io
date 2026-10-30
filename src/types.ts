@@ -1,8 +1,9 @@
 export type Category =
-  | 'waste'
-  | 'graffiti'
+  | 'unwanted_graffiti'
+  | 'fan_graffiti'
+  | 'stickers_posters'
+  | 'illegal_dump'
   | 'damaged_infrastructure'
-  | 'neglected_area'
   | 'other';
 
 export type ReportStatus =

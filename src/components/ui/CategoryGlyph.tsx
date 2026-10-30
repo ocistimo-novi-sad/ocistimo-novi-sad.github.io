@@ -1,12 +1,13 @@
-import { Cone, Ellipsis, SprayCan, Trash, Trees, type LucideIcon } from 'lucide-react';
+import { Cone, Ellipsis, Flag, SprayCan, Sticker, Trash, type LucideIcon } from 'lucide-react';
 import { CATEGORY_MAP } from '../../config';
 import type { Category } from '../../types';
 
 const ICONS: Record<Category, LucideIcon> = {
-  waste: Trash,
-  graffiti: SprayCan,
+  unwanted_graffiti: SprayCan,
+  fan_graffiti: Flag,
+  stickers_posters: Sticker,
+  illegal_dump: Trash,
   damaged_infrastructure: Cone,
-  neglected_area: Trees,
   other: Ellipsis,
 };
 

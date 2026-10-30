@@ -57,7 +57,7 @@ function ReportCard({
 
       <span className="report-card__body">
         <span className="report-card__top">
-          <span className="report-card__category">{CATEGORY_MAP[report.category].shortLabel}</span>
+          <span className="report-card__category">{CATEGORY_MAP[report.category].label}</span>
           <span className="report-card__time">{formatRelativeTime(report.createdAt)}</span>
         </span>
         <span className="report-card__title">{report.title}</span>

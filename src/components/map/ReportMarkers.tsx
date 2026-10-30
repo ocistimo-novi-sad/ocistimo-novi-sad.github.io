@@ -19,7 +19,7 @@ interface ClusterMeta {
 
 function categoryBreakdown(counts: CategoryCounts): string {
   return CATEGORIES.filter((category) => (counts[category.id] ?? 0) > 0)
-    .map((category) => `${counts[category.id]} ${category.shortLabel}`)
+    .map((category) => `${counts[category.id]} ${category.label}`)
     .join(' · ');
 }
 
@@ -32,7 +32,7 @@ function ReportTooltipContent({ report }: { report: Report }) {
       ) : null}
       <div className="ns-tooltip__body">
         <span className="ns-tooltip__label">
-          {CATEGORY_MAP[report.category].shortLabel} · {STATUS_MAP[report.status].label}
+          {CATEGORY_MAP[report.category].label} · {STATUS_MAP[report.status].label}
         </span>
         <strong className="ns-tooltip__title">{report.title}</strong>
         <span className="ns-tooltip__meta">

@@ -60,26 +60,41 @@
   --z-toast: 1100;
 
   /* Category colours, shared by the per-category blocks below and the map clusters. */
-  --cat-waste: #8a6a2f;
-  --cat-graffiti: #4c5e7d;
+  --cat-unwanted_graffiti: #4c5e7d;
+  --cat-fan_graffiti: #6b4f7d;
+  --cat-stickers_posters: #3f6b4a;
+  --cat-illegal_dump: #8a6a2f;
   --cat-damaged_infrastructure: #a8503f;
-  --cat-neglected_area: #3f6b4a;
   --cat-other: #6e736c;
 }
 
 /* Category identity is carried by a muted earth/ink colour plus an icon. */
-[data-category='waste'],
-.pin--waste,
-.legend-swatch--waste {
-  --cat: var(--cat-waste);
-  --cat-tint: #f2ecdf;
+[data-category='unwanted_graffiti'],
+.pin--unwanted_graffiti,
+.legend-swatch--unwanted_graffiti {
+  --cat: var(--cat-unwanted_graffiti);
+  --cat-tint: #e9ecf2;
 }
 
-[data-category='graffiti'],
-.pin--graffiti,
-.legend-swatch--graffiti {
-  --cat: var(--cat-graffiti);
-  --cat-tint: #e9ecf2;
+[data-category='fan_graffiti'],
+.pin--fan_graffiti,
+.legend-swatch--fan_graffiti {
+  --cat: var(--cat-fan_graffiti);
+  --cat-tint: #efe9f2;
+}
+
+[data-category='stickers_posters'],
+.pin--stickers_posters,
+.legend-swatch--stickers_posters {
+  --cat: var(--cat-stickers_posters);
+  --cat-tint: #e7eee5;
+}
+
+[data-category='illegal_dump'],
+.pin--illegal_dump,
+.legend-swatch--illegal_dump {
+  --cat: var(--cat-illegal_dump);
+  --cat-tint: #f2ecdf;
 }
 
 [data-category='damaged_infrastructure'],
@@ -87,13 +102,6 @@
 .legend-swatch--damaged_infrastructure {
   --cat: var(--cat-damaged_infrastructure);
   --cat-tint: #f5e8e4;
-}
-
-[data-category='neglected_area'],
-.pin--neglected_area,
-.legend-swatch--neglected_area {
-  --cat: var(--cat-neglected_area);
-  --cat-tint: #e7eee5;
 }
 
 [data-category='other'],

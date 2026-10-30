@@ -18,12 +18,20 @@ import { AppError } from './errors';
 import type { Category, NewReportInput, Report, ReportStatus } from '../types';
 
 const CATEGORY_VALUES: Category[] = [
-  'waste',
-  'graffiti',
+  'unwanted_graffiti',
+  'fan_graffiti',
+  'stickers_posters',
+  'illegal_dump',
   'damaged_infrastructure',
-  'neglected_area',
   'other',
 ];
+
+/** Category ids used before the category list was revised. */
+const LEGACY_CATEGORIES: Record<string, Category> = {
+  graffiti: 'unwanted_graffiti',
+  waste: 'illegal_dump',
+  neglected_area: 'other',
+};
 
 const STATUS_VALUES: ReportStatus[] = [
   'new',
@@ -65,7 +73,7 @@ export function mapReport(id: string, data: DocumentData): Report | null {
 
   const category = CATEGORY_VALUES.includes(data.category as Category)
     ? (data.category as Category)
-    : 'other';
+    : (LEGACY_CATEGORIES[data.category as string] ?? 'other');
   const status = STATUS_VALUES.includes(data.status as ReportStatus)
     ? (data.status as ReportStatus)
     : 'new';

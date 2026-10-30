@@ -51,7 +51,7 @@ const REPORT_SEEDS: ReportSeed[] = [
     title: 'Divlja deponija pored železničke pruge',
     description:
       'Pored koloseka je odloženo nekoliko vreća otpada i stari nameštaj. Prostor je vidljiv sa ulice i privlači dodatno bacanje smeća. Pristup je moguć sa staze sa gornje strane nasipa.',
-    category: 'waste',
+    category: 'illegal_dump',
     status: 'verified',
     latitude: 45.26482,
     longitude: 19.81924,
@@ -64,7 +64,7 @@ const REPORT_SEEDS: ReportSeed[] = [
     title: 'Grafiti na zidu pored igrališta',
     description:
       'Zid uz dečje igralište je prekriven sprejom u poslednjih nedelju dana. Igračka površina nije oštećena, ali je boja svuda oko ulaza. Potrebna je pomoć za čišćenje i prekrečavanje.',
-    category: 'graffiti',
+    category: 'unwanted_graffiti',
     status: 'planned',
     latitude: 45.26197,
     longitude: 19.80712,
@@ -90,7 +90,7 @@ const REPORT_SEEDS: ReportSeed[] = [
     title: 'Rasuto smeće oko kontejnera',
     description:
       'Kontejneri su prepuni, a vreće su ostavljene pored i vetar ih je raznosio po trotoaru. Prolaz je sužen i teško je proći sa kolicima. Potrebno je organizovano sakupljanje.',
-    category: 'waste',
+    category: 'illegal_dump',
     status: 'new',
     latitude: 45.25186,
     longitude: 19.82956,
@@ -103,7 +103,7 @@ const REPORT_SEEDS: ReportSeed[] = [
     title: 'Zapuštena zelena površina na Telepu',
     description:
       'Travnjak između zgrada nije košen, a klupe su obrasle u korov. Biciklistička staza je delimično prekrivena granjem. Prostor je nekada bio glavno mesto okupljanja u kvartu.',
-    category: 'neglected_area',
+    category: 'other',
     status: 'planned',
     latitude: 45.24671,
     longitude: 19.79532,
@@ -116,7 +116,7 @@ const REPORT_SEEDS: ReportSeed[] = [
     title: 'Iskršene grane i otpad u Futoškom parku',
     description:
       'Nakon nevremena ostalo je polomljenih grana i granja pored staza, a uz ogradu je i nekoliko boca i kesa. Staze su prohodne, ali je potrebno raščišćavanje pre sledeće kiše.',
-    category: 'neglected_area',
+    category: 'other',
     status: 'planned',
     latitude: 45.24713,
     longitude: 19.82214,
@@ -142,7 +142,7 @@ const REPORT_SEEDS: ReportSeed[] = [
     title: 'Ostaci gradilišnog materijala',
     description:
       'Na javnoj površini su odložene palete, komadi betona i urolane folije. Obim i težina prevazilaze mogućnosti volonterske akcije, pa je slučaj prosleđen nadležnoj službi.',
-    category: 'waste',
+    category: 'illegal_dump',
     status: 'not_suitable',
     latitude: 45.25731,
     longitude: 19.85244,
@@ -152,10 +152,10 @@ const REPORT_SEEDS: ReportSeed[] = [
   },
   {
     id: 'r-stajaliste-grafit',
-    title: 'Grafit na autobuskom stajalištu',
+    title: 'Nalepnice i plakati na autobuskom stajalištu',
     description:
-      'Staklo stajališta je prekriveno crnim sprejom, pa se red vožnje ne vidi. Prijavljeno je i očišćeno u okviru akcije čišćenja centra.',
-    category: 'graffiti',
+      'Staklo stajališta je prelepljeno nalepnicama i plakatima, pa se red vožnje ne vidi. Prijavljeno je i očišćeno u okviru akcije čišćenja centra.',
+    category: 'stickers_posters',
     status: 'resolved',
     latitude: 45.25432,
     longitude: 19.83911,
@@ -168,7 +168,7 @@ const REPORT_SEEDS: ReportSeed[] = [
     title: 'Prevrnuta kanta u Novom naselju',
     description:
       'Kanta za otpatke je prevrnuta i sadržaj se prosipao po travnjaku. Vreće su sakupljene tokom akcije, a kanta je vraćena na postolje.',
-    category: 'waste',
+    category: 'illegal_dump',
     status: 'resolved',
     latitude: 45.25847,
     longitude: 19.84553,
@@ -177,11 +177,11 @@ const REPORT_SEEDS: ReportSeed[] = [
     author: 'Petar J.',
   },
   {
-    id: 'r-strand-staza',
-    title: 'Zarasla staza pored Štranda',
+    id: 'r-strand-grafiti',
+    title: 'Navijački grafiti na prolazu kod Štranda',
     description:
-      'Staza je prekrivena rastinjem i teško je prohodna posle kiše. Pored su ostaci orezanih grana koje niko nije odneo. Pristup plaži je otežan.',
-    category: 'neglected_area',
+      'Zidovi pešačkog prolaza su ispisani navijačkim porukama i simbolima. Deo natpisa je uvredljiv i vidi se sa biciklističke staze koja vodi do plaže.',
+    category: 'fan_graffiti',
     status: 'new',
     latitude: 45.24595,
     longitude: 19.84621,
@@ -233,7 +233,7 @@ const REPORT_SEEDS: ReportSeed[] = [
     title: 'Smeće uz kontejnere na Detelinari',
     description:
       'Oko kontejnera je ostavljen otpad u rasutom stanju, uključujući staklo i ambalažu. Prostor je uz pešačku stazu kojom deca idu u školu. Potrebno je očistiti i oprati površinu.',
-    category: 'waste',
+    category: 'illegal_dump',
     status: 'planned',
     latitude: 45.26231,
     longitude: 19.80821,

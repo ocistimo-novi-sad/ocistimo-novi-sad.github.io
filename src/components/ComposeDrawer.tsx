@@ -8,7 +8,7 @@ import {
   TriangleAlert,
   X,
 } from 'lucide-react';
-import { APP, CATEGORIES, LIMITS } from '../config';
+import { APP, CATEGORIES, DEFAULT_CATEGORY, LIMITS } from '../config';
 import { addDemoReport } from '../demo/store';
 import { formatCoordinates } from '../lib/format';
 import { isInServiceArea } from '../lib/geo';
@@ -54,7 +54,7 @@ export function ComposeDrawer() {
   } = useApp();
 
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState<Category | null>(null);
+  const [category, setCategory] = useState<Category | null>(DEFAULT_CATEGORY);
   const [description, setDescription] = useState('');
   const [address, setAddress] = useState('');
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
@@ -75,7 +75,12 @@ export function ComposeDrawer() {
 
   const outsideArea = composeLocation !== null && !isInServiceArea(composeLocation);
   const dirty = Boolean(
-    title.trim() || description.trim() || address.trim() || category || photos.length || composeLocation,
+    title.trim() ||
+      description.trim() ||
+      address.trim() ||
+      category !== DEFAULT_CATEGORY ||
+      photos.length ||
+      composeLocation,
   );
 
   const requestClose = () => {
@@ -122,7 +127,7 @@ export function ComposeDrawer() {
     const ids: Record<FieldKey, string> = {
       location: 'compose-map-button',
       title: 'report-title',
-      category: 'category-waste',
+      category: 'category-first',
       description: 'report-description',
       photos: 'compose-photo-button',
     };
@@ -494,7 +499,7 @@ export function ComposeDrawer() {
                 data-category={option.id}
               >
                 <input
-                  id={index === 0 ? 'category-waste' : undefined}
+                  id={index === 0 ? 'category-first' : undefined}
                   type="radio"
                   name="report-category"
                   value={option.id}

@@ -65,10 +65,11 @@ Prijave su grupisane prema vrsti problema:
 
 | Kategorija | Primeri |
 |---|---|
-| **Smeće** | Otpad na stazama, smeće u parkovima ili otpad oko kontejnera |
-| **Grafiti** | Grafiti i šaranje na javnim površinama |
+| **Nepoželjni grafiti** | Šaranje, tagovi i uvredljive poruke na fasadama i javnim površinama |
+| **Navijački grafiti** | Navijački natpisi, simboli i poruke |
+| **Nalepnice i posteri** | Nalepnice, plakati i oglasi zalepljeni na javnim površinama |
+| **Divlja deponija** | Nelegalno odložen otpad, građevinski šut i krupno smeće |
 | **Oštećena infrastruktura** | Polomljene klupe, oštećene kante ili drugi javni inventar |
-| **Zapušten prostor** | Neodržavane zelene površine i zapušteni javni prostori |
 | **Ostalo** | Drugi vidljivi problemi koji zaslužuju pažnju zajednice |
 
 ## Statusi prijava
