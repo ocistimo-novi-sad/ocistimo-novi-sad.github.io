@@ -24,7 +24,15 @@ import {
   type Toast,
   type ToastTone,
 } from './app-context';
-import type { CleanupAction, Coordinates, Filters, Report, ReportStatus, View } from '../types';
+import type {
+  Category,
+  CleanupAction,
+  Coordinates,
+  Filters,
+  Report,
+  ReportStatus,
+  View,
+} from '../types';
 
 type PendingIntent = { kind: 'create' } | { kind: 'flag'; reportId: string };
 
@@ -237,6 +245,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const toggleCategory = useCallback((category: Category) => {
+    setFilters((current) => ({
+      ...current,
+      categories: current.categories.includes(category)
+        ? current.categories.filter((item) => item !== category)
+        : [...current.categories, category],
+    }));
+  }, []);
+
   const resetFilters = useCallback(() => {
     setFilters({
       ...DEFAULT_FILTERS,
@@ -442,6 +459,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       reloadActions,
       filters,
       updateFilters,
+      toggleCategory,
       resetFilters,
       selectedReport,
       selectedAction,
@@ -492,6 +510,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       reloadActions,
       filters,
       updateFilters,
+      toggleCategory,
       resetFilters,
       selectedReport,
       selectedAction,

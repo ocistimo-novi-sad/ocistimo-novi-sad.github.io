@@ -1,12 +1,47 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Marker, Tooltip, useMap } from 'react-leaflet';
 import Supercluster from 'supercluster';
-import { plural } from '../../lib/format';
-import type { Report } from '../../types';
-import { clusterIcon, reportIcon } from './map-icons';
+import { CATEGORIES, CATEGORY_MAP, STATUS_MAP } from '../../config';
+import { formatRelativeTime, plural } from '../../lib/format';
+import type { Category, Report } from '../../types';
+import { clusterIcon, reportIcon, type CategoryCounts } from './map-icons';
 
 interface PointProps {
   reportId: string;
+  category: Category;
+}
+
+interface ClusterMeta {
+  cluster?: boolean;
+  cluster_id?: number;
+  point_count?: number;
+}
+
+function categoryBreakdown(counts: CategoryCounts): string {
+  return CATEGORIES.filter((category) => (counts[category.id] ?? 0) > 0)
+    .map((category) => `${counts[category.id]} ${category.shortLabel}`)
+    .join(' · ');
+}
+
+function ReportTooltipContent({ report }: { report: Report }) {
+  const thumbnail = report.imageUrls[0];
+  return (
+    <div className="ns-tooltip__rich">
+      {thumbnail ? (
+        <img className="ns-tooltip__thumb" src={thumbnail} alt="" loading="lazy" />
+      ) : null}
+      <div className="ns-tooltip__body">
+        <span className="ns-tooltip__label">
+          {CATEGORY_MAP[report.category].shortLabel} · {STATUS_MAP[report.status].label}
+        </span>
+        <strong className="ns-tooltip__title">{report.title}</strong>
+        <span className="ns-tooltip__meta">
+          {report.address ? `${report.address} · ` : ''}
+          {formatRelativeTime(report.createdAt)}
+        </span>
+      </div>
+    </div>
+  );
 }
 
 interface ReportMarkersProps {
@@ -58,16 +93,25 @@ export function ReportMarkers({
   }, [map]);
 
   const index = useMemo(() => {
-    const cluster = new Supercluster<PointProps, Record<string, never>>({
+    // Counts stay flat (one key per category) because Supercluster only
+    // shallow-clones properties before reducing.
+    const cluster = new Supercluster<PointProps, CategoryCounts>({
       radius: 58,
       maxZoom: CLUSTER_MAX_ZOOM,
       minPoints: 2,
+      map: (props) => ({ [props.category]: 1 }),
+      reduce: (accumulated, props) => {
+        for (const category of CATEGORIES) {
+          const value = props[category.id];
+          if (value) accumulated[category.id] = (accumulated[category.id] ?? 0) + value;
+        }
+      },
     });
 
     cluster.load(
       reports.map((report) => ({
         type: 'Feature' as const,
-        properties: { reportId: report.id },
+        properties: { reportId: report.id, category: report.category },
         geometry: {
           type: 'Point' as const,
           coordinates: [report.longitude, report.latitude],
@@ -94,11 +138,7 @@ export function ReportMarkers({
     <>
       {features.map((feature) => {
         const [longitude, latitude] = feature.geometry.coordinates;
-        const properties = feature.properties as PointProps & {
-          cluster?: boolean;
-          cluster_id?: number;
-          point_count?: number;
-        };
+        const properties = feature.properties as PointProps & CategoryCounts & ClusterMeta;
 
         if (properties.cluster && typeof properties.cluster_id === 'number') {
           const count = properties.point_count ?? 0;
@@ -106,7 +146,7 @@ export function ReportMarkers({
             <Marker
               key={`cluster-${properties.cluster_id}`}
               position={[latitude, longitude]}
-              icon={clusterIcon(count)}
+              icon={clusterIcon(count, properties)}
               zIndexOffset={200}
               eventHandlers={{
                 click: () => {
@@ -121,6 +161,8 @@ export function ReportMarkers({
               <Tooltip direction="top" offset={[0, -18]} className="ns-tooltip">
                 {count} {plural(count, 'prijava', 'prijave', 'prijava')} u ovoj oblasti.
                 Kliknite da zumirate.
+                <br />
+                <span className="ns-tooltip__meta">{categoryBreakdown(properties)}</span>
               </Tooltip>
             </Marker>
           );
@@ -143,8 +185,8 @@ export function ReportMarkers({
               },
             }}
           >
-            <Tooltip direction="top" offset={[0, -18]} className="ns-tooltip">
-              {report.title}
+            <Tooltip direction="top" offset={[0, -18]} className="ns-tooltip ns-tooltip--rich">
+              <ReportTooltipContent report={report} />
             </Tooltip>
           </Marker>
         );

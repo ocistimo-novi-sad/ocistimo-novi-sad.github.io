@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Circle,
   MapContainer,
@@ -25,6 +25,7 @@ import {
   X,
 } from 'lucide-react';
 import { APP, CATEGORIES } from '../config';
+import type { Category } from '../types';
 import { useApp } from '../state/app-context';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { formatCoordinates } from '../lib/format';
@@ -105,6 +106,7 @@ export function MapCanvas() {
     reportsError,
     filters,
     updateFilters,
+    toggleCategory,
     resetFilters,
     selectedReport,
     selectedAction,
@@ -128,6 +130,14 @@ export function MapCanvas() {
   const [pointer, setPointer] = useState<{ lat: number; lng: number } | null>(null);
   const [legendOpen, setLegendOpen] = useState(true);
   const pointerThrottle = useRef(0);
+
+  const categoryCounts = useMemo(() => {
+    const counts: Partial<Record<Category, number>> = {};
+    for (const report of reports) {
+      counts[report.category] = (counts[report.category] ?? 0) + 1;
+    }
+    return counts;
+  }, [reports]);
 
   const handleMapClick = useCallback(
     (latlng: { lat: number; lng: number }) => {
@@ -454,20 +464,45 @@ export function MapCanvas() {
             </button>
           </div>
           <ul>
-            {CATEGORIES.map((category) => (
-              <li key={category.id}>
-                <span
-                  className={`legend-swatch legend-swatch--${category.id}`}
-                  data-category={category.id}
-                >
-                  <CategoryGlyph category={category.id} size={11} />
-                </span>
-                {category.label}
-              </li>
-            ))}
+            {CATEGORIES.map((category) => {
+              const active =
+                filters.categories.length === 0 || filters.categories.includes(category.id);
+              return (
+                <li key={category.id}>
+                  <button
+                    type="button"
+                    className={`map-legend__item${active ? '' : ' is-off'}`}
+                    onClick={() => toggleCategory(category.id)}
+                    aria-pressed={filters.categories.includes(category.id)}
+                    title={`Prikaži ili sakrij: ${category.label}`}
+                  >
+                    <span
+                      className={`legend-swatch legend-swatch--${category.id}`}
+                      data-category={category.id}
+                    >
+                      <CategoryGlyph category={category.id} size={11} />
+                    </span>
+                    <span className="map-legend__label">{category.label}</span>
+                    <span className="map-legend__count">
+                      {categoryCounts[category.id] ?? 0}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
+          {filters.categories.length > 0 ? (
+            <button
+              type="button"
+              className="map-legend__reset"
+              onClick={() => updateFilters({ categories: [] })}
+            >
+              Prikaži sve
+            </button>
+          ) : null}
           <p className="map-legend__note">
-            Tačka u uglu markera označava status prijave.
+            Kliknite kategoriju da je uključite ili isključite. Tačka u uglu markera označava
+            status prijave.
           </p>
         </div>
       ) : null}

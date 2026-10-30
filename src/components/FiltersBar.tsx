@@ -96,7 +96,7 @@ function StatusFilter() {
 }
 
 export function FiltersBar() {
-  const { filters, updateFilters, resetFilters, mapRef } = useApp();
+  const { filters, updateFilters, toggleCategory, resetFilters, mapRef } = useApp();
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -113,13 +113,6 @@ export function FiltersBar() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
-
-  const toggleCategory = (category: (typeof CATEGORIES)[number]['id']) => {
-    const next = filters.categories.includes(category)
-      ? filters.categories.filter((item) => item !== category)
-      : [...filters.categories, category];
-    updateFilters({ categories: next });
-  };
 
   const toggleViewport = () => {
     if (filters.viewportOnly) {
