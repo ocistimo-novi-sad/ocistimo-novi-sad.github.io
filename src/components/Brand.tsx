@@ -1,6 +1,6 @@
 import { APP } from '../config';
 
-export function BrandMark({ size = 26 }: { size?: number }) {
+export function BrandMark({ size = 30 }: { size?: number }) {
   return (
     <svg
       width={size}
@@ -10,11 +10,17 @@ export function BrandMark({ size = 26 }: { size?: number }) {
       focusable="false"
       className="brand-mark"
     >
-      <rect width="64" height="64" fill="#234C3B" />
-      <circle cx="32" cy="28" r="12.5" fill="none" stroke="#F3F2ED" strokeWidth="3" />
-      <circle cx="32" cy="28" r="4.5" fill="#F3F2ED" />
-      <path d="M32 40.5V50" stroke="#F3F2ED" strokeWidth="3" />
-      <path d="M18 55h28" stroke="#B94A3B" strokeWidth="3" />
+      <rect width="64" height="64" rx="16" fill="#234C3B" />
+      <path
+        d="M32 50C32 50 18 36 18 26a14 14 0 0 1 28 0c0 10-14 24-14 24Z"
+        fill="none"
+        stroke="#F6F4EE"
+        strokeWidth="3.5"
+        strokeLinejoin="round"
+      />
+      <path d="M26 31c0-8 5-12 12-12 0 8-4 12-12 12Z" fill="#8FD19E" />
+      <path d="M26.5 30.5 33 24" stroke="#234C3B" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M21 56h22" stroke="#F2B53A" strokeWidth="3.5" strokeLinecap="round" />
     </svg>
   );
 }

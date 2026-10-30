@@ -1,57 +1,87 @@
 /* ---------------------------------------------------------------------------
    Design tokens
-   Restrained, editorial palette: warm paper, deep forest green, charcoal ink,
-   hairline borders. Rectangular geometry throughout (2 to 4 px radii only).
+   Civic, optimistic palette: warm paper, deep forest green as the brand base,
+   a bright leaf accent for action and progress, a sun highlight. Soft geometry
+   (6 to 14 px radii, pills for chips and badges).
 --------------------------------------------------------------------------- */
 
 :root {
-  --paper: #f3f2ed;
-  --paper-2: #ebeae3;
+  --paper: #f6f4ee;
+  --paper-2: #eeebe2;
   --surface: #ffffff;
-  --surface-2: #f8f7f2;
-  --surface-3: #f0efe8;
+  --surface-2: #f9f8f4;
+  --surface-3: #f1efe8;
 
   --ink: #1c221e;
   --ink-2: #363d38;
-  --muted: #6e736c;
-  --muted-2: #747972;
+  --muted: #6a7068;
+  --muted-2: #737870;
 
-  --line: #d9dad3;
-  --line-strong: #c4c6bc;
+  --line: #e2e1da;
+  --line-strong: #cbcdc3;
 
   --forest: #234c3b;
   --forest-2: #1a3b2d;
   --forest-3: #2f6049;
-  --forest-tint: #e8ede5;
-  --forest-tint-2: #dce6d8;
+  --forest-tint: #e8efe6;
+  --forest-tint-2: #dce8d8;
+  --forest-line: #c3d5c0;
 
-  --alert: #b94a3b;
-  --alert-strong: #9d3a2d;
-  --alert-tint: #f7eae6;
+  --leaf: #3f9a5c;
+  --leaf-2: #2f8049;
+  --leaf-3: #24683a;
+  --leaf-tint: #e3f2e6;
+  --leaf-line: #bfe0c7;
+
+  --sun: #f2b53a;
+  --sun-tint: #fdf3dc;
+
+  --alert: #c4483a;
+  --alert-strong: #a3392c;
+  --alert-tint: #fbeae6;
+  --alert-line: #ecc9c2;
+  --alert-ink: #7a2f23;
 
   --amber: #8f6420;
-  --amber-tint: #f6eedd;
+  --amber-tint: #fbf1dd;
+  --amber-line: #ecd9b0;
+  --amber-ink: #6a4b14;
 
   --steel: #2d5c78;
-  --steel-tint: #e6eef2;
+  --steel-tint: #e6eff4;
+  --steel-line: #c5d8e2;
 
-  --radius: 2px;
-  --radius-md: 3px;
+  /* Report status colours (dots, pin badges). */
+  --status-new: #7c817a;
+  --status-verified: #2e7a52;
+  --status-planned: #b07a1c;
+  --status-in_progress: #2d6a8c;
+  --status-resolved: var(--leaf-2);
+  --status-not_suitable: #9a9e97;
 
-  --shadow-1: 0 1px 2px rgba(28, 34, 30, 0.06);
-  --shadow-2: 0 1px 2px rgba(28, 34, 30, 0.08), 0 14px 34px -22px rgba(28, 34, 30, 0.4);
+  --radius: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-pill: 999px;
 
+  --shadow-1: 0 1px 2px rgba(28, 34, 30, 0.06), 0 1px 1px rgba(28, 34, 30, 0.03);
+  --shadow-2: 0 1px 2px rgba(28, 34, 30, 0.06), 0 10px 28px -12px rgba(28, 34, 30, 0.28);
+  --shadow-3: 0 2px 6px rgba(28, 34, 30, 0.08), 0 18px 40px -16px rgba(28, 34, 30, 0.32);
+
+  --font-display: 'Bricolage Grotesque', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    system-ui, sans-serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui,
     sans-serif;
-  --font-mono: 'SFMono-Regular', ui-monospace, 'Cascadia Mono', 'Roboto Mono', Menlo, Consolas,
-    monospace;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', ui-monospace, 'Cascadia Mono', 'Roboto Mono',
+    Menlo, Consolas, monospace;
 
-  --header-h: 58px;
+  --header-h: 60px;
   --panel-w: 372px;
   --drawer-w: 428px;
-  --tabbar-h: 58px;
+  --tabbar-h: 60px;
 
   --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   --z-map-ui: 450;
   --z-panel: 600;
@@ -59,46 +89,47 @@
   --z-modal: 1000;
   --z-toast: 1100;
 
-  /* Category colours, shared by the per-category blocks below and the map clusters. */
-  --cat-waste: #8a6a2f;
-  --cat-graffiti: #4c5e7d;
-  --cat-damaged_infrastructure: #a8503f;
-  --cat-neglected_area: #3f6b4a;
-  --cat-other: #6e736c;
+  /* Category colours, shared by the per-category blocks below and the map clusters.
+     Each one carries a white glyph at 3:1 or better. */
+  --cat-waste: #b0741c;
+  --cat-graffiti: #5b5bd6;
+  --cat-damaged_infrastructure: #cc4f38;
+  --cat-neglected_area: #3b8d4f;
+  --cat-other: #64748b;
 }
 
-/* Category identity is carried by a muted earth/ink colour plus an icon. */
+/* Category identity is carried by a distinct colour plus an icon. */
 [data-category='waste'],
 .pin--waste,
 .legend-swatch--waste {
   --cat: var(--cat-waste);
-  --cat-tint: #f2ecdf;
+  --cat-tint: #fbf0dc;
 }
 
 [data-category='graffiti'],
 .pin--graffiti,
 .legend-swatch--graffiti {
   --cat: var(--cat-graffiti);
-  --cat-tint: #e9ecf2;
+  --cat-tint: #ecebfb;
 }
 
 [data-category='damaged_infrastructure'],
 .pin--damaged_infrastructure,
 .legend-swatch--damaged_infrastructure {
   --cat: var(--cat-damaged_infrastructure);
-  --cat-tint: #f5e8e4;
+  --cat-tint: #fbe9e5;
 }
 
 [data-category='neglected_area'],
 .pin--neglected_area,
 .legend-swatch--neglected_area {
   --cat: var(--cat-neglected_area);
-  --cat-tint: #e7eee5;
+  --cat-tint: #e5f2e7;
 }
 
 [data-category='other'],
 .pin--other,
 .legend-swatch--other {
   --cat: var(--cat-other);
-  --cat-tint: #edeEE9;
+  --cat-tint: #eceff3;
 }

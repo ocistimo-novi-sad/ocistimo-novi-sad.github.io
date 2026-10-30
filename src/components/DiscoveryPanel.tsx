@@ -3,6 +3,7 @@ import { formatReportCount } from '../lib/format';
 import { isFirebaseConfigured } from '../services/firebase';
 import { useApp } from '../state/app-context';
 import { FiltersBar } from './FiltersBar';
+import { ImpactSummary } from './ImpactSummary';
 import { LoadMoreButton, ReportList } from './ReportList';
 
 export function DiscoveryPanel() {
@@ -56,6 +57,8 @@ export function DiscoveryPanel() {
       </div>
 
       <div className="panel__scroll">
+        <ImpactSummary />
+
         <div className="panel__list-head">
           <span className="eyebrow">Rezultati</span>
           <span className="panel__list-count">
