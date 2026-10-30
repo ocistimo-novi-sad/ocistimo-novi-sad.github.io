@@ -62,7 +62,7 @@ export function Header() {
 
         <button
           type="button"
-          className="btn btn--primary btn--report"
+          className="btn btn--accent btn--report"
           onClick={startCompose}
           aria-label="Prijavi problem"
         >

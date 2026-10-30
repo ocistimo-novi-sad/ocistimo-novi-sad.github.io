@@ -1,14 +1,14 @@
-# Očistimo Novi Sad
+# Kuka i Motika
 
 **Mapa problema u javnim prostorima Novog Sada i mesto za organizovanje zajedničkih akcija čišćenja i uređenja grada.**
 
-Očistimo Novi Sad je zamišljen kao praktičan alat za građane koji žele da prijave smeće, oštećen javni inventar, grafite i druge probleme u svom okruženju. Cilj je da se takvi problemi lakše uoče, dokumentuju i povežu sa ljudima koji žele da pomognu u njihovom rešavanju.
+Kuka i Motika je zamišljen kao praktičan alat za građane koji žele da prijave smeće, oštećen javni inventar, grafite i druge probleme u svom okruženju. Cilj je da se takvi problemi lakše uoče, dokumentuju i povežu sa ljudima koji žele da pomognu u njihovom rešavanju.
 
 Ideja projekta je jednostavna: umesto da informacije o zapuštenim mestima ostanu rasute po porukama i društvenim mrežama, sve prijave mogu da budu pregledno prikazane na jednoj mapi. Tako zajednica lakše može da proceni gde je pomoć potrebna i da organizuje konkretnu akciju.
 
 ## Pregled aplikacije
 
-![Desktop prikaz aplikacije Očistimo Novi Sad](docs/preview.png)
+![Desktop prikaz aplikacije Kuka i Motika](docs/preview.png)
 
 <p align="center">
   <img src="docs/mobile.png" alt="Mobilni prikaz liste prijava i filtera" width="330" />
@@ -110,7 +110,7 @@ Dizajn je usmeren na preglednost i brzo korišćenje: mapa ostaje u prvom planu,
 
 Čistiji i uređeniji grad ne zavisi samo od toga da li neko primeti problem, već i od toga da li drugi mogu da saznaju za njega i da li postoji način da se organizuju oko rešenja.
 
-Očistimo Novi Sad nastoji da poveže tri koraka na jednom mestu: **uočavanje problema, njegovo dokumentovanje i organizovanje zajedničke akcije**. Cilj je da se ljudima olakša da pređu sa opažanja problema na konkretnu pomoć svom naselju i gradu.
+Kuka i Motika nastoji da poveže tri koraka na jednom mestu: **uočavanje problema, njegovo dokumentovanje i organizovanje zajedničke akcije**. Cilj je da se ljudima olakša da pređu sa opažanja problema na konkretnu pomoć svom naselju i gradu.
 
 ## Zahvalnice
 

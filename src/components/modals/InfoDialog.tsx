@@ -36,7 +36,7 @@ export function InfoDialog() {
 
   return (
     <Modal
-      title="O projektu Očistimo Novi Sad"
+      title="O projektu Kuka i Motika"
       description="Mapa problema i zajedničkih akcija čišćenja u Novom Sadu."
       size="lg"
       onClose={closeModal}
@@ -53,7 +53,7 @@ export function InfoDialog() {
         <span className="eyebrow">Novi Sad · Zajednica</span>
         <h3>Mapa problema, ne mapa žalbi.</h3>
         <p>
-          Očistimo Novi Sad okuplja prijave oštećenih, prljavih i zapuštenih javnih prostora i
+          Kuka i Motika okuplja prijave oštećenih, prljavih i zapuštenih javnih prostora i
           povezuje ih sa stvarnim akcijama čišćenja. Cilj nije da se problemi samo popišu, već da se
           vide, provere i reše.
         </p>
