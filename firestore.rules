@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// Očistimo Novi Sad: Firestore Security Rules
+// Kuka i Motika: Firestore Security Rules
 // Deploy with:  firebase deploy --only firestore:rules
 // These rules are the real access control boundary; the frontend checks are
 // only there for a good user experience.

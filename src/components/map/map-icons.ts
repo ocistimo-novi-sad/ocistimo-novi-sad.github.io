@@ -10,6 +10,9 @@ import type { Category, Report, ReportStatus } from '../../types';
 
 const reportIconCache = new Map<string, DivIcon>();
 const actionIconCache = new Map<string, DivIcon>();
+// Reusing the same icon object also stops Leaflet from rebuilding the cluster
+// element (and replaying its entry animation) on every pan.
+const clusterIconCache = new Map<string, DivIcon>();
 
 function statusBadge(status: ReportStatus): string {
   if (status === 'resolved') {
@@ -63,14 +66,21 @@ function categoryRing(counts: CategoryCounts, total: number): string {
 }
 
 export function clusterIcon(count: number, counts: CategoryCounts = {}): DivIcon {
+  const key = `${count}|${CATEGORIES.map((category) => counts[category.id] ?? 0).join(',')}`;
+  const cached = clusterIconCache.get(key);
+  if (cached) return cached;
+
   const size = count < 10 ? 38 : count < 100 ? 44 : 50;
-  return L.divIcon({
+  const icon = L.divIcon({
     className: 'ns-icon',
     html: `<span class="cluster" data-size="${count < 10 ? 'sm' : count < 100 ? 'md' : 'lg'}" style="background: ${categoryRing(counts, count)}"><span class="cluster__count">${count}</span></span>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
     tooltipAnchor: [0, -size / 2],
   });
+
+  clusterIconCache.set(key, icon);
+  return icon;
 }
 
 export function actionIcon(selected = false): DivIcon {

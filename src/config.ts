@@ -11,8 +11,8 @@ import type {
  * if the name ever changes again.
  */
 export const APP = {
-  name: 'Očistimo Novi Sad',
-  wordmark: 'OČISTIMO',
+  name: 'Kuka i Motika',
+  wordmark: 'KUKA I MOTIKA',
   city: 'Novi Sad',
   tagline: 'Mapa problema i akcija čišćenja u Novom Sadu',
   center: { latitude: 45.2671, longitude: 19.8335 } satisfies Coordinates,
