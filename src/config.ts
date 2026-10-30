@@ -26,42 +26,44 @@ export const APP = {
 export interface CategoryMeta {
   id: Category;
   label: string;
-  shortLabel: string;
   hint: string;
 }
 
 export const CATEGORIES: CategoryMeta[] = [
   {
-    id: 'waste',
-    label: 'Otpad',
-    shortLabel: 'Otpad',
-    hint: 'Smeće, kontejneri, divlje deponije',
+    id: 'unwanted_graffiti',
+    label: 'Nepoželjni grafiti',
+    hint: 'Šaranje, tagovi i uvredljive poruke na fasadama',
   },
   {
-    id: 'graffiti',
-    label: 'Grafiti',
-    shortLabel: 'Grafiti',
-    hint: 'Grafiti, vandalizam, oštećene fasade',
+    id: 'fan_graffiti',
+    label: 'Navijački grafiti',
+    hint: 'Navijački natpisi, simboli i poruke',
+  },
+  {
+    id: 'stickers_posters',
+    label: 'Nalepnice i posteri',
+    hint: 'Nalepnice, plakati i oglasi na javnim površinama',
+  },
+  {
+    id: 'illegal_dump',
+    label: 'Divlja deponija',
+    hint: 'Nelegalno odložen otpad, šut i krupno smeće',
   },
   {
     id: 'damaged_infrastructure',
     label: 'Oštećena infrastruktura',
-    shortLabel: 'Infrastruktura',
     hint: 'Klupe, staze, igrališta, oprema',
-  },
-  {
-    id: 'neglected_area',
-    label: 'Zapušten prostor',
-    shortLabel: 'Zapušteno',
-    hint: 'Zarasli parkovi, neuređene zelene površine',
   },
   {
     id: 'other',
     label: 'Ostalo',
-    shortLabel: 'Ostalo',
     hint: 'Drugi vidljivi problemi u javnom prostoru',
   },
 ];
+
+/** Category preselected when a new report is opened. */
+export const DEFAULT_CATEGORY: Category = 'unwanted_graffiti';
 
 export const CATEGORY_MAP: Record<Category, CategoryMeta> = Object.fromEntries(
   CATEGORIES.map((category) => [category.id, category]),

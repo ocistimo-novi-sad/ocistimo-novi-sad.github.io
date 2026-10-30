@@ -120,7 +120,8 @@ service cloud.firestore {
         && request.resource.data.description.size() >= 20
         && request.resource.data.description.size() <= 1200
         && request.resource.data.category in [
-             'waste', 'graffiti', 'damaged_infrastructure', 'neglected_area', 'other'
+             'unwanted_graffiti', 'fan_graffiti', 'stickers_posters',
+             'illegal_dump', 'damaged_infrastructure', 'other'
            ]
         && request.resource.data.status == 'new'
         && validCoordinates(

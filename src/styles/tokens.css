@@ -89,28 +89,42 @@
   --z-modal: 1000;
   --z-toast: 1100;
 
-  /* Category colours, shared by the per-category blocks below and the map clusters.
-     Each one carries a white glyph at 3:1 or better. */
-  --cat-waste: #b0741c;
-  --cat-graffiti: #5b5bd6;
-  --cat-damaged_infrastructure: #cc4f38;
-  --cat-neglected_area: #3b8d4f;
-  --cat-other: #64748b;
+  /* Category colours, shared by the per-category blocks below and the map clusters. */
+  --cat-unwanted_graffiti: #4c5e7d;
+  --cat-fan_graffiti: #6b4f7d;
+  --cat-stickers_posters: #3f6b4a;
+  --cat-illegal_dump: #8a6a2f;
+  --cat-damaged_infrastructure: #a8503f;
+  --cat-other: #6e736c;
 }
 
-/* Category identity is carried by a distinct colour plus an icon. */
-[data-category='waste'],
-.pin--waste,
-.legend-swatch--waste {
-  --cat: var(--cat-waste);
-  --cat-tint: #fbf0dc;
+/* Category identity is carried by a muted earth/ink colour plus an icon. */
+[data-category='unwanted_graffiti'],
+.pin--unwanted_graffiti,
+.legend-swatch--unwanted_graffiti {
+  --cat: var(--cat-unwanted_graffiti);
+  --cat-tint: #e9ecf2;
 }
 
-[data-category='graffiti'],
-.pin--graffiti,
-.legend-swatch--graffiti {
-  --cat: var(--cat-graffiti);
-  --cat-tint: #ecebfb;
+[data-category='fan_graffiti'],
+.pin--fan_graffiti,
+.legend-swatch--fan_graffiti {
+  --cat: var(--cat-fan_graffiti);
+  --cat-tint: #efe9f2;
+}
+
+[data-category='stickers_posters'],
+.pin--stickers_posters,
+.legend-swatch--stickers_posters {
+  --cat: var(--cat-stickers_posters);
+  --cat-tint: #e7eee5;
+}
+
+[data-category='illegal_dump'],
+.pin--illegal_dump,
+.legend-swatch--illegal_dump {
+  --cat: var(--cat-illegal_dump);
+  --cat-tint: #f2ecdf;
 }
 
 [data-category='damaged_infrastructure'],
@@ -118,13 +132,6 @@
 .legend-swatch--damaged_infrastructure {
   --cat: var(--cat-damaged_infrastructure);
   --cat-tint: #fbe9e5;
-}
-
-[data-category='neglected_area'],
-.pin--neglected_area,
-.legend-swatch--neglected_area {
-  --cat: var(--cat-neglected_area);
-  --cat-tint: #e5f2e7;
 }
 
 [data-category='other'],
