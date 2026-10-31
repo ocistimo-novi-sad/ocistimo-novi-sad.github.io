@@ -15,6 +15,7 @@ import { isWithinBounds } from '../lib/geo';
 import { distanceInMeters } from '../lib/geo';
 import { toSerbianError } from '../services/errors';
 import { isFirebaseConfigured } from '../services/firebase';
+import { droppedImages, removeImages } from '../services/images';
 import {
   acceptEdit,
   approveReport as approveReportRecord,
@@ -641,6 +642,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
 
       applyReport(next);
+      // Photos the edit dropped, unless the kept approved version still shows them.
+      void removeImages(
+        droppedImages(report.imageUrls, [
+          ...content.imageUrls,
+          ...(next.previousVersion?.imageUrls ?? []),
+        ]),
+      );
       setComposeOpen(false);
       setComposeEditing(null);
       setComposeLocationState(null);
@@ -662,6 +670,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         throw error;
       }
       dropReport(report.id);
+      void removeImages([
+        ...new Set([
+          ...report.imageUrls,
+          ...(report.resolution?.imageUrls ?? []),
+          ...(report.previousVersion?.imageUrls ?? []),
+        ]),
+      ]);
       if (auth.isModerator && report.moderation === 'pending') {
         setPendingCount((count) => Math.max(0, count - 1));
       }
@@ -687,6 +702,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         previousVersion: undefined,
         ...moderatorStamp(),
       });
+      // The approved version is gone, so are the photos only it used.
+      void removeImages(
+        droppedImages(report.previousVersion?.imageUrls ?? [], report.imageUrls),
+      );
       setEditCount((count) => Math.max(0, count - 1));
       notify('success', 'Izmena je prihvaćena.');
     },
@@ -710,6 +729,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         previousVersion: undefined,
         ...moderatorStamp(),
       });
+      // Photos only the rolled-back edit used.
+      void removeImages(droppedImages(report.imageUrls, restored.imageUrls));
       setEditCount((count) => Math.max(0, count - 1));
       notify('success', 'Vraćena je prethodna verzija prijave.');
     },
@@ -720,6 +741,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     async (report: Report, imageUrls: string[], note: string) => {
       const resolution = await submitResolution(report.id, imageUrls, note);
       applyReport({ ...report, resolution });
+      // A new proof replaces a rejected one, with its photos.
+      void removeImages(droppedImages(report.resolution?.imageUrls ?? [], imageUrls));
       notify('success', 'Hvala! Sanacija je poslata moderatoru na potvrdu.');
     },
     [applyReport, notify],

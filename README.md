@@ -51,9 +51,17 @@ Korisnik bira lokaciju na mapi (ili koristi svoju trenutnu lokaciju) i popunjava
 - kategoriju;
 - lokaciju označenu na mapi, unutar područja Novog Sada;
 - adresu ili orijentir, opciono;
-- do tri fotografije (JPG, PNG ili WebP, najviše 5 MB po fotografiji), kada je funkcija za slanje fotografija podešena.
+- do tri fotografije (JPG, PNG ili WebP, do 20 MB po fotografiji).
 
 Pre slanja, korisnik može da proveri podatke i prilagodi lokaciju oznake. Aplikacija proverava obavezna polja, prikazuje napredak otpremanja fotografija i poruku o uspešnom slanju ili objašnjenje greške. Ako korisnik zatvori formu sa unetim podacima, aplikacija traži potvrdu pre odbacivanja.
+
+**Fotografije.** Fotografije sa telefona mogu da se dodaju onakve kakve jesu, jer ih aplikacija pre slanja sama obrađuje u pregledaču:
+- smanjuje ih na najviše 1600 px po dužoj strani i pravi sličicu za liste i mapu;
+- čuva ih u formatu WebP (u Safari-ju JPEG), obično ispod 400 KB;
+- ispravlja okretanje uspravnih fotografija;
+- **uklanja podatke iz fotografije (EXIF), uključujući GPS lokaciju telefona.**
+
+Fotografije se čuvaju u Firebase Storage-u. Kada se prijava obriše ili se fotografija ukloni izmenom, briše se i iz Storage-a.
 
 ### 3. Pronalaženje relevantnih prijava
 
@@ -81,7 +89,8 @@ Aplikacija sadrži poseban prikaz za akcije čišćenja, podeljen na **predstoje
 - mesto okupljanja, sa oznakom na mapi;
 - potrebnu opremu i potrepštine;
 - podatke o organizatoru i njegovu napomenu;
-- povezane prijave koje se tokom akcije mogu rešavati.
+- povezane prijave koje se tokom akcije mogu rešavati;
+- naslovnu fotografiju, a posle završene akcije i do šest fotografija sa akcije.
 
 Povezivanje više prijava sa jednom akcijom olakšava planiranje rada na nekoliko problema u istom delu grada.
 
@@ -142,7 +151,9 @@ Dizajn je usmeren na preglednost i brzo korišćenje: mapa ostaje u prvom planu,
 - Aplikacija sadrži demonstracioni režim sa primerima prijava i akcija. On se uključuje automatski kada Firebase nije podešen.
 - U demonstracionom režimu nove prijave čuvaju se samo u lokalnom pregledaču (`localStorage`). Ne dele se sa drugim korisnicima i nisu trajno sačuvane u zajedničkoj bazi.
 - Pravo zajedničko čuvanje prijava i prijavljivanje korisnika zahtevaju povezivanje aplikacije sa Firebase projektom.
-- Slanje fotografija je opciono i dostupno je tek kada je podešen servis za slike (Cloudinary). Bez njega se prijave šalju bez fotografija.
+- Slanje fotografija zahteva Firebase Storage (Blaze plan) i objavljena pravila iz `storage.rules`. Bez podešenog bucket-a (`VITE_FIREBASE_STORAGE_BUCKET`) prijave se šalju bez fotografija, a u demonstracionom režimu fotografije se ne otpremaju.
+- Fotografije se čitaju preko javnih adresa sa nasumičnim imenima, a izlistavanje foldera je zabranjeno. Ko ima tačnu adresu fotografije može da je otvori, pa i fotografije „posle” u dokazu sanacije pre nego što ga moderator potvrdi.
+- Ako slanje forme ne uspe pošto su fotografije već otpremljene, pa korisnik odustane, te fotografije ostaju u Storage-u. Automatsko čišćenje takvih fotografija još ne postoji.
 - Aplikacija trenutno nema komentare, obaveštenja putem e-pošte ni evidenciju prisustva volontera.
 - Pretraga adresa nije automatska; korisnik označava lokaciju na mapi i, po potrebi, unosi adresu kao tekst.
 - Promene se ne osvežavaju automatski u realnom vremenu; podaci se osvežavaju nakon relevantnih radnji ili dugmetom za osvežavanje.

@@ -1,13 +1,16 @@
 import { useState, type FormEvent } from 'react';
 import { TriangleAlert } from 'lucide-react';
-import { ACTION_STATUSES, APP } from '../../config';
+import { ACTION_STATUSES, APP, LIMITS } from '../../config';
+import { usePhotoUploads } from '../../hooks/usePhotoUploads';
 import { formatDateInput } from '../../lib/format';
 import { createActionRecord, updateActionRecord } from '../../services/actions';
 import { toSerbianError } from '../../services/errors';
+import { droppedImages, imagesEnabled, removeImages } from '../../services/images';
 import { useApp } from '../../state/app-context';
 import type { ActionStatus, CleanupAction, NewActionInput, Report } from '../../types';
 import { CategoryGlyph } from '../ui/CategoryGlyph';
 import { Spinner } from '../ui/EmptyState';
+import { PhotoPicker } from '../ui/PhotoPicker';
 import { StatusDot } from '../ui/StatusBadge';
 import { LocationPicker } from './LocationPicker';
 
@@ -71,6 +74,17 @@ export function ActionForm({
   );
   const [organizerNote, setOrganizerNote] = useState(action?.organizerNote ?? '');
   const [selectedReports, setSelectedReports] = useState<string[]>(action?.reportIds ?? []);
+  const cover = usePhotoUploads({
+    initialUrls: action?.coverUrl ? [action.coverUrl] : [],
+    max: LIMITS.actionCoverMax,
+    folder: 'action-images',
+  });
+  const results = usePhotoUploads({
+    initialUrls: action?.resultImageUrls ?? [],
+    max: LIMITS.actionResultsMax,
+    folder: 'action-images',
+  });
+  const [photoError, setPhotoError] = useState<string | null>(null);
 
   const [errors, setErrors] = useState<Errors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -141,6 +155,22 @@ export function ActionForm({
       .filter(Boolean)
       .slice(0, MAX_SUPPLIES);
 
+    setSaving(true);
+    setSubmitError(null);
+
+    // Photos upload first; already uploaded ones are reused on a retry.
+    const coverUpload = await cover.uploadAll();
+    const resultsUpload = coverUpload.error === undefined ? await results.uploadAll() : null;
+    if (coverUpload.error !== undefined || !resultsUpload || resultsUpload.error !== undefined) {
+      setSubmitError(
+        `Akcija nije sačuvana jer fotografija nije otpremljena: ${
+          coverUpload.error ?? resultsUpload?.error ?? ''
+        } Pokušajte ponovo.`,
+      );
+      setSaving(false);
+      return;
+    }
+
     const input: NewActionInput = {
       title: title.trim(),
       description: description.trim(),
@@ -153,13 +183,20 @@ export function ActionForm({
       supplies,
       organizerName: organizerName.trim(),
       organizerNote: organizerNote.trim(),
+      coverUrl: coverUpload.urls[0],
+      resultImageUrls: resultsUpload.urls,
     };
 
-    setSaving(true);
-    setSubmitError(null);
     try {
       if (action) {
         await updateActionRecord(action.id, input);
+        // Replaced or removed photos are no longer used anywhere.
+        void removeImages(
+          droppedImages(
+            [...(action.coverUrl ? [action.coverUrl] : []), ...(action.resultImageUrls ?? [])],
+            [...coverUpload.urls, ...resultsUpload.urls],
+          ),
+        );
         notify('success', 'Akcija je ažurirana.');
       } else {
         await createActionRecord(input);
@@ -240,6 +277,65 @@ export function ActionForm({
             </select>
             <p className="field__hint">Status menjajte kada se termin potvrdi ili akcija završi.</p>
           </div>
+        </div>
+
+        <div className="admin-form__section">
+          <p className="eyebrow">Fotografije</p>
+
+          {!imagesEnabled ? (
+            <div className="notice notice--warn">
+              <TriangleAlert size={14} aria-hidden="true" />
+              <p>Otpremanje fotografija nije podešeno. Akcija može biti sačuvana i bez njih.</p>
+            </div>
+          ) : (
+            <>
+              <div className="field">
+                <span className="field__label">
+                  Naslovna slika <span className="field__optional">opciono</span>
+                </span>
+                <PhotoPicker
+                  photos={cover.photos}
+                  onAdd={(files) => setPhotoError(cover.addFiles(files))}
+                  onRemove={cover.removePhoto}
+                  disabled={saving}
+                  max={cover.max}
+                  addLabel="Dodaj"
+                />
+                <p className="field__hint">
+                  Vidi se na kartici akcije i na vrhu njenog opisa. Na primer mesto pre čišćenja.
+                </p>
+              </div>
+
+              {status === 'completed' || results.photos.length > 0 ? (
+                <div className="field">
+                  <span className="field__label">
+                    Fotografije sa akcije <span className="field__optional">opciono</span>
+                  </span>
+                  <PhotoPicker
+                    photos={results.photos}
+                    onAdd={(files) => setPhotoError(results.addFiles(files))}
+                    onRemove={results.removePhoto}
+                    disabled={saving}
+                    max={results.max}
+                  />
+                  <p className="field__hint">
+                    Do {LIMITS.actionResultsMax} fotografija koje pokazuju šta je urađeno. Vide se u
+                    opisu završene akcije.
+                  </p>
+                </div>
+              ) : (
+                <p className="field__hint">
+                  Fotografije sa akcije možete dodati kada status promenite u „Završeno”.
+                </p>
+              )}
+
+              {photoError ? (
+                <p className="field__error" role="alert">
+                  {photoError}
+                </p>
+              ) : null}
+            </>
+          )}
         </div>
 
         <div className="admin-form__section">

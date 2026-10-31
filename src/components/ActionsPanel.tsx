@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { ACTION_STATUS_MAP } from '../config';
 import { formatDate, formatTime, formatWeekday, plural, splitDate } from '../lib/format';
+import { optimizedImageUrl } from '../services/images';
 import { useApp } from '../state/app-context';
 import type { CleanupAction } from '../types';
 import { EmptyState } from './ui/EmptyState';
@@ -30,10 +31,19 @@ function ActionCard({
       onClick={() => selectAction(action)}
       aria-pressed={selected}
     >
-      <span className="action-card__date" aria-hidden="true">
-        <strong>{date.day}</strong>
-        <span>{date.month}</span>
-      </span>
+      {action.coverUrl ? (
+        <span className="action-card__cover" aria-hidden="true">
+          <img src={optimizedImageUrl(action.coverUrl, 160)} alt="" loading="lazy" />
+          <span className="action-card__cover-date">
+            <strong>{date.day}</strong> {date.month}
+          </span>
+        </span>
+      ) : (
+        <span className="action-card__date" aria-hidden="true">
+          <strong>{date.day}</strong>
+          <span>{date.month}</span>
+        </span>
+      )}
 
       <span className="action-card__body">
         <span className="action-card__top">

@@ -7,6 +7,7 @@ import {
   type Firestore,
 } from 'firebase/firestore';
 import { getAuth, type Auth } from 'firebase/auth';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
 const env = import.meta.env;
 
@@ -35,6 +36,7 @@ export const firebaseProjectId = firebaseConfig.projectId || null;
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;
 let auth: Auth | null = null;
+let storage: FirebaseStorage | null = null;
 
 if (isFirebaseConfigured) {
   try {
@@ -50,12 +52,15 @@ if (isFirebaseConfigured) {
       db = getFirestore(app);
     }
     auth = getAuth(app);
+    // Photos live in Cloud Storage for Firebase; without a bucket the app
+    // simply runs without photo uploads.
+    if (firebaseConfig.storageBucket) storage = getStorage(app);
   } catch (error) {
     console.error('[Kuka i Motika] Firebase initialization failed', error);
   }
 }
 
-export { app, db, auth };
+export { app, db, auth, storage };
 
 export function requireDb(): Firestore {
   if (!db) {
@@ -69,4 +74,11 @@ export function requireAuth(): Auth {
     throw new Error('Firebase Authentication is not configured.');
   }
   return auth;
+}
+
+export function requireStorage(): FirebaseStorage {
+  if (!storage) {
+    throw new Error('Cloud Storage for Firebase is not configured.');
+  }
+  return storage;
 }

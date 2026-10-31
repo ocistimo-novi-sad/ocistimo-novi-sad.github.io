@@ -1,26 +1,47 @@
+import {
+  deleteObject,
+  ref,
+  uploadBytesResumable,
+  type FirebaseStorage,
+  type UploadMetadata,
+} from 'firebase/storage';
 import { LIMITS } from '../config';
+import { plural } from '../lib/format';
+import { prepareImage, type PreparedImage } from '../lib/image-processing';
 import { AppError } from './errors';
+import { auth, firebaseConfig, storage } from './firebase';
 import type { StoredImage } from '../types';
 
 /**
- * Image storage is deliberately modular.
+ * Photos are stored in Cloud Storage for Firebase. Each upload is shrunk in
+ * the browser first (see image-processing.ts) and stored twice: the full
+ * image and a small `_thumb` copy next to it, so lists and markers never load
+ * full-size photos.
  *
- * Why not Firebase Storage: Cloud Storage for Firebase requires the paid Blaze
- * plan for projects created after 30 October 2024, and this project must stay
- * on the free plan. The default adapter therefore uploads unsigned files to a
- * Cloudinary upload preset, which works from the browser without a backend.
- * Any other provider can be added by implementing the ImageStorage interface.
+ * Image storage stays behind the ImageStorage interface, so the provider can
+ * change without touching the components.
  */
+
+/** Report and proof photos, or admin photos of cleanup actions. */
+export type ImageFolder = 'report-images' | 'action-images';
 
 export interface ImageStorage {
   readonly id: string;
   readonly label: string;
   readonly enabled: boolean;
-  readonly maxFiles: number;
-  readonly maxBytes: number;
   readonly maxFileLabel: string;
-  upload(file: File, onProgress?: (percent: number) => void): Promise<StoredImage>;
+  /** `onProgress` starts once the shrunk image begins uploading. */
+  upload(
+    file: File,
+    folder: ImageFolder,
+    onProgress?: (percent: number) => void,
+  ): Promise<StoredImage>;
+  /** Best effort: failures are logged and never thrown. */
+  remove(urls: string[]): Promise<void>;
 }
+
+const MAX_FILE_LABEL = `${Math.round(LIMITS.imageMaxBytes / (1024 * 1024))} MB`;
+const MEDIA_BASE = 'https://firebasestorage.googleapis.com/v0/b/';
 
 function fileTooLarge(file: File): boolean {
   return file.size > LIMITS.imageMaxBytes;
@@ -31,19 +52,30 @@ function assertValidImage(file: File): void {
     throw new AppError('storage/type', 'Dozvoljene su JPG, PNG i WebP fotografije.');
   }
   if (fileTooLarge(file)) {
-    throw new AppError(
-      'storage/too-large',
-      `Fotografija je veća od ${Math.round(LIMITS.imageMaxBytes / (1024 * 1024))} MB.`,
-    );
+    throw new AppError('storage/too-large', `Fotografija je veća od ${MAX_FILE_LABEL}.`);
   }
+}
+
+/** Public URL without a download token; Storage rules allow reading these files. */
+function mediaUrl(bucket: string, path: string): string {
+  return `${MEDIA_BASE}${bucket}/o/${encodeURIComponent(path)}?alt=media`;
+}
+
+/** Storage path of a URL this app created, or null for any other URL. */
+function pathOf(url: string): string | null {
+  if (!url.startsWith(MEDIA_BASE)) return null;
+  const match = /\/o\/([^?]+)/.exec(url);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+function thumbPathOf(path: string): string {
+  return path.replace(/\.(webp|jpg)$/, '_thumb.$1');
 }
 
 class DisabledStorage implements ImageStorage {
   readonly id = 'none';
   readonly label = 'Nije podešeno';
   readonly enabled = false;
-  readonly maxFiles = 0;
-  readonly maxBytes = 0;
   readonly maxFileLabel = '0 MB';
 
   async upload(): Promise<StoredImage> {
@@ -52,116 +84,122 @@ class DisabledStorage implements ImageStorage {
       'Otpremanje fotografija nije podešeno za ovaj sajt. Prijava može biti poslata bez fotografija.',
     );
   }
-}
 
-interface CloudinaryResponse {
-  secure_url?: string;
-  public_id?: string;
-}
-
-class CloudinaryStorage implements ImageStorage {
-  readonly id = 'cloudinary';
-  readonly label = 'Cloudinary';
-  readonly enabled = true;
-  readonly maxFiles = LIMITS.imagesMax;
-  readonly maxBytes = LIMITS.imageMaxBytes;
-  readonly maxFileLabel = `${Math.round(LIMITS.imageMaxBytes / (1024 * 1024))} MB`;
-
-  constructor(
-    private readonly cloudName: string,
-    private readonly uploadPreset: string,
-    private readonly folder: string,
-  ) {}
-
-  upload(file: File, onProgress?: (percent: number) => void): Promise<StoredImage> {
-    assertValidImage(file);
-
-    return new Promise<StoredImage>((resolve, reject) => {
-      const body = new FormData();
-      body.append('file', file);
-      body.append('upload_preset', this.uploadPreset);
-      if (this.folder) body.append('folder', this.folder);
-
-      const request = new XMLHttpRequest();
-      request.open(
-        'POST',
-        `https://api.cloudinary.com/v1_1/${encodeURIComponent(this.cloudName)}/image/upload`,
-      );
-      request.timeout = 60_000;
-
-      request.upload.onprogress = (event) => {
-        if (event.lengthComputable && onProgress) {
-          onProgress(Math.round((event.loaded / event.total) * 100));
-        }
-      };
-
-      request.onload = () => {
-        let payload: CloudinaryResponse & { error?: { message?: string } } = {};
-        try {
-          payload = JSON.parse(request.responseText) as typeof payload;
-        } catch {
-          reject(
-            new AppError(
-              'storage/upload-failed',
-              'Odgovor servisa za fotografije nije razumljiv. Pokušajte ponovo.',
-            ),
-          );
-          return;
-        }
-
-        if (request.status >= 200 && request.status < 300 && payload.secure_url) {
-          resolve({ url: payload.secure_url, publicId: payload.public_id });
-          return;
-        }
-
-        const detail = payload.error?.message;
-        reject(
-          new AppError(
-            'storage/upload-failed',
-            detail
-              ? `Otpremanje nije uspelo: ${detail}`
-              : 'Otpremanje fotografije nije uspelo. Proverite podešavanja otpremanja.',
-          ),
-        );
-      };
-
-      request.onerror = () =>
-        reject(
-          new AppError(
-            'storage/network',
-            'Otpremanje fotografije nije uspelo zbog mreže. Pokušajte ponovo.',
-          ),
-        );
-      request.ontimeout = () =>
-        reject(
-          new AppError(
-            'storage/network',
-            'Otpremanje fotografije je isteklo. Pokušajte sa manjom fotografijom.',
-          ),
-        );
-
-      request.send(body);
-    });
+  async remove(): Promise<void> {
+    // Nothing was ever uploaded.
   }
 }
 
-const cloudName = (import.meta.env.VITE_CLOUDINARY_CLOUD_NAME ?? '').trim();
-const uploadPreset = (import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET ?? '').trim();
-const folder = (import.meta.env.VITE_CLOUDINARY_FOLDER ?? 'ns-cisto').trim();
-const provider = (import.meta.env.VITE_IMAGE_PROVIDER ?? '').trim().toLowerCase();
+class FirebaseImageStorage implements ImageStorage {
+  readonly id = 'firebase';
+  readonly label = 'Firebase Storage';
+  readonly enabled = true;
+  readonly maxFileLabel = MAX_FILE_LABEL;
+
+  constructor(
+    private readonly storage: FirebaseStorage,
+    private readonly bucket: string,
+  ) {}
+
+  async upload(
+    file: File,
+    folder: ImageFolder,
+    onProgress?: (percent: number) => void,
+  ): Promise<StoredImage> {
+    assertValidImage(file);
+    const uid = auth?.currentUser?.uid;
+    if (!uid) {
+      throw new AppError('storage/unauthenticated', 'Prijavite se da biste dodali fotografiju.');
+    }
+
+    let prepared: PreparedImage;
+    try {
+      prepared = await prepareImage(file);
+    } catch {
+      throw new AppError(
+        'storage/processing',
+        'Fotografiju nije moguće obraditi. Probajte drugu fotografiju (JPG, PNG ili WebP).',
+      );
+    }
+
+    // Random names: files are publicly readable by URL, so they must not be guessable.
+    const path = `${folder}/${uid}/${crypto.randomUUID()}.${prepared.ext}`;
+    const metadata: UploadMetadata = {
+      contentType: prepared.contentType,
+      cacheControl: 'public, max-age=31536000, immutable',
+    };
+
+    await this.put(path, prepared.full, metadata, (fraction) =>
+      onProgress?.(Math.round(fraction * 90)),
+    );
+    await this.put(thumbPathOf(path), prepared.thumb, metadata, (fraction) =>
+      onProgress?.(90 + Math.round(fraction * 10)),
+    );
+
+    return { url: mediaUrl(this.bucket, path), path };
+  }
+
+  private put(
+    path: string,
+    blob: Blob,
+    metadata: UploadMetadata,
+    onFraction: (fraction: number) => void,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const task = uploadBytesResumable(ref(this.storage, path), blob, metadata);
+      task.on(
+        'state_changed',
+        (snapshot) => {
+          if (snapshot.totalBytes > 0) onFraction(snapshot.bytesTransferred / snapshot.totalBytes);
+        },
+        reject,
+        () => resolve(),
+      );
+    });
+  }
+
+  async remove(urls: string[]): Promise<void> {
+    const paths = urls
+      .map(pathOf)
+      .filter((path): path is string => path !== null)
+      .flatMap((path) => [path, thumbPathOf(path)]);
+
+    await Promise.all(
+      paths.map((path) =>
+        deleteObject(ref(this.storage, path)).catch((error: unknown) => {
+          // Not fatal: the record is already gone or changed; the file is just left over.
+          console.warn('[Kuka i Motika] Photo not deleted', path, error);
+        }),
+      ),
+    );
+  }
+}
+
+const bucket = firebaseConfig.storageBucket;
 
 export const imageStorage: ImageStorage =
-  (provider === 'cloudinary' || (!provider && cloudName && uploadPreset)) &&
-  cloudName &&
-  uploadPreset
-    ? new CloudinaryStorage(cloudName, uploadPreset, folder)
-    : new DisabledStorage();
+  storage && bucket ? new FirebaseImageStorage(storage, bucket) : new DisabledStorage();
 
 export const imagesEnabled = imageStorage.enabled;
 
-export function validateImageFiles(files: File[], existingCount: number): string | null {
-  if (existingCount + files.length > imageStorage.maxFiles) {
-    return `Dozvoljeno je najviše ${imageStorage.maxFiles} fotografije po prijavi.`;
+/** Deletes photos no longer used anywhere. Best effort, never throws. */
+export function removeImages(urls: string[]): Promise<void> {
+  return urls.length > 0 ? imageStorage.remove(urls) : Promise.resolve();
+}
+
+/** Photos in `before` that `after` no longer uses. */
+export function droppedImages(before: string[], after: string[]): string[] {
+  const kept = new Set(after);
+  return before.filter((url) => !kept.has(url));
+}
+
+export function validateImageFiles(
+  files: File[],
+  existingCount: number,
+  max: number,
+): string | null {
+  if (existingCount + files.length > max) {
+    return `Dozvoljeno je najviše ${max} ${plural(max, 'fotografija', 'fotografije', 'fotografija')}.`;
   }
   for (const file of files) {
     if (!(LIMITS.imageTypes as readonly string[]).includes(file.type)) {
@@ -174,9 +212,11 @@ export function validateImageFiles(files: File[], existingCount: number): string
   return null;
 }
 
-/** Adds Cloudinary delivery transformations for lighter gallery loading. */
+/**
+ * Small displays (lists, markers, review queues) get the `_thumb` copy;
+ * anything larger gets the full image.
+ */
 export function optimizedImageUrl(url: string, width = 1000): string {
-  if (!url.includes('res.cloudinary.com') || !url.includes('/upload/')) return url;
-  if (/\/upload\/[^/]*(f_auto|q_auto|w_\d)/.test(url)) return url;
-  return url.replace('/upload/', `/upload/f_auto,q_auto,c_limit,w_${width}/`);
+  if (width > LIMITS.imageThumbPx || !url.startsWith(MEDIA_BASE)) return url;
+  return url.replace(/\.(webp|jpg)\?alt=media$/, '_thumb.$1?alt=media');
 }
