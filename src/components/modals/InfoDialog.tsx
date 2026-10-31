@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Database, Image as ImageIcon, LockKeyhole, Map, ShieldCheck } from 'lucide-react';
-import { APP } from '../../config';
+import { APP, ROLE_LABELS } from '../../config';
 import { isFirebaseConfigured, firebaseProjectId } from '../../services/firebase';
 import { imageStorage, imagesEnabled } from '../../services/images';
 import { useApp } from '../../state/app-context';
@@ -114,11 +114,9 @@ export function InfoDialog() {
             value={
               !auth.configured
                 ? 'Nije primenljivo'
-                : auth.isAdmin
-                  ? 'Administrator'
-                  : auth.user
-                    ? 'Član zajednice'
-                    : 'Posetilac'
+                : auth.user
+                  ? ROLE_LABELS[auth.role]
+                  : 'Posetilac'
             }
             ok={Boolean(auth.user)}
           />

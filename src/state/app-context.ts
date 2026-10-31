@@ -8,6 +8,7 @@ import type {
   Coordinates,
   Filters,
   Report,
+  ReportContent,
   ReportStatus,
   View,
 } from '../types';
@@ -25,6 +26,8 @@ export type ModalState =
   | { kind: 'flag'; reportId: string }
   | { kind: 'info' }
   | { kind: 'admin'; editActionId?: string }
+  | { kind: 'moderation' }
+  | { kind: 'my-reports' }
   | { kind: 'lightbox'; images: string[]; index: number }
   | null;
 
@@ -68,9 +71,21 @@ export interface AppContextValue {
 
   composeOpen: boolean;
   composeLocation: Coordinates | null;
+  /** The report being edited in the compose drawer, or null for a new one. */
+  composeEditing: Report | null;
   startCompose: () => void;
   cancelCompose: () => void;
   setComposeLocation: (coordinates: Coordinates) => void;
+  editReport: (report: Report) => void;
+  /** Saves an edit; throws so the form can show the error. */
+  submitReportEdit: (report: Report, content: ReportContent) => Promise<void>;
+  deleteReport: (report: Report) => Promise<void>;
+
+  /** The signed-in author's reports, published or not. */
+  myReports: Report[];
+  /** Own reports that are not public yet, drawn as draft pins for the author. */
+  myUnpublishedReports: Report[];
+  reloadMyReports: () => Promise<void>;
 
   modal: ModalState;
   openModal: (modal: ModalState) => void;
@@ -83,7 +98,18 @@ export interface AppContextValue {
   dismissToast: (id: string) => void;
 
   addCreatedReport: (report: Report) => void;
+  storeCreatedReport: (report: Report) => void;
   moderateReport: (reportId: string, status: ReportStatus) => Promise<void>;
+
+  /** Reports waiting for review (moderators only, otherwise 0). */
+  pendingCount: number;
+  /** Published reports whose author edits wait for a look (moderators only). */
+  editCount: number;
+  refreshModerationCounts: () => Promise<void>;
+  approvePendingReport: (report: Report) => Promise<void>;
+  rejectPendingReport: (report: Report, reason: string) => Promise<void>;
+  acceptReportEdit: (report: Report) => Promise<void>;
+  revertReportEdit: (report: Report) => Promise<void>;
 
   mapRef: React.RefObject<LeafletMap | null>;
   flyTo: (

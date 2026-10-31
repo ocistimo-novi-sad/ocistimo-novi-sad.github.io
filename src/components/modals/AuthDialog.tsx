@@ -81,9 +81,10 @@ export function AuthDialog({
         </div>
         <p className="auth-card__text">{reason}</p>
 
-        {auth.isAdmin ? (
+        {auth.isModerator ? (
           <p className="auth-card__admin">
-            <ShieldCheck size={13} aria-hidden="true" /> Prijavljeni ste kao administrator.
+            <ShieldCheck size={13} aria-hidden="true" /> Prijavljeni ste kao{' '}
+            {auth.isAdmin ? 'administrator' : 'moderator'}.
           </p>
         ) : null}
 

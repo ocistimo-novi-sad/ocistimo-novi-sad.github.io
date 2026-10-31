@@ -9,12 +9,14 @@ import {
   type User,
 } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from '../services/firebase';
-import { checkIsAdmin, ensureProfile } from '../services/profile';
+import { ensureProfile } from '../services/profile';
+import { fetchRole } from '../services/roles';
 import { errorCode, toSerbianError } from '../services/errors';
+import type { UserRole } from '../types';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [role, setRole] = useState<UserRole>('user');
   const [ready, setReady] = useState(!isFirebaseConfigured);
   const [signingIn, setSigningIn] = useState(false);
   const [signInError, setSignInError] = useState<string | null>(null);
@@ -35,16 +37,17 @@ export function useAuth() {
         setReady(true);
 
         if (!nextUser) {
-          setIsAdmin(false);
+          setRole('user');
           return;
         }
 
-        void checkIsAdmin(nextUser.uid).then((admin) => {
-          if (!cancelled) setIsAdmin(admin);
+        void fetchRole(nextUser.uid).then((nextRole) => {
+          if (!cancelled) setRole(nextRole);
         });
         void ensureProfile(
           nextUser.uid,
           nextUser.displayName ?? 'Član zajednice',
+          nextUser.email,
           nextUser.photoURL,
         );
       },
@@ -101,7 +104,10 @@ export function useAuth() {
 
   return {
     user,
-    isAdmin,
+    role,
+    isAdmin: role === 'admin',
+    /** Admins hold every moderator right as well. */
+    isModerator: role !== 'user',
     ready,
     signingIn,
     signInError,

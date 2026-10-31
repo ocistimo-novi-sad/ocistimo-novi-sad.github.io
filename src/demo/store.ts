@@ -30,6 +30,7 @@ function readStorage(): Report[] {
         ...item,
         createdAt: new Date(item.createdAt),
         source: 'demo' as const,
+        moderation: item.moderation ?? 'approved',
         imageUrls: Array.isArray(item.imageUrls) ? item.imageUrls : [],
       }))
       .filter((item) => Number.isFinite(item.createdAt.getTime()));
@@ -73,6 +74,10 @@ export function addDemoReport(input: NewReportInput, imageUrls: string[]): Repor
     latitude: input.latitude,
     longitude: input.longitude,
     address: input.address,
+    communityCan: input.communityCan,
+    helpNeeded: input.helpNeeded,
+    // Demo mode has no moderators, so a demo report is published at once.
+    moderation: 'approved',
     createdByName: input.createdByName || 'Vi (demo)',
     createdAt: new Date(),
     createdBy: 'demo-local',

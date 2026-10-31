@@ -89,7 +89,7 @@ export function FlagsPanel() {
     return (
       <EmptyState
         icon={<ShieldAlert size={20} />}
-        title="Nema prijavljenog sadržaja"
+        title="Nema označenog sadržaja"
         description="Kada neko prijavi prijavu kao netačnu, uvredljivu ili duplu, pojaviće se ovde."
         action={
           <button type="button" className="btn btn--quiet btn--sm" onClick={() => void load()}>

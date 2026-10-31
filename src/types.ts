@@ -18,6 +18,12 @@ export type ActionStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled'
 
 export type FlagReason = 'spam' | 'duplicate' | 'misleading' | 'inappropriate' | 'other';
 
+/** Visibility of a report. Only approved reports are public. */
+export type ModerationState = 'pending' | 'approved' | 'rejected';
+
+/** Admins are set in the Firebase console; moderators are granted by admins. */
+export type UserRole = 'user' | 'moderator' | 'admin';
+
 export interface Coordinates {
   latitude: number;
   longitude: number;
@@ -33,17 +39,35 @@ export interface Bounds {
 /** Where a record came from. Demo records never claim to be in the database. */
 export type DataSource = 'firestore' | 'demo';
 
-export interface Report extends Coordinates {
-  id: string;
+/** The part of a report its author writes and may later edit. */
+export interface ReportContent extends Coordinates {
   title: string;
   description: string;
   category: Category;
+  imageUrls: string[];
+  address?: string;
+  /** What the neighbourhood can do on its own. Missing on older reports. */
+  communityCan?: string;
+  /** What the neighbourhood needs help with. Missing on older reports. */
+  helpNeeded?: string;
+}
+
+export interface Report extends ReportContent {
+  id: string;
   status: ReportStatus;
   createdAt: Date;
   createdBy: string;
   createdByName?: string;
-  imageUrls: string[];
-  address?: string;
+  /** Set when the author edited the report after it was published. */
+  editedAt?: Date | null;
+  /** A published report's edit is live but waits for a moderator's look. */
+  editReview?: 'pending';
+  /** Last approved content, kept while an edit waits for review. */
+  previousVersion?: ReportContent;
+  moderation: ModerationState;
+  rejectionReason?: string;
+  moderatedBy?: string;
+  moderatedByName?: string;
   moderatedAt?: Date | null;
   source: DataSource;
 }
@@ -71,6 +95,8 @@ export interface NewReportInput {
   latitude: number;
   longitude: number;
   address?: string;
+  communityCan: string;
+  helpNeeded: string;
   createdByName?: string;
 }
 
@@ -98,7 +124,17 @@ export interface ContentFlag {
   createdAt: Date;
 }
 
-export type SortMode = 'newest' | 'oldest' | 'nearest' | 'status';
+export interface UserProfile {
+  uid: string;
+  displayName: string;
+  email?: string;
+  photoURL?: string;
+  createdAt: Date | null;
+  lastSeenAt: Date | null;
+  role: UserRole;
+}
+
+export type SortMode ='newest' | 'oldest' | 'nearest' | 'status';
 
 export interface Filters {
   query: string;

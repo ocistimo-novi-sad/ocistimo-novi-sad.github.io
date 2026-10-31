@@ -89,6 +89,19 @@ export function useReports() {
     );
   }, []);
 
+  /** Replaces a known report or adds one fetched outside the public pages. */
+  const upsertReport = useCallback((next: Report) => {
+    setReports((current) =>
+      current.some((report) => report.id === next.id)
+        ? current.map((report) => (report.id === next.id ? next : report))
+        : [next, ...current],
+    );
+  }, []);
+
+  const removeReport = useCallback((reportId: string) => {
+    setReports((current) => current.filter((report) => report.id !== reportId));
+  }, []);
+
   return {
     reports,
     phase,
@@ -99,5 +112,7 @@ export function useReports() {
     loadMore,
     addReport,
     updateReport,
+    upsertReport,
+    removeReport,
   };
 }

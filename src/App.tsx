@@ -6,6 +6,8 @@ import { DiscoveryPanel } from './components/DiscoveryPanel';
 import { Header } from './components/Header';
 import { MapCanvas } from './components/MapCanvas';
 import { MobileTabBar } from './components/MobileTabBar';
+import { ModerationPanel } from './components/moderation/ModerationPanel';
+import { MyReportsPanel } from './components/my/MyReportsPanel';
 import { ReportDetail } from './components/ReportDetail';
 import { Toasts } from './components/Toasts';
 import { AuthDialog } from './components/modals/AuthDialog';
@@ -28,6 +30,10 @@ function ModalHost() {
       return <InfoDialog />;
     case 'admin':
       return <AdminPanel />;
+    case 'moderation':
+      return <ModerationPanel />;
+    case 'my-reports':
+      return <MyReportsPanel />;
     case 'lightbox':
       return (
         <Lightbox
@@ -42,7 +48,8 @@ function ModalHost() {
 }
 
 function AppShell() {
-  const { view, mobileTab, selectedReport, selectedAction, composeOpen } = useApp();
+  const { view, mobileTab, selectedReport, selectedAction, composeOpen, composeEditing } =
+    useApp();
   const drawerOpen = composeOpen || Boolean(selectedReport) || Boolean(selectedAction);
 
   return (
@@ -59,7 +66,8 @@ function AppShell() {
         </div>
 
         {composeOpen ? (
-          <ComposeDrawer />
+          // Keyed so switching between a new report and an edit starts fresh.
+          <ComposeDrawer key={composeEditing?.id ?? 'new'} />
         ) : selectedReport ? (
           <ReportDetail />
         ) : selectedAction ? (

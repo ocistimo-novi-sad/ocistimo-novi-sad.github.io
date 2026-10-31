@@ -78,7 +78,7 @@ export async function resolveFlag(
   const db = requireDb();
   const user = requireAuth().currentUser;
   if (!user) {
-    throw new AppError('unauthenticated', 'Prijavite se kao administrator.');
+    throw new AppError('unauthenticated', 'Prijavite se kao moderator.');
   }
 
   await updateDoc(doc(db, 'flags', flagId), {

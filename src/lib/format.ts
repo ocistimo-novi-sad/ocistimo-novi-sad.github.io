@@ -67,6 +67,16 @@ export function formatRelativeTime(date: Date): string {
   return formatDate(date);
 }
 
+/** Up to two initials for an avatar placeholder. */
+export function initials(name: string): string {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
 export function formatCoordinates(latitude: number, longitude: number): string {
   const latHemisphere = latitude >= 0 ? 'N' : 'S';
   const lngHemisphere = longitude >= 0 ? 'E' : 'W';
