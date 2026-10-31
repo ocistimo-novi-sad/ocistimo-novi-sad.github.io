@@ -188,6 +188,7 @@
     left: 0;
     width: 100%;
     max-width: none;
+    max-height: calc(100dvh - var(--header-h) - env(safe-area-inset-top, 0px));
     height: 64vh;
     border-top: 1px solid var(--line);
     border-left: 0;
