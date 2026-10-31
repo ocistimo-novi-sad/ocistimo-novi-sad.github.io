@@ -3,6 +3,7 @@ import { Marker, Tooltip, useMap } from 'react-leaflet';
 import Supercluster from 'supercluster';
 import { CATEGORIES, CATEGORY_MAP, MODERATION_LABELS, STATUS_MAP } from '../../config';
 import { formatRelativeTime, plural } from '../../lib/format';
+import { optimizedImageUrl } from '../../services/images';
 import type { Category, Report } from '../../types';
 import { clusterIcon, draftIcon, reportIcon, type CategoryCounts } from './map-icons';
 
@@ -28,7 +29,12 @@ function ReportTooltipContent({ report }: { report: Report }) {
   return (
     <div className="ns-tooltip__rich">
       {thumbnail ? (
-        <img className="ns-tooltip__thumb" src={thumbnail} alt="" loading="lazy" />
+        <img
+          className="ns-tooltip__thumb"
+          src={optimizedImageUrl(thumbnail, 160)}
+          alt=""
+          loading="lazy"
+        />
       ) : null}
       <div className="ns-tooltip__body">
         <span className="ns-tooltip__label">

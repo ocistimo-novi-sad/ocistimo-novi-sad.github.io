@@ -1,13 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
+import { LIMITS } from '../config';
 import { toSerbianError } from '../services/errors';
-import { imageStorage, validateImageFiles } from '../services/images';
+import {
+  imageStorage,
+  optimizedImageUrl,
+  validateImageFiles,
+  type ImageFolder,
+} from '../services/images';
 
 export interface PhotoDraft {
   id: string;
   /** Missing for photos that were already uploaded earlier. */
   file?: File;
   previewUrl: string;
-  status: 'pending' | 'uploading' | 'done' | 'error';
+  /** `processing`: being shrunk in the browser, before the upload starts. */
+  status: 'pending' | 'processing' | 'uploading' | 'done' | 'error';
   progress: number;
   url?: string;
   error?: string;
@@ -15,11 +22,19 @@ export interface PhotoDraft {
 
 export type UploadResult = { urls: string[]; error?: undefined } | { urls?: undefined; error: string };
 
+export interface PhotoUploadOptions {
+  /** Already uploaded photos, for edit forms. */
+  initialUrls?: string[];
+  /** Most photos the form accepts. */
+  max?: number;
+  folder?: ImageFolder;
+}
+
 /** Already uploaded photos, shown like finished drafts. */
 function storedPhotos(urls: string[]): PhotoDraft[] {
   return urls.map((url, index) => ({
     id: `stored-${index}`,
-    previewUrl: url,
+    previewUrl: optimizedImageUrl(url, 240),
     status: 'done',
     progress: 100,
     url,
@@ -28,9 +43,13 @@ function storedPhotos(urls: string[]): PhotoDraft[] {
 
 /**
  * Photo drafts with local previews, uploaded only when the form is sent.
- * Shared by the report form and the "fixed" proof dialog.
+ * Shared by the report form, the "fixed" proof dialog and the action form.
  */
-export function usePhotoUploads(initialUrls: string[] = []) {
+export function usePhotoUploads({
+  initialUrls = [],
+  max = LIMITS.imagesMax,
+  folder = 'report-images',
+}: PhotoUploadOptions = {}) {
   const [photos, setPhotos] = useState<PhotoDraft[]>(() => storedPhotos(initialUrls));
   const previewUrls = useRef<string[]>([]);
 
@@ -43,7 +62,7 @@ export function usePhotoUploads(initialUrls: string[] = []) {
   const addFiles = (fileList: FileList | null): string | null => {
     if (!fileList || fileList.length === 0) return null;
     const incoming = Array.from(fileList);
-    const error = validateImageFiles(incoming, photos.length);
+    const error = validateImageFiles(incoming, photos.length, max);
     if (error) return error;
 
     const drafts: PhotoDraft[] = incoming.map((file) => ({
@@ -70,14 +89,18 @@ export function usePhotoUploads(initialUrls: string[] = []) {
     if (!file) return draft.url ? { urls: [draft.url] } : { error: 'Fotografija nije dostupna.' };
     setPhotos((prev) =>
       prev.map((item) =>
-        item.id === draft.id ? { ...item, status: 'uploading', error: undefined } : item,
+        item.id === draft.id
+          ? { ...item, status: 'processing', progress: 0, error: undefined }
+          : item,
       ),
     );
 
     try {
-      const result = await imageStorage.upload(file, (percent) => {
+      const result = await imageStorage.upload(file, folder, (percent) => {
         setPhotos((prev) =>
-          prev.map((item) => (item.id === draft.id ? { ...item, progress: percent } : item)),
+          prev.map((item) =>
+            item.id === draft.id ? { ...item, status: 'uploading', progress: percent } : item,
+          ),
         );
       });
       setPhotos((prev) =>
@@ -117,5 +140,5 @@ export function usePhotoUploads(initialUrls: string[] = []) {
     return { urls };
   };
 
-  return { photos, addFiles, removePhoto, uploadAll };
+  return { photos, addFiles, removePhoto, uploadAll, max };
 }

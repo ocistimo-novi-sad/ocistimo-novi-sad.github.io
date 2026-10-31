@@ -101,6 +101,10 @@ export interface CleanupAction extends Coordinates {
   supplies: string[];
   organizerName: string;
   organizerNote: string;
+  /** Cover photo shown on the action card and at the top of its detail. */
+  coverUrl?: string;
+  /** Photos from the finished action, up to 6. */
+  resultImageUrls?: string[];
   createdAt: Date;
   createdBy: string;
   source: DataSource;
@@ -130,6 +134,8 @@ export interface NewActionInput {
   supplies: string[];
   organizerName: string;
   organizerNote: string;
+  coverUrl?: string;
+  resultImageUrls: string[];
 }
 
 export interface ContentFlag {
@@ -166,6 +172,8 @@ export interface Filters {
 export type View = 'map' | 'actions';
 
 export interface StoredImage {
+  /** Public URL of the full image; the thumbnail is derived from it. */
   url: string;
-  publicId?: string;
+  /** Path of the full image in the storage bucket. */
+  path: string;
 }

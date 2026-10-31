@@ -16,8 +16,10 @@ import { formatCoordinates, formatDate, formatTime, formatWeekday, plural } from
 import { openStreetMapUrl } from '../lib/geo';
 import { updateActionStatus } from '../services/actions';
 import { toSerbianError } from '../services/errors';
+import { optimizedImageUrl } from '../services/images';
 import { useApp } from '../state/app-context';
 import { Drawer } from './Drawer';
+import { PhotoGallery } from './PhotoGallery';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { SectionLabel, Spinner } from './ui/EmptyState';
 import { ActionStatusBadge } from './ui/ActionStatusBadge';
@@ -42,6 +44,7 @@ export function ActionDetail() {
   if (!action) return null;
 
   const isPast = action.date.getTime() < Date.now();
+  const resultImages = action.resultImageUrls ?? [];
 
   const cancelAction = async () => {
     setCancelling(true);
@@ -89,6 +92,19 @@ export function ActionDetail() {
 
       <h2 className="detail-title">{action.title}</h2>
 
+      {action.coverUrl ? (
+        <button
+          type="button"
+          className="action-cover"
+          onClick={() =>
+            openModal({ kind: 'lightbox', images: [action.coverUrl as string], index: 0 })
+          }
+          aria-label="Uvećaj naslovnu sliku akcije"
+        >
+          <img src={optimizedImageUrl(action.coverUrl, 1000)} alt="" />
+        </button>
+      ) : null}
+
       <div className="action-hero">
         <div className="action-hero__date">
           <span className="action-hero__weekday">{formatWeekday(action.date)}</span>
@@ -113,6 +129,22 @@ export function ActionDetail() {
         <SectionLabel>O akciji</SectionLabel>
         <p className="detail-prose">{action.description}</p>
       </section>
+
+      {action.status === 'completed' && resultImages.length > 0 ? (
+        <section className="detail-section">
+          <div className="section-head-row">
+            <SectionLabel>Sa akcije</SectionLabel>
+            <span className="section-count">
+              {resultImages.length}{' '}
+              {plural(resultImages.length, 'fotografija', 'fotografije', 'fotografija')}
+            </span>
+          </div>
+          <PhotoGallery
+            images={resultImages}
+            onOpen={(index) => openModal({ kind: 'lightbox', images: resultImages, index })}
+          />
+        </section>
+      ) : null}
 
       <section className="detail-section">
         <SectionLabel>Mesto okupljanja</SectionLabel>

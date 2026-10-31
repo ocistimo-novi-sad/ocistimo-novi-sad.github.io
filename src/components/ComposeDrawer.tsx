@@ -160,9 +160,9 @@ export function ComposeDrawer() {
   const [helpNeeded, setHelpNeeded] = useState(initial.helpNeeded);
   const [address, setAddress] = useState(initial.address);
   const [submitted, setSubmitted] = useState<Report | null>(null);
-  const { photos, addFiles: addPhotoFiles, removePhoto, uploadAll } = usePhotoUploads(
-    initial.imageUrls,
-  );
+  const { photos, addFiles: addPhotoFiles, removePhoto, uploadAll } = usePhotoUploads({
+    initialUrls: initial.imageUrls,
+  });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -849,9 +849,9 @@ export function ComposeDrawer() {
             />
 
             <p className="field__hint">
-              Najviše {LIMITS.imagesMax} fotografije, do{' '}
-              {Math.round(LIMITS.imageMaxBytes / (1024 * 1024))} MB. JPG, PNG ili WebP.
-              Fotografije se otpremaju pri objavljivanju.
+              Najviše {LIMITS.imagesMax} fotografije, JPG, PNG ili WebP. Fotografije sa telefona
+              možete dodati takve kakve jesu: aplikacija ih sama smanjuje i uklanja podatke o
+              lokaciji pre slanja.
             </p>
           </>
         )}

@@ -155,7 +155,10 @@ service cloud.firestore {
         && data.organizerName is string
         && data.organizerName.size() <= 80
         && data.organizerNote is string
-        && data.organizerNote.size() <= 600;
+        && data.organizerNote.size() <= 600
+        && optionalString(data, 'coverUrl', 500)
+        && (!('resultImageUrls' in data)
+            || (data.resultImageUrls is list && data.resultImageUrls.size() <= 6));
     }
 
     // ---------------------------------------------------------------------
@@ -361,7 +364,8 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly([
              'title', 'description', 'date', 'meetingPoint', 'latitude',
              'longitude', 'status', 'reportIds', 'supplies',
-             'organizerName', 'organizerNote', 'createdAt', 'createdBy'
+             'organizerName', 'organizerNote', 'coverUrl', 'resultImageUrls',
+             'createdAt', 'createdBy'
            ])
         && validActionFields(request.resource.data)
         && request.resource.data.createdAt == request.time

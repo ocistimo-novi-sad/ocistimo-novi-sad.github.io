@@ -9,6 +9,7 @@ export function PhotoPicker({
   onAdd,
   onRemove,
   disabled,
+  max = LIMITS.imagesMax,
   addButtonId,
   addLabel = 'Dodaj',
 }: {
@@ -16,6 +17,7 @@ export function PhotoPicker({
   onAdd: (files: FileList | null) => void;
   onRemove: (photo: PhotoDraft) => void;
   disabled: boolean;
+  max?: number;
   addButtonId?: string;
   addLabel?: string;
 }) {
@@ -27,6 +29,11 @@ export function PhotoPicker({
         {photos.map((photo) => (
           <div key={photo.id} className={`photo-draft photo-draft--${photo.status}`}>
             <img src={photo.previewUrl} alt="" />
+            {photo.status === 'processing' ? (
+              <span className="photo-draft__stage" role="status">
+                Smanjujem…
+              </span>
+            ) : null}
             {photo.status === 'uploading' ? (
               <span className="photo-draft__bar">
                 <span style={{ width: `${photo.progress}%` }} />
@@ -54,7 +61,7 @@ export function PhotoPicker({
           </div>
         ))}
 
-        {photos.length < LIMITS.imagesMax ? (
+        {photos.length < max ? (
           <button
             type="button"
             id={addButtonId}
@@ -65,7 +72,7 @@ export function PhotoPicker({
             <ImagePlus size={18} aria-hidden="true" />
             <span>{addLabel}</span>
             <span className="photo-add__count">
-              {photos.length}/{LIMITS.imagesMax}
+              {photos.length}/{max}
             </span>
           </button>
         ) : null}
@@ -75,7 +82,7 @@ export function PhotoPicker({
         ref={fileInputRef}
         type="file"
         accept={LIMITS.imageTypes.join(',')}
-        multiple
+        multiple={max > 1}
         style={{ display: 'none' }}
         onChange={(event) => {
           onAdd(event.target.files);

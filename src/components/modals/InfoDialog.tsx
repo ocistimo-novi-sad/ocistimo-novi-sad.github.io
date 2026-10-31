@@ -131,12 +131,11 @@ export function InfoDialog() {
       </div>
 
       <div className="info-block">
-        <h4>Besplatan plan i ograničenja</h4>
+        <h4>Hosting i fotografije</h4>
         <p>
-          Aplikacija je napravljena za Firebase Spark (besplatan) plan i statički hosting na GitHub
-          Pages. Firebase Storage za nove projekte zahteva plaćeni Blaze plan, zato fotografije idu
-          preko Cloudinary besplatnog plana, a aplikacija radi i bez njega. Detalji o limitima i
-          podešavanju su u README-u.
+          Aplikacija je statički sajt na GitHub Pages, a podaci i fotografije su u Firebase-u.
+          Fotografije se pre slanja smanjuju u vašem pregledaču i čuvaju u Firebase Storage-u, bez
+          podataka o lokaciji iz telefona. Detalji o podešavanju su u README-u.
         </p>
       </div>
 

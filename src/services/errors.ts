@@ -53,6 +53,15 @@ const MESSAGES: Record<string, string> = {
   'storage/too-large': 'Fotografija je veća od dozvoljene veličine.',
   'storage/network': 'Otpremanje fotografije nije uspelo zbog mreže. Pokušajte ponovo.',
   'storage/upload-failed': 'Otpremanje fotografije nije uspelo. Pokušajte ponovo.',
+  'storage/processing':
+    'Fotografiju nije moguće obraditi. Probajte drugu fotografiju (JPG, PNG ili WebP).',
+  'storage/unauthorized':
+    'Otpremanje je odbijeno. Proverite da li ste prijavljeni i da li su Storage pravila objavljena.',
+  'storage/unauthenticated': 'Prijavite se da biste dodali fotografiju.',
+  'storage/retry-limit-exceeded':
+    'Otpremanje fotografije nije uspelo zbog mreže. Pokušajte ponovo.',
+  'storage/quota-exceeded': 'Prostor za fotografije je trenutno pun. Javite se administratoru.',
+  'storage/canceled': 'Otpremanje fotografije je prekinuto.',
 };
 
 export function toSerbianError(error: unknown, fallback: string): string {

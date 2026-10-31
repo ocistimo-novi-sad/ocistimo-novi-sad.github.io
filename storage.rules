@@ -1,0 +1,56 @@
+rules_version = '2';
+
+// Kuka i Motika: Cloud Storage for Firebase Security Rules
+// Deploy with:  firebase deploy --only storage
+// Photos are shrunk in the browser and stored as a full image plus a
+// `_thumb` copy. Files are read through public URLs; their names are random
+// UUIDs and listing is denied, so photos of unpublished reports cannot be
+// discovered. The first deploy asks to let these rules read Firestore
+// (roles live in /admins and /moderators).
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid));
+    }
+
+    function isModerator() {
+      return isAdmin()
+        || (signedIn()
+            && firestore.exists(/databases/(default)/documents/moderators/$(request.auth.uid)));
+    }
+
+    // Matches what the app uploads: a WebP or JPEG under 3 MB with a
+    // random name, as a full image or its thumbnail.
+    function validImage(fileName) {
+      return request.resource.size < 3 * 1024 * 1024
+        && request.resource.contentType.matches('image/(webp|jpeg)')
+        && fileName.matches('^[A-Za-z0-9-]+(_thumb)?[.](webp|jpg)$');
+    }
+
+    // Report photos and proof-of-fix photos, in the uploader's own folder.
+    match /report-images/{uid}/{fileName} {
+      allow get: if true;
+      allow create: if signedIn() && request.auth.uid == uid && validImage(fileName);
+      allow delete: if (signedIn() && request.auth.uid == uid) || isModerator();
+    }
+
+    // Cover and result photos of cleanup actions, uploaded by admins.
+    match /action-images/{uid}/{fileName} {
+      allow get: if true;
+      allow create: if isAdmin() && request.auth.uid == uid && validImage(fileName);
+      allow delete: if isAdmin();
+    }
+
+    // Everything else is closed, including listing any folder.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

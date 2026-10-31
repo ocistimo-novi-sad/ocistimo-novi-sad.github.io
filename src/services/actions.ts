@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteField,
   doc,
   getDocs,
   limit,
@@ -64,6 +65,8 @@ export function mapAction(id: string, data: DocumentData): CleanupAction | null 
     supplies: asStringList(data.supplies),
     organizerName: asString(data.organizerName),
     organizerNote: asString(data.organizerNote),
+    coverUrl: asString(data.coverUrl) || undefined,
+    resultImageUrls: asStringList(data.resultImageUrls),
     createdAt: asDate(data.createdAt) ?? new Date(),
     createdBy: asString(data.createdBy),
     source: 'firestore',
@@ -95,6 +98,7 @@ function actionPayload(input: NewActionInput): Record<string, unknown> {
     supplies: input.supplies,
     organizerName: input.organizerName,
     organizerNote: input.organizerNote,
+    resultImageUrls: input.resultImageUrls,
   };
 }
 
@@ -105,11 +109,14 @@ export async function createActionRecord(input: NewActionInput): Promise<void> {
     throw new AppError('unauthenticated', 'Prijavite se kao administrator.');
   }
 
-  await addDoc(collection(db, 'actions'), {
+  const payload: Record<string, unknown> = {
     ...actionPayload(input),
     createdAt: serverTimestamp(),
     createdBy: user.uid,
-  });
+  };
+  if (input.coverUrl) payload.coverUrl = input.coverUrl;
+
+  await addDoc(collection(db, 'actions'), payload);
 }
 
 export async function updateActionRecord(
@@ -122,7 +129,10 @@ export async function updateActionRecord(
     throw new AppError('unauthenticated', 'Prijavite se kao administrator.');
   }
 
-  await updateDoc(doc(db, 'actions', actionId), actionPayload(input));
+  await updateDoc(doc(db, 'actions', actionId), {
+    ...actionPayload(input),
+    coverUrl: input.coverUrl || deleteField(),
+  });
 }
 
 export async function updateActionStatus(

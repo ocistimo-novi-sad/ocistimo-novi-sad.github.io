@@ -208,8 +208,14 @@ export const LIMITS = {
   resolutionNoteMax: 500,
   addressMax: 160,
   imagesMax: 3,
-  imageMaxBytes: 5 * 1024 * 1024,
+  /** Largest original accepted; photos are shrunk in the browser before upload. */
+  imageMaxBytes: 20 * 1024 * 1024,
   imageTypes: ['image/jpeg', 'image/png', 'image/webp'],
+  /** Longer side of the stored full image and of its thumbnail, in pixels. */
+  imageFullPx: 1600,
+  imageThumbPx: 480,
+  actionCoverMax: 1,
+  actionResultsMax: 6,
   reportsPageSize: 80,
   actionsPageSize: 60,
 } as const;
