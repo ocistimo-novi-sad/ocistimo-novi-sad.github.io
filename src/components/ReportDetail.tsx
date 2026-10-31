@@ -318,7 +318,7 @@ export function ReportDetail() {
     editReport,
     openModal,
     selectAction,
-    flyTo,
+    showReportOnMap,
     notify,
   } = useApp();
 
@@ -577,7 +577,7 @@ export function ReportDetail() {
             <button
               type="button"
               className="btn btn--quiet btn--sm"
-              onClick={() => flyTo(report, undefined, { accountForDrawer: true })}
+              onClick={() => showReportOnMap(report)}
             >
               Prikaži na mapi
             </button>
