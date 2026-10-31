@@ -354,6 +354,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSelectedActionId(null);
   }, []);
 
+  /**
+   * ova funkcija sluzi da bi se nakon zahtjeva da se prikaze gdje je prijava izvrsena, 
+   * dok na telefonu gasi prijavu i (nadam se) prikaze na mapi gdje je prijava.
+   */
+  const showReportOnMap = useCallback(
+    (report: Report) => {
+      if (window.innerWidth > 900) {
+        flyTo(report, APP.focusZoom, { accountForDrawer: true });
+        return;
+      }
+
+      clearSelection();
+      window.requestAnimationFrame(() => flyTo(report, APP.focusZoom));
+    },
+    [clearSelection, flyTo],
+  );
+
   const openCompose = useCallback(() => {
     setSelectedReportId(null);
     setSelectedActionId(null);
@@ -900,6 +917,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       relatedAction,
       actionReports,
       selectReport,
+      showReportOnMap,
       selectAction,
       clearSelection,
       closeSelection: clearSelection,
@@ -971,6 +989,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       relatedAction,
       actionReports,
       selectReport,
+      showReportOnMap,
       selectAction,
       clearSelection,
       view,

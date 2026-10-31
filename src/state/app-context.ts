@@ -61,6 +61,7 @@ export interface AppContextValue {
   relatedAction: CleanupAction | null;
   actionReports: Report[];
   selectReport: (report: Report, options?: { fly?: boolean }) => void;
+  showReportOnMap: (report: Report) => void;
   selectAction: (action: CleanupAction, options?: { fly?: boolean }) => void;
   clearSelection: () => void;
   closeSelection: () => void;
