@@ -1,18 +1,27 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, LogOut, ShieldCheck, UserRound } from 'lucide-react';
+import {
+  ChevronDown,
+  ClipboardCheck,
+  LogOut,
+  NotebookText,
+  Settings,
+  UserRound,
+} from 'lucide-react';
+import { ROLE_LABELS } from '../config';
+import { initials } from '../lib/format';
 import { useApp } from '../state/app-context';
 
-function initials(name: string): string {
-  return name
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? '')
-    .join('');
-}
-
 export function AccountMenu() {
-  const { auth, openModal, notify } = useApp();
+  const { auth, openModal, notify, pendingCount, editCount, resolutionCount, myReports } =
+    useApp();
+  // Author's reports that need a fix: a rejected report or a rejected proof.
+  const rejectedCount = myReports.filter(
+    (report) =>
+      report.moderation === 'rejected' ||
+      (report.status !== 'resolved' && report.resolution?.state === 'rejected'),
+  ).length;
+  const reviewCount = pendingCount + editCount + resolutionCount;
+  const attention = rejectedCount + reviewCount;
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -63,8 +72,9 @@ export function AccountMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((value) => !value)}
-        aria-label={`Nalog: ${name}`}
+        aria-label={attention > 0 ? `Nalog: ${name}, ima novosti` : `Nalog: ${name}`}
       >
+        {attention > 0 ? <span className="account__alert" aria-hidden="true" /> : null}
         {auth.user.photoURL ? (
           <img className="account__avatar" src={auth.user.photoURL} alt="" referrerPolicy="no-referrer" />
         ) : (
@@ -80,7 +90,47 @@ export function AccountMenu() {
           <div className="account__identity">
             <span className="account__name">{name}</span>
             <span className="account__email">{auth.user.email}</span>
+            {auth.role !== 'user' ? (
+              <span className={`account__role account__role--${auth.role}`}>
+                {ROLE_LABELS[auth.role]}
+              </span>
+            ) : null}
           </div>
+          <button
+            type="button"
+            role="menuitem"
+            className="account__item"
+            onClick={() => {
+              setOpen(false);
+              openModal({ kind: 'my-reports' });
+            }}
+          >
+            <NotebookText size={15} aria-hidden="true" />
+            Moje prijave
+            {rejectedCount > 0 ? (
+              <span
+                className="account__count account__count--alert"
+                title={`${rejectedCount} za ispravku`}
+              >
+                {rejectedCount}
+              </span>
+            ) : null}
+          </button>
+          {auth.isModerator ? (
+            <button
+              type="button"
+              role="menuitem"
+              className="account__item"
+              onClick={() => {
+                setOpen(false);
+                openModal({ kind: 'moderation' });
+              }}
+            >
+              <ClipboardCheck size={15} aria-hidden="true" />
+              Moderacija
+              {reviewCount > 0 ? <span className="account__count">{reviewCount}</span> : null}
+            </button>
+          ) : null}
           {auth.isAdmin ? (
             <button
               type="button"
@@ -91,7 +141,7 @@ export function AccountMenu() {
                 openModal({ kind: 'admin' });
               }}
             >
-              <ShieldCheck size={15} aria-hidden="true" />
+              <Settings size={15} aria-hidden="true" />
               Administracija
             </button>
           ) : null}

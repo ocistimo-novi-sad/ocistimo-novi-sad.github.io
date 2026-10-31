@@ -15,7 +15,25 @@ import { isWithinBounds } from '../lib/geo';
 import { distanceInMeters } from '../lib/geo';
 import { toSerbianError } from '../services/errors';
 import { isFirebaseConfigured } from '../services/firebase';
-import { updateReportStatus } from '../services/reports';
+import {
+  acceptEdit,
+  approveReport as approveReportRecord,
+  approveResolution,
+  countEditedReports,
+  countPendingReports,
+  countPendingResolutions,
+  deleteReportRecord,
+  fetchMyReports,
+  fetchReport,
+  markResolved,
+  rejectReport as rejectReportRecord,
+  rejectResolution,
+  revertEdit,
+  submitResolution,
+  updateOwnReport,
+  updateReportAsModerator,
+  updateReportStatus,
+} from '../services/reports';
 import {
   AppContext,
   type AppContextValue,
@@ -30,6 +48,7 @@ import type {
   Coordinates,
   Filters,
   Report,
+  ReportContent,
   ReportStatus,
   View,
 } from '../types';
@@ -57,7 +76,7 @@ function boundsOfMap(map: LeafletMap): Filters['bounds'] {
 export function AppProvider({ children }: { children: ReactNode }) {
   const auth = useAuth();
   const {
-    reports,
+    reports: storedReports,
     phase: reportsPhase,
     error: reportsError,
     hasMore: hasMoreReports,
@@ -66,7 +85,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
     loadMore: loadMoreReportsRaw,
     addReport,
     updateReport,
+    upsertReport,
+    removeReport,
   } = useReports();
+
+  // The signed-in author's own reports, published or not. Kept apart from the
+  // public pages so a reload of the map does not drop them.
+  const [myReports, setMyReports] = useState<Report[]>([]);
+
+  // The store also holds unpublished reports a moderator or author opened.
+  // Everything public (map, list, counts) sees approved reports only.
+  const reports = useMemo(
+    () => storedReports.filter((report) => report.moderation === 'approved'),
+    [storedReports],
+  );
+  const knownReports = useMemo(() => {
+    const ids = new Set(storedReports.map((report) => report.id));
+    return [...storedReports, ...myReports.filter((report) => !ids.has(report.id))];
+  }, [myReports, storedReports]);
+  const myUnpublishedReports = useMemo(
+    () => myReports.filter((report) => report.moderation !== 'approved'),
+    [myReports],
+  );
   const {
     actions,
     phase: actionsPhase,
@@ -86,17 +126,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeLocation, setComposeLocationState] = useState<Coordinates | null>(null);
+  const [composeEditing, setComposeEditing] = useState<Report | null>(null);
   const [modal, setModal] = useState<ModalState>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [userPosition, setUserPosition] = useState<
     (Coordinates & { accuracy: number }) | null
   >(null);
   const [locating, setLocating] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [editCount, setEditCount] = useState(0);
+  const [resolutionCount, setResolutionCount] = useState(0);
 
   const mapRef = useRef<LeafletMap | null>(null);
   const pendingIntentRef = useRef<PendingIntent | null>(null);
   const toastTimers = useRef<Map<string, number>>(new Map());
   const toastCounter = useRef(0);
+  const deepLinkRef = useRef<string | null>(
+    new URLSearchParams(window.location.search).get('prijava'),
+  );
 
   useEffect(() => {
     const timers = toastTimers.current;
@@ -152,8 +199,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const selectedReport = useMemo(
-    () => reports.find((report) => report.id === selectedReportId) ?? null,
-    [reports, selectedReportId],
+    () => knownReports.find((report) => report.id === selectedReportId) ?? null,
+    [knownReports, selectedReportId],
   );
   const selectedAction = useMemo(
     () => actions.find((action) => action.id === selectedActionId) ?? null,
@@ -311,6 +358,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSelectedReportId(null);
     setSelectedActionId(null);
     setComposeOpen(true);
+    setComposeEditing(null);
     setComposeLocationState(null);
     setViewState('map');
     setMobileTabState('map');
@@ -328,7 +376,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const cancelCompose = useCallback(() => {
     setComposeOpen(false);
+    setComposeEditing(null);
     setComposeLocationState(null);
+  }, []);
+
+  /** Opens the report form prefilled with an existing report. */
+  const editReport = useCallback((report: Report) => {
+    setSelectedReportId(null);
+    setSelectedActionId(null);
+    setModal(null);
+    setComposeEditing(report);
+    setComposeLocationState({ latitude: report.latitude, longitude: report.longitude });
+    setComposeOpen(true);
+    setViewState('map');
+    setMobileTabState('map');
   }, []);
 
   const setComposeLocation = useCallback((coordinates: Coordinates) => {
@@ -382,6 +443,56 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [addReport, flyTo, resetFilters],
   );
 
+  const signedInUid = auth.user?.uid ?? null;
+
+  /** Puts a changed report everywhere it is known: the store and "my reports". */
+  const applyReport = useCallback(
+    (report: Report) => {
+      upsertReport(report);
+      if (report.createdBy && report.createdBy === signedInUid) {
+        setMyReports((current) =>
+          current.some((item) => item.id === report.id)
+            ? current.map((item) => (item.id === report.id ? report : item))
+            : [report, ...current],
+        );
+      }
+    },
+    [signedInUid, upsertReport],
+  );
+
+  const dropReport = useCallback(
+    (reportId: string) => {
+      removeReport(reportId);
+      setMyReports((current) => current.filter((report) => report.id !== reportId));
+      setSelectedReportId((current) => (current === reportId ? null : current));
+    },
+    [removeReport],
+  );
+
+  /** Keeps a just-created, still unpublished report without showing it. */
+  const storeCreatedReport = useCallback(
+    (report: Report) => {
+      applyReport(report);
+    },
+    [applyReport],
+  );
+
+  const reloadMyReports = useCallback(async () => {
+    if (!isFirebaseConfigured || !signedInUid) {
+      setMyReports([]);
+      return;
+    }
+    try {
+      setMyReports(await fetchMyReports(signedInUid));
+    } catch {
+      // Not fatal: the public map still works; "Moje prijave" shows its own error.
+    }
+  }, [signedInUid]);
+
+  useEffect(() => {
+    void reloadMyReports();
+  }, [reloadMyReports]);
+
   const reloadReports = useCallback(async () => {
     await loadReports();
   }, [loadReports]);
@@ -411,6 +522,329 @@ export function AppProvider({ children }: { children: ReactNode }) {
     },
     [notify, updateReport],
   );
+
+  const refreshModerationCounts = useCallback(async () => {
+    if (!isFirebaseConfigured || !auth.isModerator) {
+      setPendingCount(0);
+      setEditCount(0);
+      setResolutionCount(0);
+      return;
+    }
+    try {
+      const [pending, edits, resolutions] = await Promise.all([
+        countPendingReports(),
+        countEditedReports(),
+        countPendingResolutions(),
+      ]);
+      setPendingCount(pending);
+      setEditCount(edits);
+      setResolutionCount(resolutions);
+    } catch {
+      // A badge is a hint only; the queue itself reports load errors.
+    }
+  }, [auth.isModerator]);
+
+  useEffect(() => {
+    void refreshModerationCounts();
+  }, [refreshModerationCounts]);
+
+  const approvePendingReport = useCallback(
+    async (report: Report) => {
+      try {
+        await approveReportRecord(report.id);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Prijavu nije moguće odobriti.'));
+        throw error;
+      }
+      applyReport({
+        ...report,
+        moderation: 'approved',
+        rejectionReason: undefined,
+        moderatedAt: new Date(),
+        moderatedBy: auth.user?.uid,
+        moderatedByName: auth.user?.displayName ?? undefined,
+      });
+      if (report.moderation === 'pending') {
+        setPendingCount((count) => Math.max(0, count - 1));
+      }
+      notify('success', 'Prijava je odobrena i objavljena na mapi.');
+    },
+    [applyReport, auth.user, notify],
+  );
+
+  const rejectPendingReport = useCallback(
+    async (report: Report, reason: string) => {
+      try {
+        await rejectReportRecord(report.id, reason);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Prijavu nije moguće odbiti.'));
+        throw error;
+      }
+
+      applyReport({
+        ...report,
+        moderation: 'rejected',
+        rejectionReason: reason,
+        moderatedAt: new Date(),
+        moderatedBy: auth.user?.uid,
+        moderatedByName: auth.user?.displayName ?? undefined,
+      });
+      if (report.moderation === 'pending') {
+        setPendingCount((count) => Math.max(0, count - 1));
+      }
+      notify('success', 'Prijava je odbijena. Autor vidi razlog u aplikaciji.');
+    },
+    [applyReport, auth.user, notify],
+  );
+
+  const moderatorStamp = useCallback(
+    (): Partial<Report> => ({
+      moderatedAt: new Date(),
+      moderatedBy: auth.user?.uid,
+      moderatedByName: auth.user?.displayName ?? undefined,
+    }),
+    [auth.user],
+  );
+
+  const submitReportEdit = useCallback(
+    async (report: Report, content: ReportContent) => {
+      let next: Report;
+      let message: string;
+      if (auth.isModerator) {
+        await updateReportAsModerator(report.id, content);
+        next = { ...report, ...content, ...moderatorStamp() };
+        message = 'Izmene su sačuvane.';
+      } else {
+        const changes = await updateOwnReport(report, content);
+        next = { ...report, ...changes };
+        message =
+          report.moderation === 'approved'
+            ? 'Izmena je sačuvana i vidljiva. Moderator će je pregledati.'
+            : 'Prijava je ispravljena i ponovo poslata na pregled.';
+      }
+
+      applyReport(next);
+      setComposeOpen(false);
+      setComposeEditing(null);
+      setComposeLocationState(null);
+      setSelectedReportId(next.id);
+      setSelectedActionId(null);
+      setViewState('map');
+      setMobileTabState('map');
+      notify('success', message);
+    },
+    [applyReport, auth.isModerator, moderatorStamp, notify],
+  );
+
+  const deleteReport = useCallback(
+    async (report: Report) => {
+      try {
+        await deleteReportRecord(report.id, auth.isModerator);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Prijavu nije moguće obrisati.'));
+        throw error;
+      }
+      dropReport(report.id);
+      if (auth.isModerator && report.moderation === 'pending') {
+        setPendingCount((count) => Math.max(0, count - 1));
+      }
+      if (auth.isModerator && report.editReview === 'pending') {
+        setEditCount((count) => Math.max(0, count - 1));
+      }
+      notify('success', 'Prijava je obrisana.');
+    },
+    [auth.isModerator, dropReport, notify],
+  );
+
+  const acceptReportEdit = useCallback(
+    async (report: Report) => {
+      try {
+        await acceptEdit(report.id);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Izmenu nije moguće prihvatiti.'));
+        throw error;
+      }
+      applyReport({
+        ...report,
+        editReview: undefined,
+        previousVersion: undefined,
+        ...moderatorStamp(),
+      });
+      setEditCount((count) => Math.max(0, count - 1));
+      notify('success', 'Izmena je prihvaćena.');
+    },
+    [applyReport, moderatorStamp, notify],
+  );
+
+  const revertReportEdit = useCallback(
+    async (report: Report) => {
+      let restored: ReportContent;
+      try {
+        restored = await revertEdit(report.id);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Prethodnu verziju nije moguće vratiti.'));
+        throw error;
+      }
+      applyReport({
+        ...report,
+        ...restored,
+        editedAt: null,
+        editReview: undefined,
+        previousVersion: undefined,
+        ...moderatorStamp(),
+      });
+      setEditCount((count) => Math.max(0, count - 1));
+      notify('success', 'Vraćena je prethodna verzija prijave.');
+    },
+    [applyReport, moderatorStamp, notify],
+  );
+
+  const submitReportResolution = useCallback(
+    async (report: Report, imageUrls: string[], note: string) => {
+      const resolution = await submitResolution(report.id, imageUrls, note);
+      applyReport({ ...report, resolution });
+      notify('success', 'Hvala! Sanacija je poslata moderatoru na potvrdu.');
+    },
+    [applyReport, notify],
+  );
+
+  const approveReportResolution = useCallback(
+    async (report: Report) => {
+      try {
+        await approveResolution(report.id);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Sanaciju nije moguće potvrditi.'));
+        throw error;
+      }
+      applyReport({
+        ...report,
+        status: 'resolved',
+        resolution: report.resolution
+          ? {
+              ...report.resolution,
+              state: 'approved',
+              rejectionReason: undefined,
+              reviewedAt: new Date(),
+              reviewedBy: auth.user?.uid,
+            }
+          : undefined,
+        ...moderatorStamp(),
+      });
+      setResolutionCount((count) => Math.max(0, count - 1));
+      notify('success', 'Sanacija je potvrđena. Prijava je rešena.');
+    },
+    [applyReport, auth.user, moderatorStamp, notify],
+  );
+
+  const rejectReportResolution = useCallback(
+    async (report: Report, reason: string) => {
+      try {
+        await rejectResolution(report.id, reason);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Sanaciju nije moguće odbiti.'));
+        throw error;
+      }
+      applyReport({
+        ...report,
+        resolution: report.resolution
+          ? {
+              ...report.resolution,
+              state: 'rejected',
+              rejectionReason: reason,
+              reviewedAt: new Date(),
+              reviewedBy: auth.user?.uid,
+            }
+          : undefined,
+        ...moderatorStamp(),
+      });
+      setResolutionCount((count) => Math.max(0, count - 1));
+      notify('success', 'Sanacija nije potvrđena. Autor vidi razlog u aplikaciji.');
+    },
+    [applyReport, auth.user, moderatorStamp, notify],
+  );
+
+  const markReportResolved = useCallback(
+    async (report: Report) => {
+      try {
+        await markResolved(report.id);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Prijavu nije moguće označiti kao rešenu.'));
+        throw error;
+      }
+      applyReport({
+        ...report,
+        status: 'resolved',
+        resolution: {
+          state: 'approved',
+          imageUrls: [],
+          note: '',
+          byModerator: true,
+          submittedAt: null,
+          reviewedAt: new Date(),
+          reviewedBy: auth.user?.uid,
+        },
+        ...moderatorStamp(),
+      });
+      if (report.resolution?.state === 'pending') {
+        setResolutionCount((count) => Math.max(0, count - 1));
+      }
+      notify('success', 'Prijava je označena kao rešena.');
+    },
+    [applyReport, auth.user, moderatorStamp, notify],
+  );
+
+  // Deep link (?prijava=<id>) from shared links. Waits for auth so
+  // authors and moderators can open reports that are not public yet.
+  useEffect(() => {
+    const reportId = deepLinkRef.current;
+    if (!reportId || reportsPhase === 'loading' || !auth.ready) return;
+    deepLinkRef.current = null;
+
+    const clearLink = () => {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('prijava');
+      window.history.replaceState(null, '', url);
+    };
+
+    const known = knownReports.find((report) => report.id === reportId);
+    if (known) {
+      selectReport(known);
+      return;
+    }
+    if (!isFirebaseConfigured) {
+      clearLink();
+      return;
+    }
+
+    fetchReport(reportId)
+      .then((report) => {
+        if (!report) {
+          clearLink();
+          notify('info', 'Prijava nije pronađena. Možda je obrisana.');
+          return;
+        }
+        applyReport(report);
+        selectReport(report);
+      })
+      .catch(() => {
+        clearLink();
+        notify(
+          'info',
+          auth.user
+            ? 'Ova prijava još nije javna.'
+            : 'Ova prijava još nije javna. Prijavite se ako ste njen autor.',
+        );
+      });
+  }, [applyReport, auth.ready, auth.user, knownReports, notify, reportsPhase, selectReport]);
+
+  // Keep the address bar pointing at the open report so it can be shared.
+  useEffect(() => {
+    if (deepLinkRef.current) return;
+    const url = new URL(window.location.href);
+    if (selectedReportId) url.searchParams.set('prijava', selectedReportId);
+    else url.searchParams.delete('prijava');
+    if (url.href !== window.location.href) window.history.replaceState(null, '', url);
+  }, [selectedReportId]);
 
   const locateUser = useCallback(() => {
     if (!('geolocation' in navigator)) {
@@ -475,9 +909,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setMobileTab,
       composeOpen,
       composeLocation,
+      composeEditing,
       startCompose,
       cancelCompose,
       setComposeLocation,
+      editReport,
+      submitReportEdit,
+      deleteReport,
+      myReports,
+      myUnpublishedReports,
+      reloadMyReports,
       modal,
       openModal: setModal,
       closeModal,
@@ -487,7 +928,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
       notify,
       dismissToast,
       addCreatedReport,
+      storeCreatedReport,
       moderateReport,
+      pendingCount,
+      editCount,
+      refreshModerationCounts,
+      approvePendingReport,
+      rejectPendingReport,
+      acceptReportEdit,
+      revertReportEdit,
+      resolutionCount,
+      submitReportResolution,
+      approveReportResolution,
+      rejectReportResolution,
+      markReportResolved,
       mapRef,
       flyTo,
       userPosition,
@@ -525,9 +979,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setMobileTab,
       composeOpen,
       composeLocation,
+      composeEditing,
       startCompose,
       cancelCompose,
       setComposeLocation,
+      editReport,
+      submitReportEdit,
+      deleteReport,
+      myReports,
+      myUnpublishedReports,
+      reloadMyReports,
       modal,
       closeModal,
       requestFlag,
@@ -536,7 +997,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
       notify,
       dismissToast,
       addCreatedReport,
+      storeCreatedReport,
       moderateReport,
+      pendingCount,
+      editCount,
+      refreshModerationCounts,
+      approvePendingReport,
+      rejectPendingReport,
+      acceptReportEdit,
+      revertReportEdit,
+      resolutionCount,
+      submitReportResolution,
+      approveReportResolution,
+      rejectReportResolution,
+      markReportResolved,
       flyTo,
       userPosition,
       locating,

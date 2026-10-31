@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Marker, Tooltip, useMap } from 'react-leaflet';
 import Supercluster from 'supercluster';
-import { CATEGORIES, CATEGORY_MAP, STATUS_MAP } from '../../config';
+import { CATEGORIES, CATEGORY_MAP, MODERATION_LABELS, STATUS_MAP } from '../../config';
 import { formatRelativeTime, plural } from '../../lib/format';
 import type { Category, Report } from '../../types';
-import { clusterIcon, reportIcon, type CategoryCounts } from './map-icons';
+import { clusterIcon, draftIcon, reportIcon, type CategoryCounts } from './map-icons';
 
 interface PointProps {
   reportId: string;
@@ -196,13 +196,63 @@ export function ReportMarkers({
         <Marker
           key={`selected-${selectedReport.id}`}
           position={[selectedReport.latitude, selectedReport.longitude]}
-          icon={reportIcon(selectedReport, true)}
+          icon={
+            selectedReport.moderation === 'approved'
+              ? reportIcon(selectedReport, true)
+              : draftIcon(selectedReport.category, true)
+          }
           zIndexOffset={900}
           bubblingMouseEvents={false}
           interactive={interactive}
           eventHandlers={{ click: () => onSelect(selectedReport) }}
         />
       ) : null}
+    </>
+  );
+}
+
+/**
+ * The signed-in author's reports that are not public yet. Few and never
+ * clustered, drawn hollow so they cannot be mistaken for published ones.
+ */
+export function DraftMarkers({
+  reports,
+  selectedReportId,
+  onSelect,
+  interactive = true,
+}: {
+  reports: Report[];
+  selectedReportId: string | null;
+  onSelect: (report: Report) => void;
+  interactive?: boolean;
+}) {
+  return (
+    <>
+      {reports
+        .filter((report) => report.id !== selectedReportId)
+        .map((report) => (
+          <Marker
+            key={`draft-${report.id}`}
+            position={[report.latitude, report.longitude]}
+            icon={draftIcon(report.category)}
+            zIndexOffset={250}
+            bubblingMouseEvents={false}
+            interactive={interactive}
+            eventHandlers={{
+              click: () => {
+                if (interactive) onSelect(report);
+              },
+            }}
+          >
+            <Tooltip direction="top" offset={[0, -18]} className="ns-tooltip">
+              <span className="ns-tooltip__label">{MODERATION_LABELS[report.moderation].label}</span>
+              <br />
+              <strong>{report.title}</strong>
+              <br />
+              <span className="ns-tooltip__meta">Vidite je samo vi i moderatori.</span>
+            </Tooltip>
+          </Marker>
+        ))}
     </>
   );
 }

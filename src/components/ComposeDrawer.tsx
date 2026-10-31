@@ -1,51 +1,139 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   Check,
+  Clock3,
   Crosshair,
-  ImagePlus,
   Info,
   Navigation,
+  Plus,
   TriangleAlert,
-  X,
 } from 'lucide-react';
-import { APP, CATEGORIES, DEFAULT_CATEGORY, LIMITS } from '../config';
+import {
+  APP,
+  CATEGORIES,
+  COMMUNITY_CAN_PRESETS,
+  DEFAULT_CATEGORY,
+  HELP_NEEDED_PRESETS,
+  LIMITS,
+} from '../config';
 import { addDemoReport } from '../demo/store';
 import { formatCoordinates } from '../lib/format';
 import { isInServiceArea } from '../lib/geo';
 import { toSerbianError } from '../services/errors';
 import { isFirebaseConfigured } from '../services/firebase';
-import { imageStorage, imagesEnabled, validateImageFiles } from '../services/images';
+import { usePhotoUploads } from '../hooks/usePhotoUploads';
+import { imagesEnabled } from '../services/images';
 import { createReportRecord } from '../services/reports';
 import { useApp } from '../state/app-context';
-import type { Category, NewReportInput } from '../types';
+import type { Category, NewReportInput, Report } from '../types';
 import { Drawer } from './Drawer';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { Spinner } from './ui/EmptyState';
+import { PhotoPicker } from './ui/PhotoPicker';
 
-interface PhotoDraft {
-  id: string;
-  file: File;
-  previewUrl: string;
-  status: 'pending' | 'uploading' | 'done' | 'error';
-  progress: number;
-  url?: string;
-  error?: string;
-}
-
-type FieldKey = 'location' | 'title' | 'category' | 'description' | 'photos';
+type FieldKey =
+  | 'location'
+  | 'title'
+  | 'category'
+  | 'description'
+  | 'communityCan'
+  | 'helpNeeded'
+  | 'photos';
 type FieldErrors = Partial<Record<FieldKey, string>>;
 
 const TITLE_MIN = LIMITS.titleMin;
 const TITLE_MAX = LIMITS.titleMax;
 const DESC_MIN = LIMITS.descriptionMin;
 const DESC_MAX = LIMITS.descriptionMax;
+const COMMUNITY_MIN = LIMITS.communityMin;
+const COMMUNITY_MAX = LIMITS.communityMax;
+
+/** Appends a quick pick on its own line, unless the text already has it. */
+function appendPreset(value: string, preset: string): string {
+  const trimmed = value.trimEnd();
+  if (trimmed.includes(preset)) return value;
+  const next = trimmed ? `${trimmed}\n${preset}` : preset;
+  return next.slice(0, COMMUNITY_MAX);
+}
+
+function PlanField({
+  id,
+  label,
+  hint,
+  placeholder,
+  presets,
+  value,
+  error,
+  disabled,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  hint: string;
+  placeholder: string;
+  presets: string[];
+  value: string;
+  error?: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className={`field${error ? ' has-error' : ''}`}>
+      <div className="field__top">
+        <label htmlFor={id}>{label}</label>
+        <span className="field__counter">
+          {value.length}/{COMMUNITY_MAX}
+        </span>
+      </div>
+      <div className="preset-row" role="group" aria-label={`Brzi izbor: ${label}`}>
+        {presets.map((preset) => {
+          const used = value.includes(preset);
+          return (
+            <button
+              key={preset}
+              type="button"
+              className={`preset-chip${used ? ' is-used' : ''}`}
+              onClick={() => onChange(appendPreset(value, preset))}
+              disabled={disabled || used}
+            >
+              {used ? <Check size={11} aria-hidden="true" /> : <Plus size={11} aria-hidden="true" />}
+              {preset}
+            </button>
+          );
+        })}
+      </div>
+      <textarea
+        id={id}
+        rows={3}
+        value={value}
+        maxLength={COMMUNITY_MAX}
+        placeholder={placeholder}
+        onChange={(event) => onChange(event.target.value)}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? `error-${id}` : `hint-${id}`}
+        disabled={disabled}
+      />
+      <p className="field__hint" id={`hint-${id}`}>
+        {hint}
+      </p>
+      {error ? (
+        <p className="field__error" id={`error-${id}`} role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
 
 export function ComposeDrawer() {
   const {
     composeLocation,
+    composeEditing: editing,
     setComposeLocation,
     cancelCompose,
     addCreatedReport,
+    storeCreatedReport,
+    submitReportEdit,
     flyTo,
     notify,
     auth,
@@ -53,11 +141,28 @@ export function ComposeDrawer() {
     mapRef,
   } = useApp();
 
-  const [title, setTitle] = useState('');
-  const [category, setCategory] = useState<Category | null>(DEFAULT_CATEGORY);
-  const [description, setDescription] = useState('');
-  const [address, setAddress] = useState('');
-  const [photos, setPhotos] = useState<PhotoDraft[]>([]);
+  // The drawer is keyed by the edited report, so these initial values are
+  // read once per report.
+  const [initial] = useState(() => ({
+    title: editing?.title ?? '',
+    category: editing?.category ?? DEFAULT_CATEGORY,
+    description: editing?.description ?? '',
+    communityCan: editing?.communityCan ?? '',
+    helpNeeded: editing?.helpNeeded ?? '',
+    address: editing?.address ?? '',
+    imageUrls: editing?.imageUrls ?? [],
+  }));
+
+  const [title, setTitle] = useState(initial.title);
+  const [category, setCategory] = useState<Category | null>(initial.category);
+  const [description, setDescription] = useState(initial.description);
+  const [communityCan, setCommunityCan] = useState(initial.communityCan);
+  const [helpNeeded, setHelpNeeded] = useState(initial.helpNeeded);
+  const [address, setAddress] = useState(initial.address);
+  const [submitted, setSubmitted] = useState<Report | null>(null);
+  const { photos, addFiles: addPhotoFiles, removePhoto, uploadAll } = usePhotoUploads(
+    initial.imageUrls,
+  );
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -65,26 +170,32 @@ export function ComposeDrawer() {
   const [locating, setLocating] = useState(false);
   const [collapseSignal, setCollapseSignal] = useState(0);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const previewUrls = useRef<string[]>([]);
-
-  useEffect(() => {
-    const urls = previewUrls.current;
-    return () => urls.forEach((url) => URL.revokeObjectURL(url));
-  }, []);
-
   const outsideArea = composeLocation !== null && !isInServiceArea(composeLocation);
-  const dirty = Boolean(
-    title.trim() ||
-      description.trim() ||
-      address.trim() ||
-      category !== DEFAULT_CATEGORY ||
-      photos.length ||
-      composeLocation,
-  );
+  const locationMoved = editing
+    ? composeLocation?.latitude !== editing.latitude ||
+      composeLocation?.longitude !== editing.longitude
+    : composeLocation !== null;
+  const dirty =
+    title.trim() !== initial.title.trim() ||
+    description.trim() !== initial.description.trim() ||
+    communityCan.trim() !== initial.communityCan.trim() ||
+    helpNeeded.trim() !== initial.helpNeeded.trim() ||
+    address.trim() !== initial.address.trim() ||
+    category !== initial.category ||
+    photos.length !== initial.imageUrls.length ||
+    photos.some((photo, index) => photo.url !== initial.imageUrls[index]) ||
+    locationMoved;
+
+  // Wording for the three ways this drawer is used.
+  const isModeratorEdit = Boolean(editing && auth.isModerator);
+  const editsPublished = Boolean(editing && editing.moderation === 'approved');
 
   const requestClose = () => {
     if (submitting) return;
+    if (submitted) {
+      cancelCompose();
+      return;
+    }
     if (dirty) {
       setConfirmClose(true);
       return;
@@ -114,6 +225,17 @@ export function ComposeDrawer() {
       next.description = `Opis mora imati najmanje ${DESC_MIN} znakova.`;
     }
 
+    if (communityCan.trim().length < COMMUNITY_MIN) {
+      next.communityCan = communityCan.trim()
+        ? `Napišite bar ${COMMUNITY_MIN} znakova ili izaberite ponuđeno.`
+        : 'Napišite šta zajednica može sama ili izaberite ponuđeno.';
+    }
+    if (helpNeeded.trim().length < COMMUNITY_MIN) {
+      next.helpNeeded = helpNeeded.trim()
+        ? `Napišite bar ${COMMUNITY_MIN} znakova ili izaberite ponuđeno.`
+        : 'Napišite za šta je potrebna pomoć ili izaberite ponuđeno.';
+    }
+
     if (photos.length > LIMITS.imagesMax) {
       next.photos = `Dozvoljeno je najviše ${LIMITS.imagesMax} fotografije.`;
     }
@@ -122,80 +244,36 @@ export function ComposeDrawer() {
   };
 
   const focusFirstError = (next: FieldErrors) => {
-    const order: FieldKey[] = ['location', 'title', 'category', 'description', 'photos'];
+    const order: FieldKey[] = [
+      'location',
+      'title',
+      'category',
+      'description',
+      'communityCan',
+      'helpNeeded',
+      'photos',
+    ];
     const first = order.find((key) => next[key]);
     const ids: Record<FieldKey, string> = {
       location: 'compose-map-button',
       title: 'report-title',
       category: 'category-first',
       description: 'report-description',
+      communityCan: 'report-community',
+      helpNeeded: 'report-help',
       photos: 'compose-photo-button',
     };
     if (first) document.getElementById(ids[first])?.focus();
   };
 
   const addFiles = (fileList: FileList | null) => {
-    if (!fileList || fileList.length === 0) return;
-    const incoming = Array.from(fileList);
-    const error = validateImageFiles(incoming, photos.length);
-    if (error) {
-      setErrors((prev) => ({ ...prev, photos: error }));
-      return;
-    }
-
-    const drafts: PhotoDraft[] = incoming.map((file) => ({
-      id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
-      file,
-      previewUrl: URL.createObjectURL(file),
-      status: 'pending',
-      progress: 0,
-    }));
-    previewUrls.current.push(...drafts.map((draft) => draft.previewUrl));
-    setPhotos((prev) => [...prev, ...drafts]);
+    const error = addPhotoFiles(fileList);
     setErrors((prev) => {
       const next = { ...prev };
-      delete next.photos;
+      if (error) next.photos = error;
+      else delete next.photos;
       return next;
     });
-  };
-
-  const removePhoto = (draft: PhotoDraft) => {
-    setPhotos((prev) => prev.filter((item) => item.id !== draft.id));
-    URL.revokeObjectURL(draft.previewUrl);
-    previewUrls.current = previewUrls.current.filter((url) => url !== draft.previewUrl);
-  };
-
-  const uploadPhoto = async (draft: PhotoDraft): Promise<string | null> => {
-    setPhotos((prev) =>
-      prev.map((item) =>
-        item.id === draft.id ? { ...item, status: 'uploading', error: undefined } : item,
-      ),
-    );
-
-    try {
-      const result = await imageStorage.upload(draft.file, (percent) => {
-        setPhotos((prev) =>
-          prev.map((item) => (item.id === draft.id ? { ...item, progress: percent } : item)),
-        );
-      });
-      setPhotos((prev) =>
-        prev.map((item) =>
-          item.id === draft.id
-            ? { ...item, status: 'done', progress: 100, url: result.url }
-            : item,
-        ),
-      );
-      return result.url;
-    } catch (error) {
-      const message = toSerbianError(error, 'Fotografija nije otpremljena.');
-      setPhotos((prev) =>
-        prev.map((item) =>
-          item.id === draft.id ? { ...item, status: 'error', error: message } : item,
-        ),
-      );
-      setSubmitError(message);
-      return null;
-    }
   };
 
   const submit = async () => {
@@ -216,24 +294,21 @@ export function ComposeDrawer() {
     setSubmitError(null);
     setConfirmClose(false);
 
-    const urls: string[] = [];
-    for (const draft of photos) {
-      if (draft.status === 'done' && draft.url) {
-        urls.push(draft.url);
-        continue;
-      }
-      const uploaded = await uploadPhoto(draft);
-      if (!uploaded) {
-        setSubmitting(false);
-        setSubmitError('Prijava nije poslata jer fotografija nije otpremljena. Pokušajte ponovo.');
-        return;
-      }
-      urls.push(uploaded);
+    const upload = await uploadAll();
+    if (upload.error !== undefined) {
+      setSubmitting(false);
+      setSubmitError(
+        `Prijava nije poslata jer fotografija nije otpremljena: ${upload.error} Pokušajte ponovo.`,
+      );
+      return;
     }
+    const urls = upload.urls;
 
     const input: NewReportInput = {
       title: title.trim(),
       description: description.trim(),
+      communityCan: communityCan.trim(),
+      helpNeeded: helpNeeded.trim(),
       category: category as Category,
       latitude: composeLocation.latitude,
       longitude: composeLocation.longitude,
@@ -242,10 +317,23 @@ export function ComposeDrawer() {
     };
 
     try {
-      if (isFirebaseConfigured) {
+      if (editing) {
+        await submitReportEdit(editing, {
+          title: input.title,
+          description: input.description,
+          communityCan: input.communityCan,
+          helpNeeded: input.helpNeeded,
+          category: input.category,
+          latitude: input.latitude,
+          longitude: input.longitude,
+          address: input.address,
+          imageUrls: urls,
+        });
+      } else if (isFirebaseConfigured) {
+        // Not public until a moderator approves it, so stay here and say so.
         const report = await createReportRecord(input, urls);
-        addCreatedReport(report);
-        notify('success', 'Prijava je objavljena i vidljiva je na mapi.');
+        storeCreatedReport(report);
+        setSubmitted(report);
       } else {
         const report = addDemoReport(input, urls);
         addCreatedReport(report);
@@ -314,10 +402,83 @@ export function ComposeDrawer() {
     );
   };
 
+  if (submitted) {
+    return (
+      <Drawer
+        label="Prijava je poslata"
+        onClose={cancelCompose}
+        className="drawer--compose"
+        footer={
+          <div className="compose-foot">
+            <div className="compose-foot__row">
+              <button type="button" className="btn btn--primary" onClick={cancelCompose}>
+                Zatvori
+              </button>
+            </div>
+          </div>
+        }
+      >
+        <div className="submit-success" role="status">
+          <span className="submit-success__icon" aria-hidden="true">
+            <Clock3 size={22} />
+          </span>
+          <h2 className="compose-title">Hvala! Prijava je na pregledu.</h2>
+          <p className="compose-sub">
+            Moderator će pregledati „{submitted.title}” i objaviti je na mapi. Do tada je vidite
+            samo vi i moderatori.
+          </p>
+          <ol className="submit-success__steps">
+            <li className="is-done">
+              <Check size={12} aria-hidden="true" /> Prijava je poslata
+            </li>
+            <li className="is-current">
+              <Clock3 size={12} aria-hidden="true" /> Pregled moderatora
+            </li>
+            <li>
+              <span className="submit-success__dot" aria-hidden="true" /> Objava na mapi
+            </li>
+          </ol>
+          <p className="submit-success__note">
+            Ako nešto treba ispraviti, moderator će napisati razlog. Videćete ga uz prijavu kada
+            se prijavite ovim nalogom.
+          </p>
+        </div>
+      </Drawer>
+    );
+  }
+
+  const submitLabel = editing
+    ? submitting
+      ? 'Čuvam…'
+      : isModeratorEdit || editsPublished
+        ? 'Sačuvaj izmene'
+        : 'Pošalji ponovo na pregled'
+    : isFirebaseConfigured
+      ? submitting
+        ? 'Šaljem…'
+        : 'Pošalji na pregled'
+      : submitting
+        ? 'Objavljujem…'
+        : 'Objavi prijavu';
+
+  const footNote = editing
+    ? isModeratorEdit
+      ? 'Izmena moderatora se odmah primenjuje i beleži uz vaš nalog.'
+      : editsPublished
+        ? 'Izmena se odmah vidi, a moderator će je pregledati. Ne unosite lične podatke.'
+        : 'Posle ispravke prijava ponovo ide na pregled. Ne unosite lične podatke.'
+    : isFirebaseConfigured
+      ? 'Moderator pregleda prijavu pre objave. Ne unosite lične podatke.'
+      : 'Ne unosite lične podatke. Demo režim: prijava se čuva samo u ovom pregledaču.';
+
   const footer =
     confirmClose && !submitting ? (
       <div className="confirm-panel">
-        <p>Otkazati prijavu? Uneti podaci neće biti sačuvani.</p>
+        <p>
+          {editing
+            ? 'Odbaciti izmene? Prijava ostaje kakva je bila.'
+            : 'Otkazati prijavu? Uneti podaci neće biti sačuvani.'}
+        </p>
         <div className="confirm-panel__actions">
           <button
             type="button"
@@ -327,7 +488,7 @@ export function ComposeDrawer() {
             Nastavi unos
           </button>
           <button type="button" className="btn btn--danger btn--sm" onClick={cancelCompose}>
-            Otkaži prijavu
+            {editing ? 'Odbaci izmene' : 'Otkaži prijavu'}
           </button>
         </div>
       </div>
@@ -355,34 +516,77 @@ export function ComposeDrawer() {
             disabled={submitting}
           >
             {submitting ? <Spinner size={15} /> : null}
-            {submitting ? 'Objavljujem…' : 'Objavi prijavu'}
+            {submitLabel}
           </button>
         </div>
-        <p className="compose-foot__note">
-          Prijava je javna. Ne unosite lične podatke. {isFirebaseConfigured ? '' : 'Demo režim: prijava se čuva samo u ovom pregledaču.'}
-        </p>
+        <p className="compose-foot__note">{footNote}</p>
       </div>
     );
 
   return (
     <Drawer
-      label="Nova prijava"
+      label={editing ? 'Izmena prijave' : 'Nova prijava'}
       onClose={requestClose}
       footer={footer}
       className="drawer--compose"
       collapseSignal={collapseSignal}
     >
       <div className="compose-head">
-        <span className="eyebrow">Nova prijava</span>
+        <span className="eyebrow">{editing ? 'Izmena prijave' : 'Nova prijava'}</span>
         <span className="compose-head__hint">
-          {isFirebaseConfigured ? 'Prijava se objavljuje odmah' : 'Demo režim'}
+          {editing
+            ? isModeratorEdit
+              ? 'Izmena moderatora'
+              : editsPublished
+                ? 'Ostaje javna'
+                : 'Vraća se na pregled'
+            : isFirebaseConfigured
+              ? 'Objavljuje se posle pregleda'
+              : 'Demo režim'}
         </span>
       </div>
 
-      <h2 className="compose-title">Prijavite problem na mapi</h2>
+      <h2 className="compose-title">
+        {editing ? 'Izmenite prijavu' : 'Prijavite problem na mapi'}
+      </h2>
       <p className="compose-sub">
-        Izaberite tačnu lokaciju, opišite šta nedostaje i dodajte fotografiju ako je imate.
+        {editing
+          ? 'Promenite ono što nije tačno ili nedostaje. Lokaciju pomerate klikom na mapu.'
+          : 'Izaberite tačnu lokaciju, opišite šta nedostaje i dodajte fotografiju ako je imate.'}
       </p>
+
+      {editing && isModeratorEdit ? (
+        <div className="notice notice--info">
+          <Info size={14} aria-hidden="true" />
+          <p>Menjate tuđu prijavu kao moderator. Izmena se odmah primenjuje, bez novog pregleda.</p>
+        </div>
+      ) : null}
+
+      {editing && !isModeratorEdit && editsPublished ? (
+        <div className="notice notice--info">
+          <Info size={14} aria-hidden="true" />
+          <p>
+            Prijava je javna. Izmena će odmah biti vidljiva, a moderator će je pregledati i može
+            da vrati prethodnu verziju.
+          </p>
+        </div>
+      ) : null}
+
+      {editing && !isModeratorEdit && editing.moderation === 'rejected' ? (
+        <div className="reject-note" role="note">
+          <p className="reject-note__title">Razlog odbijanja</p>
+          <p className="reject-note__reason">
+            {editing.rejectionReason ?? 'Moderator nije naveo razlog.'}
+          </p>
+        </div>
+      ) : null}
+
+      {editing && !isModeratorEdit && editing.moderation === 'pending' ? (
+        <div className="notice notice--warn">
+          <Clock3 size={14} aria-hidden="true" />
+          <p>Prijava još čeka pregled. Posle izmene ostaje u redu za pregled.</p>
+        </div>
+      ) : null}
 
       {!isFirebaseConfigured ? (
         <div className="notice notice--info">
@@ -578,9 +782,50 @@ export function ComposeDrawer() {
         </div>
       </section>
 
-      <section className="form-section" aria-labelledby="compose-photos-label">
+      <section className="form-section" aria-labelledby="compose-plan-label">
         <div className="form-section__head">
           <span className="form-section__num">03</span>
+          <h3 id="compose-plan-label">Kako možemo da rešimo</h3>
+        </div>
+        <p className="form-section__intro">
+          Pojedinci prijavljuju, a Zbor zajedno rešava. Napišite šta komšije mogu same, a gde je
+          potrebna pomoć sa strane.
+        </p>
+
+        <PlanField
+          id="report-community"
+          label="Šta zajednica može sama"
+          hint="Na primer rad, alat koji već imate ili termin kada možete da se okupite."
+          placeholder="Možemo da skupimo sitan otpad u džakove i očistimo stazu."
+          presets={COMMUNITY_CAN_PRESETS}
+          value={communityCan}
+          error={errors.communityCan}
+          disabled={submitting}
+          onChange={(value) => {
+            setCommunityCan(value);
+            if (errors.communityCan) setErrors((prev) => ({ ...prev, communityCan: undefined }));
+          }}
+        />
+
+        <PlanField
+          id="report-help"
+          label="Za šta nam treba pomoć"
+          hint="Na primer odvoz, materijal, stručan rad ili nadležna služba."
+          placeholder="Potreban je kontejner za krupni otpad i odvoz šuta."
+          presets={HELP_NEEDED_PRESETS}
+          value={helpNeeded}
+          error={errors.helpNeeded}
+          disabled={submitting}
+          onChange={(value) => {
+            setHelpNeeded(value);
+            if (errors.helpNeeded) setErrors((prev) => ({ ...prev, helpNeeded: undefined }));
+          }}
+        />
+      </section>
+
+      <section className="form-section" aria-labelledby="compose-photos-label">
+        <div className="form-section__head">
+          <span className="form-section__num">04</span>
           <h3 id="compose-photos-label">Fotografije</h3>
           <span className="form-section__optional">opciono</span>
         </div>
@@ -595,64 +840,12 @@ export function ComposeDrawer() {
           </div>
         ) : (
           <>
-            <div className="photo-grid">
-              {photos.map((photo) => (
-                <div key={photo.id} className={`photo-draft photo-draft--${photo.status}`}>
-                  <img src={photo.previewUrl} alt="" />
-                  {photo.status === 'uploading' ? (
-                    <span className="photo-draft__bar">
-                      <span style={{ width: `${photo.progress}%` }} />
-                    </span>
-                  ) : null}
-                  {photo.status === 'done' ? (
-                    <span className="photo-draft__done" aria-label="Fotografija je otpremljena">
-                      <Check size={11} aria-hidden="true" />
-                    </span>
-                  ) : null}
-                  {photo.status === 'error' ? (
-                    <span className="photo-draft__error" title={photo.error}>
-                      <TriangleAlert size={12} aria-hidden="true" />
-                    </span>
-                  ) : null}
-                  <button
-                    type="button"
-                    className="photo-draft__remove"
-                    onClick={() => removePhoto(photo)}
-                    aria-label="Ukloni fotografiju"
-                    disabled={submitting}
-                  >
-                    <X size={12} aria-hidden="true" />
-                  </button>
-                </div>
-              ))}
-
-              {photos.length < LIMITS.imagesMax ? (
-                <button
-                  type="button"
-                  id="compose-photo-button"
-                  className="photo-add"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={submitting}
-                >
-                  <ImagePlus size={18} aria-hidden="true" />
-                  <span>Dodaj</span>
-                  <span className="photo-add__count">
-                    {photos.length}/{LIMITS.imagesMax}
-                  </span>
-                </button>
-              ) : null}
-            </div>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={LIMITS.imageTypes.join(',')}
-              multiple
-              style={{ display: 'none' }}
-              onChange={(event) => {
-                addFiles(event.target.files);
-                event.target.value = '';
-              }}
+            <PhotoPicker
+              photos={photos}
+              onAdd={addFiles}
+              onRemove={removePhoto}
+              disabled={submitting}
+              addButtonId="compose-photo-button"
             />
 
             <p className="field__hint">
@@ -679,8 +872,9 @@ export function ComposeDrawer() {
       <div className="compose-review">
         <p className="eyebrow">Pre objave</p>
         <p>
-          Prijava se prikazuje na javnoj mapi. Status „Nova” znači da je poslata, ne da je
-          proverena. Administratori mogu da je povežu sa akcijom čišćenja.
+          {isFirebaseConfigured
+            ? 'Moderator pregleda prijavu i objavljuje je na javnoj mapi. Ako nešto treba ispraviti, dobićete razlog. Posle objave Zbor može da je poveže sa akcijom čišćenja.'
+            : 'Prijava se prikazuje na mapi. U pravoj bazi moderator je prvo pregleda, a Zbor može da je poveže sa akcijom čišćenja.'}
         </p>
       </div>
     </Drawer>

@@ -32,7 +32,7 @@ import { formatCoordinates } from '../lib/format';
 import { isInServiceArea, roundCoordinate } from '../lib/geo';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { Spinner } from './ui/EmptyState';
-import { ReportMarkers } from './map/ReportMarkers';
+import { DraftMarkers, ReportMarkers } from './map/ReportMarkers';
 import { ActionMarkers } from './map/ActionMarkers';
 import { tempIcon, userIcon } from './map/map-icons';
 
@@ -100,6 +100,7 @@ export function MapCanvas() {
   const {
     filteredReports,
     reports,
+    myUnpublishedReports,
     actions,
     view,
     reportsPhase,
@@ -242,12 +243,20 @@ export function MapCanvas() {
         ) : null}
 
         {view === 'map' ? (
-          <ReportMarkers
-            reports={filteredReports}
-            selectedReport={selectedReport}
-            onSelect={handleReportSelect}
-            interactive={!composeOpen}
-          />
+          <>
+            <DraftMarkers
+              reports={myUnpublishedReports}
+              selectedReportId={selectedReport?.id ?? null}
+              onSelect={handleReportSelect}
+              interactive={!composeOpen}
+            />
+            <ReportMarkers
+              reports={filteredReports}
+              selectedReport={selectedReport}
+              onSelect={handleReportSelect}
+              interactive={!composeOpen}
+            />
+          </>
         ) : (
           <>
             {selectedAction && actionReports.length > 0 ? (

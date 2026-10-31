@@ -257,6 +257,7 @@ export function createDemoReports(): Report[] {
     createdBy: 'demo-zajednica',
     createdByName: seed.author,
     imageUrls: [],
+    moderation: 'approved',
     source: 'demo',
   }));
 }

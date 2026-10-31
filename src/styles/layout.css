@@ -142,6 +142,37 @@
   border-radius: var(--radius);
 }
 
+.account__trigger {
+  position: relative;
+}
+
+.account__alert {
+  position: absolute;
+  top: 2px;
+  left: 22px;
+  width: 9px;
+  height: 9px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  background: var(--sun);
+}
+
+.account__count {
+  margin-left: auto;
+  padding: 0 6px;
+  border-radius: var(--radius-pill);
+  background: var(--sun-tint);
+  color: var(--amber-ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.account__count--alert {
+  background: var(--alert-tint);
+  color: var(--alert-ink);
+}
+
 .account__trigger:hover {
   border-color: var(--line);
   background: var(--surface-2);
@@ -204,6 +235,26 @@
   font-size: 10.5px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.account__role {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 1px 6px;
+  border: 1px solid var(--forest-line);
+  border-radius: var(--radius-pill);
+  background: var(--forest-tint);
+  color: var(--forest);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.account__role--admin {
+  border-color: var(--amber-line);
+  background: var(--amber-tint);
+  color: var(--amber-ink);
 }
 
 .account__item {
@@ -731,6 +782,12 @@ button.impact-stat:hover {
 }
 
 .report-card.is-selected::before {
+  transform: scaleY(1);
+}
+
+/* A resolved report keeps a green edge, whatever its category. */
+.report-card.is-resolved::before {
+  background: var(--status-resolved);
   transform: scaleY(1);
 }
 

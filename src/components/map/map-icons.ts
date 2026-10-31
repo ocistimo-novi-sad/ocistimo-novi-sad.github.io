@@ -35,7 +35,7 @@ export function reportIcon(
   const category = report.category as Category;
   const icon = L.divIcon({
     className: 'ns-icon',
-    html: `<span class="pin pin--${category}${selected ? ' is-selected' : ''}"><span class="pin__glyph">${glyphMarkup(
+    html: `<span class="pin pin--${category}${report.status === 'resolved' ? ' pin--resolved' : ''}${selected ? ' is-selected' : ''}"><span class="pin__glyph">${glyphMarkup(
       CATEGORY_GLYPH[category],
       selected ? 16 : 14,
     )}</span>${statusBadge(report.status)}</span>`,
@@ -45,6 +45,29 @@ export function reportIcon(
   });
 
   reportIconCache.set(key, icon);
+  return icon;
+}
+
+const draftIconCache = new Map<string, DivIcon>();
+
+/** The author's own report that is not public yet: a hollow, dashed pin. */
+export function draftIcon(category: Category, selected = false): DivIcon {
+  const key = `${category}|${selected ? 1 : 0}`;
+  const cached = draftIconCache.get(key);
+  if (cached) return cached;
+
+  const icon = L.divIcon({
+    className: 'ns-icon',
+    html: `<span class="pin pin--${category} pin--draft${selected ? ' is-selected' : ''}"><span class="pin__glyph">${glyphMarkup(
+      CATEGORY_GLYPH[category],
+      selected ? 16 : 14,
+    )}</span></span>`,
+    iconSize: selected ? [38, 38] : [32, 32],
+    iconAnchor: selected ? [19, 19] : [16, 16],
+    tooltipAnchor: selected ? [0, -22] : [0, -18],
+  });
+
+  draftIconCache.set(key, icon);
   return icon;
 }
 

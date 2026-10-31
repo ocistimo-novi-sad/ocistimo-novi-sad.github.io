@@ -22,6 +22,24 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
+    // Moderators are listed in /moderators/{uid}, which only admins write.
+    // Admins hold every moderator right as well.
+    function isModerator() {
+      return signedIn()
+        && (isAdmin()
+            || exists(/databases/$(database)/documents/moderators/$(request.auth.uid)));
+    }
+
+    // The signed-in user wrote the existing document.
+    function isOwner() {
+      return signedIn() && resource.data.createdBy == request.auth.uid;
+    }
+
+    // A stored e-mail must be the one Google verified for this account.
+    function validProfileEmail(data) {
+      return !('email' in data) || data.email == request.auth.token.email;
+    }
+
     // Novi Sad municipality, with a small margin. Prevents reports and
     // cleanup actions from being placed anywhere else on the planet.
     function validCoordinates(lat, lng) {
@@ -34,6 +52,84 @@ service cloud.firestore {
       return value in [
         'new', 'verified', 'planned', 'in_progress', 'resolved', 'not_suitable'
       ];
+    }
+
+    function optionalString(data, key, max) {
+      return !(key in data) || (data[key] is string && data[key].size() <= max);
+    }
+
+    function contentKeys() {
+      return [
+        'title', 'description', 'communityCan', 'helpNeeded', 'category',
+        'latitude', 'longitude', 'imageUrls', 'address'
+      ];
+    }
+
+    // The two community plan fields are required from authors. Moderators may
+    // keep them empty on older reports that never had them.
+    function validPlanField(data, key, required) {
+      return (!required && !(key in data))
+        || (data[key] is string && data[key].size() >= 10 && data[key].size() <= 600);
+    }
+
+    // Shared shape of a report's content, for any writer.
+    function validReportCore(data) {
+      return data.title is string
+        && data.title.size() >= 5
+        && data.title.size() <= 90
+        && data.description is string
+        && data.description.size() >= 20
+        && data.description.size() <= 1200
+        && data.category in [
+             'unwanted_graffiti', 'fan_graffiti', 'stickers_posters',
+             'illegal_dump', 'damaged_infrastructure', 'other'
+           ]
+        && validCoordinates(data.latitude, data.longitude)
+        && data.imageUrls is list
+        && data.imageUrls.size() <= 3
+        && optionalString(data, 'address', 160);
+    }
+
+    // Content an author writes, on create and on every edit.
+    function validReportContent(data) {
+      return validReportCore(data)
+        && validPlanField(data, 'communityCan', true)
+        && validPlanField(data, 'helpNeeded', true);
+    }
+
+    // Proof of a fix, in any state a moderator may leave it in. A rejected
+    // proof always tells the author why.
+    function validResolution(data) {
+      return !('resolution' in data)
+        || (data.resolution is map
+            && data.resolution.state in ['pending', 'approved', 'rejected']
+            && data.resolution.get('imageUrls', []) is list
+            && data.resolution.get('imageUrls', []).size() <= 3
+            && data.resolution.get('note', '') is string
+            && data.resolution.get('note', '').size() <= 500
+            && (data.resolution.state != 'rejected'
+                || (data.resolution.rejectionReason is string
+                    && data.resolution.rejectionReason.size() >= 10
+                    && data.resolution.rejectionReason.size() <= 500)));
+    }
+
+    // `snapshot` holds exactly the content fields of `data`, unchanged.
+    function isContentOf(snapshot, data) {
+      return snapshot is map
+        && snapshot.keys().hasOnly(contentKeys())
+        && snapshot.diff(data).changedKeys().size() == 0
+        && snapshot.diff(data).removedKeys().size() == 0
+        && !snapshot.diff(data).addedKeys().hasAny(contentKeys());
+    }
+
+    // Reports created before pre-moderation have no state and count as
+    // approved. A rejection always carries a reason for the author.
+    function validModeration(data) {
+      return data.get('moderation', 'approved') in ['pending', 'approved', 'rejected']
+        && (data.get('moderation', 'approved') != 'rejected'
+            || (data.rejectionReason is string
+                && data.rejectionReason.size() >= 10
+                && data.rejectionReason.size() <= 500));
     }
 
     function validActionStatus(value) {
@@ -74,60 +170,82 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------------------------
-    // Public profiles. Kept minimal and readable only by their owner.
+    // Moderator allow list. Admins grant and revoke the role from the app;
+    // a user may read their own record to learn their role.
+    // ---------------------------------------------------------------------
+    match /moderators/{uid} {
+      allow get: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow list: if isAdmin();
+
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly([
+             'displayName', 'email', 'addedBy', 'addedAt'
+           ])
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 80
+        && (!('email' in request.resource.data)
+            || (request.resource.data.email is string
+                && request.resource.data.email.size() <= 254))
+        && request.resource.data.addedBy == request.auth.uid
+        && request.resource.data.addedAt == request.time;
+
+      allow delete: if isAdmin();
+    }
+
+    // ---------------------------------------------------------------------
+    // Profiles. Private: the owner reads their own, only admins see others.
     // ---------------------------------------------------------------------
     match /users/{uid} {
-      allow get: if signedIn() && request.auth.uid == uid;
+      allow get: if signedIn() && (request.auth.uid == uid || isAdmin());
       allow list: if isAdmin();
 
       allow create: if signedIn()
         && request.auth.uid == uid
         && request.resource.data.keys().hasOnly([
-             'displayName', 'photoURL', 'createdAt', 'lastSeenAt'
+             'displayName', 'email', 'photoURL', 'createdAt', 'lastSeenAt'
            ])
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() <= 80
         && request.resource.data.createdAt == request.time
+        && request.resource.data.lastSeenAt == request.time
+        && validProfileEmail(request.resource.data)
         && (!('photoURL' in request.resource.data)
             || request.resource.data.photoURL is string);
 
       allow update: if signedIn()
         && request.auth.uid == uid
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['displayName', 'photoURL', 'lastSeenAt'])
+             .hasOnly(['displayName', 'email', 'photoURL', 'lastSeenAt'])
         && request.resource.data.displayName is string
-        && request.resource.data.displayName.size() <= 80;
+        && request.resource.data.displayName.size() <= 80
+        && request.resource.data.lastSeenAt == request.time
+        && validProfileEmail(request.resource.data)
+        && (!('photoURL' in request.resource.data)
+            || request.resource.data.photoURL is string);
 
       allow delete: if false;
     }
 
     // ---------------------------------------------------------------------
-    // Reports: public read, authenticated create, moderation by administrators only.
+    // Reports: public read, authenticated create, moderation by moderators.
     // ---------------------------------------------------------------------
     match /reports/{reportId} {
-      allow read: if true;
+      // Public only once a moderator approves it. Authors always see their
+      // own reports, moderators see everything. Rules are not filters: the
+      // public query must ask for moderation == 'approved'.
+      allow read: if resource.data.moderation == 'approved'
+        || (signedIn() && resource.data.createdBy == request.auth.uid)
+        || isModerator();
 
       allow create: if signedIn()
         && request.resource.data.keys().hasOnly([
-             'title', 'description', 'category', 'status',
-             'latitude', 'longitude', 'createdAt', 'createdBy',
-             'createdByName', 'imageUrls', 'address'
+             'title', 'description', 'communityCan', 'helpNeeded', 'category',
+             'status', 'moderation', 'latitude', 'longitude', 'createdAt',
+             'createdBy', 'createdByName', 'imageUrls', 'address'
            ])
-        && request.resource.data.title is string
-        && request.resource.data.title.size() >= 5
-        && request.resource.data.title.size() <= 90
-        && request.resource.data.description is string
-        && request.resource.data.description.size() >= 20
-        && request.resource.data.description.size() <= 1200
-        && request.resource.data.category in [
-             'unwanted_graffiti', 'fan_graffiti', 'stickers_posters',
-             'illegal_dump', 'damaged_infrastructure', 'other'
-           ]
+        && validReportContent(request.resource.data)
         && request.resource.data.status == 'new'
-        && validCoordinates(
-             request.resource.data.latitude,
-             request.resource.data.longitude
-           )
+        && request.resource.data.moderation == 'pending'
         && request.resource.data.createdAt == request.time
         && request.resource.data.createdBy == request.auth.uid
         && (
@@ -136,31 +254,81 @@ service cloud.firestore {
                request.resource.data.createdByName is string
                && request.resource.data.createdByName.size() <= 60
              )
-           )
-        && request.resource.data.imageUrls is list
-        && request.resource.data.imageUrls.size() <= 3
-        && (
-             !('address' in request.resource.data)
-             || (
-               request.resource.data.address is string
-               && request.resource.data.address.size() <= 160
-             )
            );
 
-      // Only administrators moderate. Creator IDs and timestamps can never
-      // be rewritten; status changes must be attributed.
-      allow update: if isAdmin()
+      // Author, case 1: fixing a report before it is published. It goes back
+      // to the review queue and the old rejection reason is dropped.
+      allow update: if isOwner()
+        && resource.data.get('moderation', 'approved') in ['pending', 'rejected']
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['status', 'moderatedAt', 'moderatedBy'])
-        && validReportStatus(request.resource.data.status)
-        && request.resource.data.moderatedAt == request.time
-        && request.resource.data.moderatedBy == request.auth.uid;
+             .hasOnly(contentKeys().concat(['moderation', 'rejectionReason', 'editedAt']))
+        && validReportContent(request.resource.data)
+        && request.resource.data.moderation == 'pending'
+        && !('rejectionReason' in request.resource.data)
+        && request.resource.data.editedAt == request.time;
 
-      allow delete: if isAdmin();
+      // Author, case 2: editing a published report. It stays public, waits
+      // for a moderator's look and keeps the last approved content. That
+      // snapshot must be the real stored content and is kept unchanged while
+      // an earlier edit is still waiting.
+      allow update: if isOwner()
+        && resource.data.get('moderation', 'approved') == 'approved'
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(contentKeys().concat(['editedAt', 'editReview', 'previousVersion']))
+        && validReportContent(request.resource.data)
+        && request.resource.data.editedAt == request.time
+        && request.resource.data.editReview == 'pending'
+        && (resource.data.get('editReview', null) == 'pending'
+            ? request.resource.data.get('previousVersion', null)
+                == resource.data.get('previousVersion', null)
+            : isContentOf(request.resource.data.previousVersion, resource.data));
+
+      // Author, case 3: proof that the problem was fixed, with 1 to 3 "after"
+      // photos. Only for a published report that is not resolved yet; a
+      // moderator confirms it.
+      allow update: if isOwner()
+        && resource.data.get('moderation', 'approved') == 'approved'
+        && resource.data.status != 'resolved'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['resolution'])
+        && request.resource.data.resolution.keys().hasOnly([
+             'state', 'imageUrls', 'note', 'submittedAt', 'submittedBy'
+           ])
+        && request.resource.data.resolution.state == 'pending'
+        && request.resource.data.resolution.imageUrls is list
+        && request.resource.data.resolution.imageUrls.size() >= 1
+        && request.resource.data.resolution.imageUrls.size() <= 3
+        && request.resource.data.resolution.note is string
+        && request.resource.data.resolution.note.size() <= 500
+        && request.resource.data.resolution.submittedAt == request.time
+        && request.resource.data.resolution.submittedBy == request.auth.uid;
+
+      // Moderators may change anything except authorship and creation time,
+      // and every change is attributed to them.
+      allow update: if isModerator()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(contentKeys().concat([
+               'status', 'moderation', 'rejectionReason', 'editedAt',
+               'editReview', 'previousVersion', 'resolution',
+               'moderatedAt', 'moderatedBy', 'moderatedByName'
+             ]))
+        && validResolution(request.resource.data)
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(contentKeys())
+            || (validReportCore(request.resource.data)
+                && validPlanField(request.resource.data, 'communityCan', false)
+                && validPlanField(request.resource.data, 'helpNeeded', false)))
+        && validReportStatus(request.resource.data.status)
+        && validModeration(request.resource.data)
+        && request.resource.data.get('editReview', null) in [null, 'pending']
+        && request.resource.data.moderatedAt == request.time
+        && request.resource.data.moderatedBy == request.auth.uid
+        && request.resource.data.moderatedByName is string
+        && request.resource.data.moderatedByName.size() <= 80;
+
+      allow delete: if isOwner() || isModerator();
     }
 
     // ---------------------------------------------------------------------
-    // Content flags: one flag per user per report, admins handle them.
+    // Content flags: one flag per user per report, moderators handle them.
     // ---------------------------------------------------------------------
     match /flags/{flagId} {
       allow create: if signedIn()
@@ -178,9 +346,9 @@ service cloud.firestore {
         && request.resource.data.createdBy == request.auth.uid
         && request.resource.data.createdAt == request.time;
 
-      allow read: if isAdmin();
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow read: if isModerator();
+      allow update: if isModerator();
+      allow delete: if isModerator();
     }
 
     // ---------------------------------------------------------------------

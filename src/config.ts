@@ -2,8 +2,10 @@ import type {
   ActionStatus,
   Category,
   Coordinates,
+  ModerationState,
   ReportStatus,
   SortMode,
+  UserRole,
 } from './types';
 
 /**
@@ -81,7 +83,7 @@ export const REPORT_STATUSES: StatusMeta[] = [
   {
     id: 'new',
     label: 'Nova',
-    description: 'Prijava je poslata i čeka pregled.',
+    description: 'Objavljena, još bez plana akcije.',
     weight: 1,
   },
   {
@@ -146,11 +148,64 @@ export const FLAG_REASONS: { id: string; label: string }[] = [
   { id: 'other', label: 'Drugo' },
 ];
 
+export const ROLE_LABELS: Record<UserRole, string> = {
+  user: 'Član zajednice',
+  moderator: 'Moderator',
+  admin: 'Administrator',
+};
+
+export const MODERATION_LABELS: Record<ModerationState, { label: string; description: string }> = {
+  pending: {
+    label: 'Na pregledu',
+    description: 'Moderator još nije pregledao prijavu. Vidite je samo vi i moderatori.',
+  },
+  approved: { label: 'Objavljena', description: 'Prijava je javna i vidljiva na mapi.' },
+  rejected: {
+    label: 'Odbijena',
+    description: 'Moderator je odbio prijavu. Razlog je naveden uz prijavu.',
+  },
+};
+
+/** Quick picks appended to the "what can we do / what do we need" fields. */
+export const COMMUNITY_CAN_PRESETS = [
+  'Čišćenje i sakupljanje otpada',
+  'Krečenje i farbanje',
+  'Skidanje nalepnica i plakata',
+  'Ništa, potrebna je stručna pomoć',
+];
+
+export const HELP_NEEDED_PRESETS = [
+  'Odvoz krupnog otpada',
+  'Alat i materijal (džakovi, rukavice, boja)',
+  'Nadležna služba ili JKP',
+  'Više volontera',
+];
+
+export const REJECT_REASONS = [
+  'Fotografija ne prikazuje problem.',
+  'Dupla prijava, problem je već prijavljen.',
+  'Lokacija nije tačna.',
+  'Prijava sadrži lične podatke.',
+  'Problem nije u javnom prostoru.',
+];
+
+export const RESOLUTION_REJECT_REASONS = [
+  'Fotografija ne prikazuje isto mesto.',
+  'Problem se na fotografiji još vidi.',
+  'Fotografija nije dovoljno jasna.',
+  'Rešen je samo deo problema.',
+];
+
 export const LIMITS = {
   titleMin: 5,
   titleMax: 90,
   descriptionMin: 20,
   descriptionMax: 1200,
+  communityMin: 10,
+  communityMax: 600,
+  rejectReasonMin: 10,
+  rejectReasonMax: 500,
+  resolutionNoteMax: 500,
   addressMax: 160,
   imagesMax: 3,
   imageMaxBytes: 5 * 1024 * 1024,

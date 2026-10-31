@@ -9,7 +9,7 @@ import type { CleanupAction } from '../../types';
 import { Modal } from '../modals/Modal';
 import { EmptyState, Spinner } from '../ui/EmptyState';
 import { ActionForm } from './ActionForm';
-import { FlagsPanel } from './FlagsPanel';
+import { UsersPanel } from './UsersPanel';
 
 export function AdminPanel() {
   const {
@@ -23,7 +23,7 @@ export function AdminPanel() {
   } = useApp();
 
   const initialEditId = modal?.kind === 'admin' ? modal.editActionId : undefined;
-  const [tab, setTab] = useState<'actions' | 'flags'>('actions');
+  const [tab, setTab] = useState<'actions' | 'users'>('actions');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<CleanupAction | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
@@ -103,7 +103,7 @@ export function AdminPanel() {
   return (
     <Modal
       title="Administracija"
-      description="Moderacija prijava sadržaja i upravljanje akcijama čišćenja."
+      description="Akcije čišćenja, korisnici i uloge."
       size="lg"
       onClose={closeModal}
       footer={
@@ -130,11 +130,11 @@ export function AdminPanel() {
         <button
           type="button"
           role="tab"
-          aria-selected={tab === 'flags'}
-          className={`admin-tab${tab === 'flags' ? ' is-active' : ''}`}
-          onClick={() => setTab('flags')}
+          aria-selected={tab === 'users'}
+          className={`admin-tab${tab === 'users' ? ' is-active' : ''}`}
+          onClick={() => setTab('users')}
         >
-          Prijave sadržaja
+          Korisnici i uloge
         </button>
       </div>
 
@@ -223,7 +223,7 @@ export function AdminPanel() {
           )}
         </div>
       ) : (
-        <FlagsPanel />
+        <UsersPanel />
       )}
     </Modal>
   );
