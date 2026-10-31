@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { FilePlus2, Inbox, Pencil, RefreshCw, UserRound } from 'lucide-react';
+import { CheckCircle2, FilePlus2, Inbox, Pencil, RefreshCw, UserRound } from 'lucide-react';
 import { CATEGORY_MAP } from '../../config';
 import { formatRelativeTime } from '../../lib/format';
 import { isFirebaseConfigured } from '../../services/firebase';
-import { optimizedImageUrl } from '../../services/images';
+import { imagesEnabled, optimizedImageUrl } from '../../services/images';
 import { useApp } from '../../state/app-context';
 import type { Report } from '../../types';
 import { Modal } from '../modals/Modal';
@@ -29,6 +29,16 @@ const FILTERS: { id: MyFilter; label: string; matches: (report: Report) => boole
     matches: (report) => report.moderation === 'approved' && report.status === 'resolved',
   },
 ];
+
+/** Published, not resolved, no proof waiting, and photos can be uploaded. */
+function canReportFixed(report: Report): boolean {
+  return (
+    imagesEnabled &&
+    report.moderation === 'approved' &&
+    report.status !== 'resolved' &&
+    report.resolution?.state !== 'pending'
+  );
+}
 
 export function MyReportsPanel() {
   const {
@@ -187,7 +197,19 @@ export function MyReportsPanel() {
                   {report.editReview === 'pending' ? (
                     <span className="my-report__flag">Izmena čeka pregled</span>
                   ) : null}
+                  {report.status !== 'resolved' && report.resolution?.state === 'pending' ? (
+                    <span className="my-report__flag">Sanacija čeka potvrdu</span>
+                  ) : null}
                 </div>
+
+                {report.status !== 'resolved' && report.resolution?.state === 'rejected' ? (
+                  <div className="reject-note my-report__reason" role="note">
+                    <p className="reject-note__title">Sanacija nije potvrđena</p>
+                    <p className="reject-note__reason">
+                      {report.resolution.rejectionReason ?? 'Moderator nije naveo razlog.'}
+                    </p>
+                  </div>
+                ) : null}
 
                 {report.moderation === 'rejected' ? (
                   <div className="reject-note my-report__reason" role="note">
@@ -199,6 +221,15 @@ export function MyReportsPanel() {
                 ) : null}
 
                 <div className="my-report__actions">
+                  {canReportFixed(report) ? (
+                    <button
+                      type="button"
+                      className="btn btn--primary btn--sm"
+                      onClick={() => openModal({ kind: 'resolve', reportId: report.id })}
+                    >
+                      <CheckCircle2 size={12} aria-hidden="true" /> Sanirano
+                    </button>
+                  ) : null}
                   {report.moderation === 'rejected' ? (
                     <button
                       type="button"

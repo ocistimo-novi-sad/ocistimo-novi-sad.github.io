@@ -21,6 +21,23 @@ export type FlagReason = 'spam' | 'duplicate' | 'misleading' | 'inappropriate' |
 /** Visibility of a report. Only approved reports are public. */
 export type ModerationState = 'pending' | 'approved' | 'rejected';
 
+/**
+ * The author's proof that a problem was fixed, confirmed by a moderator.
+ * A moderator may also mark a report resolved without proof.
+ */
+export interface Resolution {
+  state: 'pending' | 'approved' | 'rejected';
+  /** "After" photos, 1 to 3 when the author submits proof. */
+  imageUrls: string[];
+  note: string;
+  submittedAt: Date | null;
+  submittedBy?: string;
+  reviewedAt: Date | null;
+  reviewedBy?: string;
+  rejectionReason?: string;
+  byModerator?: boolean;
+}
+
 /** Admins are set in the Firebase console; moderators are granted by admins. */
 export type UserRole = 'user' | 'moderator' | 'admin';
 
@@ -64,6 +81,7 @@ export interface Report extends ReportContent {
   editReview?: 'pending';
   /** Last approved content, kept while an edit waits for review. */
   previousVersion?: ReportContent;
+  resolution?: Resolution;
   moderation: ModerationState;
   rejectionReason?: string;
   moderatedBy?: string;

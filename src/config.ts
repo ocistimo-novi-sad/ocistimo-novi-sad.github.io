@@ -189,6 +189,13 @@ export const REJECT_REASONS = [
   'Problem nije u javnom prostoru.',
 ];
 
+export const RESOLUTION_REJECT_REASONS = [
+  'Fotografija ne prikazuje isto mesto.',
+  'Problem se na fotografiji još vidi.',
+  'Fotografija nije dovoljno jasna.',
+  'Rešen je samo deo problema.',
+];
+
 export const LIMITS = {
   titleMin: 5,
   titleMax: 90,
@@ -198,6 +205,7 @@ export const LIMITS = {
   communityMax: 600,
   rejectReasonMin: 10,
   rejectReasonMax: 500,
+  resolutionNoteMax: 500,
   addressMax: 160,
   imagesMax: 3,
   imageMaxBytes: 5 * 1024 * 1024,

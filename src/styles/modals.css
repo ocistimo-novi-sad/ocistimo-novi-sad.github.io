@@ -948,6 +948,44 @@
   margin-right: auto;
 }
 
+/* --- "Fixed" proof dialog ------------------------------------------------ */
+
+.resolve__report {
+  margin-bottom: 12px;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.resolve__pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.resolve__side {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.resolve__side > .before-after__tag {
+  position: static;
+  align-self: flex-start;
+}
+
+.resolve__before {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-md);
+  background: var(--surface-3);
+  object-fit: cover;
+  filter: saturate(0.75);
+}
+
 /* --- Edit diff ----------------------------------------------------------- */
 
 .diff__intro {

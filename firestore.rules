@@ -97,6 +97,22 @@ service cloud.firestore {
         && validPlanField(data, 'helpNeeded', true);
     }
 
+    // Proof of a fix, in any state a moderator may leave it in. A rejected
+    // proof always tells the author why.
+    function validResolution(data) {
+      return !('resolution' in data)
+        || (data.resolution is map
+            && data.resolution.state in ['pending', 'approved', 'rejected']
+            && data.resolution.get('imageUrls', []) is list
+            && data.resolution.get('imageUrls', []).size() <= 3
+            && data.resolution.get('note', '') is string
+            && data.resolution.get('note', '').size() <= 500
+            && (data.resolution.state != 'rejected'
+                || (data.resolution.rejectionReason is string
+                    && data.resolution.rejectionReason.size() >= 10
+                    && data.resolution.rejectionReason.size() <= 500)));
+    }
+
     // `snapshot` holds exactly the content fields of `data`, unchanged.
     function isContentOf(snapshot, data) {
       return snapshot is map
@@ -267,15 +283,35 @@ service cloud.firestore {
                 == resource.data.get('previousVersion', null)
             : isContentOf(request.resource.data.previousVersion, resource.data));
 
+      // Author, case 3: proof that the problem was fixed, with 1 to 3 "after"
+      // photos. Only for a published report that is not resolved yet; a
+      // moderator confirms it.
+      allow update: if isOwner()
+        && resource.data.get('moderation', 'approved') == 'approved'
+        && resource.data.status != 'resolved'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['resolution'])
+        && request.resource.data.resolution.keys().hasOnly([
+             'state', 'imageUrls', 'note', 'submittedAt', 'submittedBy'
+           ])
+        && request.resource.data.resolution.state == 'pending'
+        && request.resource.data.resolution.imageUrls is list
+        && request.resource.data.resolution.imageUrls.size() >= 1
+        && request.resource.data.resolution.imageUrls.size() <= 3
+        && request.resource.data.resolution.note is string
+        && request.resource.data.resolution.note.size() <= 500
+        && request.resource.data.resolution.submittedAt == request.time
+        && request.resource.data.resolution.submittedBy == request.auth.uid;
+
       // Moderators may change anything except authorship and creation time,
       // and every change is attributed to them.
       allow update: if isModerator()
         && request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(contentKeys().concat([
                'status', 'moderation', 'rejectionReason', 'editedAt',
-               'editReview', 'previousVersion',
+               'editReview', 'previousVersion', 'resolution',
                'moderatedAt', 'moderatedBy', 'moderatedByName'
              ]))
+        && validResolution(request.resource.data)
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(contentKeys())
             || (validReportCore(request.resource.data)
                 && validPlanField(request.resource.data, 'communityCan', false)

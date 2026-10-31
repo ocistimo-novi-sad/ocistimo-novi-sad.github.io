@@ -31,6 +31,14 @@
         { "fieldPath": "editReview", "order": "ASCENDING" },
         { "fieldPath": "editedAt", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "reports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "resolution.state", "order": "ASCENDING" },
+        { "fieldPath": "resolution.submittedAt", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

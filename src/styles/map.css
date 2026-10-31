@@ -590,6 +590,18 @@
     0 4px 12px -2px rgba(20, 28, 22, 0.45);
 }
 
+/* A resolved report turns fully green; the category glyph stays readable. */
+.pin--resolved {
+  background: var(--status-resolved);
+}
+
+.pin--resolved .pin__badge--resolved {
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  color: var(--status-resolved);
+}
+
 /* The author's own report that is not public yet. */
 .pin--draft {
   border: 2px dashed var(--cat);

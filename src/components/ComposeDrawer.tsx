@@ -1,14 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   Check,
   Clock3,
   Crosshair,
-  ImagePlus,
   Info,
   Navigation,
   Plus,
   TriangleAlert,
-  X,
 } from 'lucide-react';
 import {
   APP,
@@ -23,24 +21,15 @@ import { formatCoordinates } from '../lib/format';
 import { isInServiceArea } from '../lib/geo';
 import { toSerbianError } from '../services/errors';
 import { isFirebaseConfigured } from '../services/firebase';
-import { imageStorage, imagesEnabled, validateImageFiles } from '../services/images';
+import { usePhotoUploads } from '../hooks/usePhotoUploads';
+import { imagesEnabled } from '../services/images';
 import { createReportRecord } from '../services/reports';
 import { useApp } from '../state/app-context';
 import type { Category, NewReportInput, Report } from '../types';
 import { Drawer } from './Drawer';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { Spinner } from './ui/EmptyState';
-
-interface PhotoDraft {
-  id: string;
-  /** Missing for photos that were already uploaded with an edited report. */
-  file?: File;
-  previewUrl: string;
-  status: 'pending' | 'uploading' | 'done' | 'error';
-  progress: number;
-  url?: string;
-  error?: string;
-}
+import { PhotoPicker } from './ui/PhotoPicker';
 
 type FieldKey =
   | 'location'
@@ -136,17 +125,6 @@ function PlanField({
   );
 }
 
-/** Already uploaded photos of an edited report, shown like finished drafts. */
-function storedPhotos(urls: string[]): PhotoDraft[] {
-  return urls.map((url, index) => ({
-    id: `stored-${index}`,
-    previewUrl: url,
-    status: 'done',
-    progress: 100,
-    url,
-  }));
-}
-
 export function ComposeDrawer() {
   const {
     composeLocation,
@@ -182,21 +160,15 @@ export function ComposeDrawer() {
   const [helpNeeded, setHelpNeeded] = useState(initial.helpNeeded);
   const [address, setAddress] = useState(initial.address);
   const [submitted, setSubmitted] = useState<Report | null>(null);
-  const [photos, setPhotos] = useState<PhotoDraft[]>(() => storedPhotos(initial.imageUrls));
+  const { photos, addFiles: addPhotoFiles, removePhoto, uploadAll } = usePhotoUploads(
+    initial.imageUrls,
+  );
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
   const [locating, setLocating] = useState(false);
   const [collapseSignal, setCollapseSignal] = useState(0);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const previewUrls = useRef<string[]>([]);
-
-  useEffect(() => {
-    const urls = previewUrls.current;
-    return () => urls.forEach((url) => URL.revokeObjectURL(url));
-  }, []);
 
   const outsideArea = composeLocation !== null && !isInServiceArea(composeLocation);
   const locationMoved = editing
@@ -295,70 +267,13 @@ export function ComposeDrawer() {
   };
 
   const addFiles = (fileList: FileList | null) => {
-    if (!fileList || fileList.length === 0) return;
-    const incoming = Array.from(fileList);
-    const error = validateImageFiles(incoming, photos.length);
-    if (error) {
-      setErrors((prev) => ({ ...prev, photos: error }));
-      return;
-    }
-
-    const drafts: PhotoDraft[] = incoming.map((file) => ({
-      id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
-      file,
-      previewUrl: URL.createObjectURL(file),
-      status: 'pending',
-      progress: 0,
-    }));
-    previewUrls.current.push(...drafts.map((draft) => draft.previewUrl));
-    setPhotos((prev) => [...prev, ...drafts]);
+    const error = addPhotoFiles(fileList);
     setErrors((prev) => {
       const next = { ...prev };
-      delete next.photos;
+      if (error) next.photos = error;
+      else delete next.photos;
       return next;
     });
-  };
-
-  const removePhoto = (draft: PhotoDraft) => {
-    setPhotos((prev) => prev.filter((item) => item.id !== draft.id));
-    if (!draft.file) return;
-    URL.revokeObjectURL(draft.previewUrl);
-    previewUrls.current = previewUrls.current.filter((url) => url !== draft.previewUrl);
-  };
-
-  const uploadPhoto = async (draft: PhotoDraft): Promise<string | null> => {
-    const { file } = draft;
-    if (!file) return draft.url ?? null;
-    setPhotos((prev) =>
-      prev.map((item) =>
-        item.id === draft.id ? { ...item, status: 'uploading', error: undefined } : item,
-      ),
-    );
-
-    try {
-      const result = await imageStorage.upload(file, (percent) => {
-        setPhotos((prev) =>
-          prev.map((item) => (item.id === draft.id ? { ...item, progress: percent } : item)),
-        );
-      });
-      setPhotos((prev) =>
-        prev.map((item) =>
-          item.id === draft.id
-            ? { ...item, status: 'done', progress: 100, url: result.url }
-            : item,
-        ),
-      );
-      return result.url;
-    } catch (error) {
-      const message = toSerbianError(error, 'Fotografija nije otpremljena.');
-      setPhotos((prev) =>
-        prev.map((item) =>
-          item.id === draft.id ? { ...item, status: 'error', error: message } : item,
-        ),
-      );
-      setSubmitError(message);
-      return null;
-    }
   };
 
   const submit = async () => {
@@ -379,20 +294,15 @@ export function ComposeDrawer() {
     setSubmitError(null);
     setConfirmClose(false);
 
-    const urls: string[] = [];
-    for (const draft of photos) {
-      if (draft.status === 'done' && draft.url) {
-        urls.push(draft.url);
-        continue;
-      }
-      const uploaded = await uploadPhoto(draft);
-      if (!uploaded) {
-        setSubmitting(false);
-        setSubmitError('Prijava nije poslata jer fotografija nije otpremljena. Pokušajte ponovo.');
-        return;
-      }
-      urls.push(uploaded);
+    const upload = await uploadAll();
+    if (upload.error !== undefined) {
+      setSubmitting(false);
+      setSubmitError(
+        `Prijava nije poslata jer fotografija nije otpremljena: ${upload.error} Pokušajte ponovo.`,
+      );
+      return;
     }
+    const urls = upload.urls;
 
     const input: NewReportInput = {
       title: title.trim(),
@@ -930,64 +840,12 @@ export function ComposeDrawer() {
           </div>
         ) : (
           <>
-            <div className="photo-grid">
-              {photos.map((photo) => (
-                <div key={photo.id} className={`photo-draft photo-draft--${photo.status}`}>
-                  <img src={photo.previewUrl} alt="" />
-                  {photo.status === 'uploading' ? (
-                    <span className="photo-draft__bar">
-                      <span style={{ width: `${photo.progress}%` }} />
-                    </span>
-                  ) : null}
-                  {photo.status === 'done' ? (
-                    <span className="photo-draft__done" aria-label="Fotografija je otpremljena">
-                      <Check size={11} aria-hidden="true" />
-                    </span>
-                  ) : null}
-                  {photo.status === 'error' ? (
-                    <span className="photo-draft__error" title={photo.error}>
-                      <TriangleAlert size={12} aria-hidden="true" />
-                    </span>
-                  ) : null}
-                  <button
-                    type="button"
-                    className="photo-draft__remove"
-                    onClick={() => removePhoto(photo)}
-                    aria-label="Ukloni fotografiju"
-                    disabled={submitting}
-                  >
-                    <X size={12} aria-hidden="true" />
-                  </button>
-                </div>
-              ))}
-
-              {photos.length < LIMITS.imagesMax ? (
-                <button
-                  type="button"
-                  id="compose-photo-button"
-                  className="photo-add"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={submitting}
-                >
-                  <ImagePlus size={18} aria-hidden="true" />
-                  <span>Dodaj</span>
-                  <span className="photo-add__count">
-                    {photos.length}/{LIMITS.imagesMax}
-                  </span>
-                </button>
-              ) : null}
-            </div>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={LIMITS.imageTypes.join(',')}
-              multiple
-              style={{ display: 'none' }}
-              onChange={(event) => {
-                addFiles(event.target.files);
-                event.target.value = '';
-              }}
+            <PhotoPicker
+              photos={photos}
+              onAdd={addFiles}
+              onRemove={removePhoto}
+              disabled={submitting}
+              addButtonId="compose-photo-button"
             />
 
             <p className="field__hint">

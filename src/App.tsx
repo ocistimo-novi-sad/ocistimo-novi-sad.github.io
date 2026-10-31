@@ -14,6 +14,7 @@ import { AuthDialog } from './components/modals/AuthDialog';
 import { FlagDialog } from './components/modals/FlagDialog';
 import { InfoDialog } from './components/modals/InfoDialog';
 import { Lightbox } from './components/modals/Lightbox';
+import { ResolveDialog } from './components/modals/ResolveDialog';
 import { AppProvider } from './state/AppProvider';
 import { useApp } from './state/app-context';
 
@@ -34,6 +35,8 @@ function ModalHost() {
       return <ModerationPanel />;
     case 'my-reports':
       return <MyReportsPanel />;
+    case 'resolve':
+      return <ResolveDialog reportId={modal.reportId} />;
     case 'lightbox':
       return (
         <Lightbox

@@ -28,6 +28,7 @@ export type ModalState =
   | { kind: 'admin'; editActionId?: string }
   | { kind: 'moderation' }
   | { kind: 'my-reports' }
+  | { kind: 'resolve'; reportId: string }
   | { kind: 'lightbox'; images: string[]; index: number }
   | null;
 
@@ -110,6 +111,15 @@ export interface AppContextValue {
   rejectPendingReport: (report: Report, reason: string) => Promise<void>;
   acceptReportEdit: (report: Report) => Promise<void>;
   revertReportEdit: (report: Report) => Promise<void>;
+
+  /** Proofs of a fix waiting for confirmation (moderators only). */
+  resolutionCount: number;
+  /** Author sends "after" photos; throws so the dialog can show the error. */
+  submitReportResolution: (report: Report, imageUrls: string[], note: string) => Promise<void>;
+  approveReportResolution: (report: Report) => Promise<void>;
+  rejectReportResolution: (report: Report, reason: string) => Promise<void>;
+  /** Moderator marks a report resolved without the author's proof. */
+  markReportResolved: (report: Report) => Promise<void>;
 
   mapRef: React.RefObject<LeafletMap | null>;
   flyTo: (

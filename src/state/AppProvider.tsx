@@ -18,13 +18,18 @@ import { isFirebaseConfigured } from '../services/firebase';
 import {
   acceptEdit,
   approveReport as approveReportRecord,
+  approveResolution,
   countEditedReports,
   countPendingReports,
+  countPendingResolutions,
   deleteReportRecord,
   fetchMyReports,
   fetchReport,
+  markResolved,
   rejectReport as rejectReportRecord,
+  rejectResolution,
   revertEdit,
+  submitResolution,
   updateOwnReport,
   updateReportAsModerator,
   updateReportStatus,
@@ -130,6 +135,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [locating, setLocating] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [editCount, setEditCount] = useState(0);
+  const [resolutionCount, setResolutionCount] = useState(0);
 
   const mapRef = useRef<LeafletMap | null>(null);
   const pendingIntentRef = useRef<PendingIntent | null>(null);
@@ -521,12 +527,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!isFirebaseConfigured || !auth.isModerator) {
       setPendingCount(0);
       setEditCount(0);
+      setResolutionCount(0);
       return;
     }
     try {
-      const [pending, edits] = await Promise.all([countPendingReports(), countEditedReports()]);
+      const [pending, edits, resolutions] = await Promise.all([
+        countPendingReports(),
+        countEditedReports(),
+        countPendingResolutions(),
+      ]);
       setPendingCount(pending);
       setEditCount(edits);
+      setResolutionCount(resolutions);
     } catch {
       // A badge is a hint only; the queue itself reports load errors.
     }
@@ -687,6 +699,100 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [applyReport, moderatorStamp, notify],
   );
 
+  const submitReportResolution = useCallback(
+    async (report: Report, imageUrls: string[], note: string) => {
+      const resolution = await submitResolution(report.id, imageUrls, note);
+      applyReport({ ...report, resolution });
+      notify('success', 'Hvala! Sanacija je poslata moderatoru na potvrdu.');
+    },
+    [applyReport, notify],
+  );
+
+  const approveReportResolution = useCallback(
+    async (report: Report) => {
+      try {
+        await approveResolution(report.id);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Sanaciju nije moguće potvrditi.'));
+        throw error;
+      }
+      applyReport({
+        ...report,
+        status: 'resolved',
+        resolution: report.resolution
+          ? {
+              ...report.resolution,
+              state: 'approved',
+              rejectionReason: undefined,
+              reviewedAt: new Date(),
+              reviewedBy: auth.user?.uid,
+            }
+          : undefined,
+        ...moderatorStamp(),
+      });
+      setResolutionCount((count) => Math.max(0, count - 1));
+      notify('success', 'Sanacija je potvrđena. Prijava je rešena.');
+    },
+    [applyReport, auth.user, moderatorStamp, notify],
+  );
+
+  const rejectReportResolution = useCallback(
+    async (report: Report, reason: string) => {
+      try {
+        await rejectResolution(report.id, reason);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Sanaciju nije moguće odbiti.'));
+        throw error;
+      }
+      applyReport({
+        ...report,
+        resolution: report.resolution
+          ? {
+              ...report.resolution,
+              state: 'rejected',
+              rejectionReason: reason,
+              reviewedAt: new Date(),
+              reviewedBy: auth.user?.uid,
+            }
+          : undefined,
+        ...moderatorStamp(),
+      });
+      setResolutionCount((count) => Math.max(0, count - 1));
+      notify('success', 'Sanacija nije potvrđena. Autor vidi razlog u aplikaciji.');
+    },
+    [applyReport, auth.user, moderatorStamp, notify],
+  );
+
+  const markReportResolved = useCallback(
+    async (report: Report) => {
+      try {
+        await markResolved(report.id);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Prijavu nije moguće označiti kao rešenu.'));
+        throw error;
+      }
+      applyReport({
+        ...report,
+        status: 'resolved',
+        resolution: {
+          state: 'approved',
+          imageUrls: [],
+          note: '',
+          byModerator: true,
+          submittedAt: null,
+          reviewedAt: new Date(),
+          reviewedBy: auth.user?.uid,
+        },
+        ...moderatorStamp(),
+      });
+      if (report.resolution?.state === 'pending') {
+        setResolutionCount((count) => Math.max(0, count - 1));
+      }
+      notify('success', 'Prijava je označena kao rešena.');
+    },
+    [applyReport, auth.user, moderatorStamp, notify],
+  );
+
   // Deep link (?prijava=<id>) from shared links. Waits for auth so
   // authors and moderators can open reports that are not public yet.
   useEffect(() => {
@@ -831,6 +937,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       rejectPendingReport,
       acceptReportEdit,
       revertReportEdit,
+      resolutionCount,
+      submitReportResolution,
+      approveReportResolution,
+      rejectReportResolution,
+      markReportResolved,
       mapRef,
       flyTo,
       userPosition,
@@ -895,6 +1006,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       rejectPendingReport,
       acceptReportEdit,
       revertReportEdit,
+      resolutionCount,
+      submitReportResolution,
+      approveReportResolution,
+      rejectReportResolution,
+      markReportResolved,
       flyTo,
       userPosition,
       locating,

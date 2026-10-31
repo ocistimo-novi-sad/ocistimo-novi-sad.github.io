@@ -501,6 +501,136 @@
   margin-top: 8px;
 }
 
+.delete-confirm__text--ok {
+  color: var(--leaf-3);
+}
+
+/* --- Resolution ---------------------------------------------------------- */
+
+.resolved-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--leaf-line);
+  border-radius: var(--radius-md);
+  background: var(--leaf-tint);
+  color: var(--leaf-3);
+  font-size: 12.5px;
+}
+
+.resolved-banner svg {
+  flex: 0 0 auto;
+}
+
+.resolved-banner strong {
+  font-weight: 600;
+}
+
+.resolution-strip {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin-bottom: 14px;
+  padding: 8px 10px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.resolution-strip svg {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--muted);
+}
+
+.resolution-note {
+  margin-top: 8px;
+}
+
+.before-after {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.before-after__side {
+  position: relative;
+  margin: 0;
+}
+
+.before-after__media {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: var(--surface-3);
+}
+
+.before-after__media img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+}
+
+.before-after__side--before img {
+  filter: saturate(0.75);
+}
+
+.before-after__side--after .before-after__media {
+  outline: 2px solid var(--leaf);
+  outline-offset: -2px;
+}
+
+.before-after__tag {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 1;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  background: rgba(28, 34, 30, 0.72);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.before-after__side--after .before-after__tag,
+.before-after__tag--after {
+  background: var(--leaf-2);
+}
+
+.before-after__more {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  background: rgba(28, 34, 30, 0.72);
+  color: #fff;
+  font-size: 10px;
+}
+
+.before-after__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  aspect-ratio: 4 / 3;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+
 /* --- Community plan ------------------------------------------------------ */
 
 .report-plan {

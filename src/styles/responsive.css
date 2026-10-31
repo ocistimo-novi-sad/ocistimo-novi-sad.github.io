@@ -441,6 +441,10 @@
     grid-template-columns: 1fr;
   }
 
+  .resolve__pair {
+    grid-template-columns: 1fr;
+  }
+
   .my-report__state {
     align-items: flex-start;
     grid-column: 1 / -1;

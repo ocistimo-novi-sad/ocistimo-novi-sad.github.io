@@ -785,6 +785,12 @@ button.impact-stat:hover {
   transform: scaleY(1);
 }
 
+/* A resolved report keeps a green edge, whatever its category. */
+.report-card.is-resolved::before {
+  background: var(--status-resolved);
+  transform: scaleY(1);
+}
+
 .report-card__media {
   display: grid;
   flex: 0 0 auto;

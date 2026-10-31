@@ -5,12 +5,14 @@ import { Modal } from '../modals/Modal';
 import { EmptyState } from '../ui/EmptyState';
 import { EditsQueue } from './EditsQueue';
 import { FlagsPanel } from './FlagsPanel';
+import { ResolutionsQueue } from './ResolutionsQueue';
 import { ReviewQueue } from './ReviewQueue';
 
-type ModerationTab = 'new' | 'edits' | 'flags';
+type ModerationTab = 'new' | 'edits' | 'resolutions' | 'flags';
 
 export function ModerationPanel() {
-  const { auth, closeModal, pendingCount, editCount, refreshModerationCounts } = useApp();
+  const { auth, closeModal, pendingCount, editCount, resolutionCount, refreshModerationCounts } =
+    useApp();
   const [tab, setTab] = useState<ModerationTab>('new');
 
   useEffect(() => {
@@ -73,6 +75,15 @@ export function ModerationPanel() {
         <button
           type="button"
           role="tab"
+          aria-selected={tab === 'resolutions'}
+          className={`admin-tab${tab === 'resolutions' ? ' is-active' : ''}`}
+          onClick={() => setTab('resolutions')}
+        >
+          Sanacije {resolutionCount > 0 ? <span>{resolutionCount}</span> : null}
+        </button>
+        <button
+          type="button"
+          role="tab"
           aria-selected={tab === 'flags'}
           className={`admin-tab${tab === 'flags' ? ' is-active' : ''}`}
           onClick={() => setTab('flags')}
@@ -81,7 +92,15 @@ export function ModerationPanel() {
         </button>
       </div>
 
-      {tab === 'new' ? <ReviewQueue /> : tab === 'edits' ? <EditsQueue /> : <FlagsPanel />}
+      {tab === 'new' ? (
+        <ReviewQueue />
+      ) : tab === 'edits' ? (
+        <EditsQueue />
+      ) : tab === 'resolutions' ? (
+        <ResolutionsQueue />
+      ) : (
+        <FlagsPanel />
+      )}
     </Modal>
   );
 }

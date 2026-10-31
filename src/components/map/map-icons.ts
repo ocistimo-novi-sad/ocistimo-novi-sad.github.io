@@ -35,7 +35,7 @@ export function reportIcon(
   const category = report.category as Category;
   const icon = L.divIcon({
     className: 'ns-icon',
-    html: `<span class="pin pin--${category}${selected ? ' is-selected' : ''}"><span class="pin__glyph">${glyphMarkup(
+    html: `<span class="pin pin--${category}${report.status === 'resolved' ? ' pin--resolved' : ''}${selected ? ' is-selected' : ''}"><span class="pin__glyph">${glyphMarkup(
       CATEGORY_GLYPH[category],
       selected ? 16 : 14,
     )}</span>${statusBadge(report.status)}</span>`,

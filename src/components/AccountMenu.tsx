@@ -12,9 +12,15 @@ import { initials } from '../lib/format';
 import { useApp } from '../state/app-context';
 
 export function AccountMenu() {
-  const { auth, openModal, notify, pendingCount, editCount, myReports } = useApp();
-  const rejectedCount = myReports.filter((report) => report.moderation === 'rejected').length;
-  const reviewCount = pendingCount + editCount;
+  const { auth, openModal, notify, pendingCount, editCount, resolutionCount, myReports } =
+    useApp();
+  // Author's reports that need a fix: a rejected report or a rejected proof.
+  const rejectedCount = myReports.filter(
+    (report) =>
+      report.moderation === 'rejected' ||
+      (report.status !== 'resolved' && report.resolution?.state === 'rejected'),
+  ).length;
+  const reviewCount = pendingCount + editCount + resolutionCount;
   const attention = rejectedCount + reviewCount;
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);

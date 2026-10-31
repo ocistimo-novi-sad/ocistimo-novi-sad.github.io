@@ -28,6 +28,7 @@ import type {
   Report,
   ReportContent,
   ReportStatus,
+  Resolution,
 } from '../types';
 
 /** Fields an author writes, in the order an edit is reviewed. */
@@ -110,6 +111,27 @@ function mapContent(data: DocumentData): ReportContent | null {
   };
 }
 
+function mapResolution(value: unknown): Resolution | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const data = value as DocumentData;
+  if (data.state !== 'pending' && data.state !== 'approved' && data.state !== 'rejected') {
+    return undefined;
+  }
+  return {
+    state: data.state,
+    imageUrls: Array.isArray(data.imageUrls)
+      ? data.imageUrls.filter((url: unknown): url is string => typeof url === 'string')
+      : [],
+    note: asString(data.note),
+    submittedAt: asDate(data.submittedAt),
+    submittedBy: asString(data.submittedBy) || undefined,
+    reviewedAt: asDate(data.reviewedAt),
+    reviewedBy: asString(data.reviewedBy) || undefined,
+    rejectionReason: asString(data.rejectionReason) || undefined,
+    byModerator: data.byModerator === true,
+  };
+}
+
 export function mapReport(id: string, data: DocumentData): Report | null {
   const createdAt = asDate(data.createdAt);
   const content = mapContent(data);
@@ -138,6 +160,7 @@ export function mapReport(id: string, data: DocumentData): Report | null {
     editedAt: asDate(data.editedAt),
     editReview: data.editReview === 'pending' ? 'pending' : undefined,
     previousVersion: previous ?? undefined,
+    resolution: mapResolution(data.resolution),
     moderation,
     rejectionReason: asString(data.rejectionReason) || undefined,
     moderatedBy: asString(data.moderatedBy) || undefined,
@@ -463,4 +486,88 @@ export async function revertEdit(reportId: string): Promise<ReportContent> {
   }
   await updateDoc(reference, changes);
   return restored;
+}
+
+/** Author: proof that the problem was fixed, waiting for a moderator. */
+export async function submitResolution(
+  reportId: string,
+  imageUrls: string[],
+  note: string,
+): Promise<Resolution> {
+  const user = currentUser();
+  await updateDoc(doc(requireDb(), 'reports', reportId), {
+    resolution: {
+      state: 'pending',
+      imageUrls,
+      note,
+      submittedAt: serverTimestamp(),
+      submittedBy: user.uid,
+    },
+  });
+  return {
+    state: 'pending',
+    imageUrls,
+    note,
+    submittedAt: new Date(),
+    submittedBy: user.uid,
+    reviewedAt: null,
+  };
+}
+
+function resolutionsQuery() {
+  return query(collection(requireDb(), 'reports'), where('resolution.state', '==', 'pending'));
+}
+
+/** Moderators: proofs of a fix waiting for confirmation, oldest first. */
+export async function fetchPendingResolutions(): Promise<Report[]> {
+  const snapshot = await getDocs(
+    query(resolutionsQuery(), orderBy('resolution.submittedAt', 'asc'), limit(QUEUE_LIMIT)),
+  );
+  return mapSnapshots(snapshot.docs);
+}
+
+export async function countPendingResolutions(): Promise<number> {
+  const snapshot = await getCountFromServer(resolutionsQuery());
+  return snapshot.data().count;
+}
+
+/** Confirms the author's proof: the report becomes resolved. */
+export async function approveResolution(reportId: string): Promise<void> {
+  const user = currentUser();
+  await updateDoc(doc(requireDb(), 'reports', reportId), {
+    status: 'resolved',
+    'resolution.state': 'approved',
+    'resolution.rejectionReason': deleteField(),
+    'resolution.reviewedAt': serverTimestamp(),
+    'resolution.reviewedBy': user.uid,
+    ...moderationStamp(user),
+  });
+}
+
+export async function rejectResolution(reportId: string, reason: string): Promise<void> {
+  const user = currentUser();
+  await updateDoc(doc(requireDb(), 'reports', reportId), {
+    'resolution.state': 'rejected',
+    'resolution.rejectionReason': reason,
+    'resolution.reviewedAt': serverTimestamp(),
+    'resolution.reviewedBy': user.uid,
+    ...moderationStamp(user),
+  });
+}
+
+/** Moderator marks a report resolved without the author's proof. */
+export async function markResolved(reportId: string): Promise<void> {
+  const user = currentUser();
+  await updateDoc(doc(requireDb(), 'reports', reportId), {
+    status: 'resolved',
+    resolution: {
+      state: 'approved',
+      imageUrls: [],
+      note: '',
+      byModerator: true,
+      reviewedAt: serverTimestamp(),
+      reviewedBy: user.uid,
+    },
+    ...moderationStamp(user),
+  });
 }

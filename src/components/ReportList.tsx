@@ -38,7 +38,7 @@ function ReportCard({
     <button
       type="button"
       id={`report-card-${report.id}`}
-      className={`report-card${selected ? ' is-selected' : ''}`}
+      className={`report-card${selected ? ' is-selected' : ''}${report.status === 'resolved' ? ' is-resolved' : ''}`}
       data-category={report.category}
       onClick={() => selectReport(report)}
       aria-pressed={selected}
