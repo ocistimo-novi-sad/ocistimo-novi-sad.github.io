@@ -9,6 +9,8 @@ dist-ssr/
 .env
 .env.local
 .env.*.local
+# Extension secrets for the emulator (ext:configure → "Local file")
+*.secret.local
 
 # Local tooling
 .npm-cache/
