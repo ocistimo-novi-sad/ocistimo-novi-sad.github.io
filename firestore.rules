@@ -355,7 +355,8 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------------------------
-    // Cleanup actions: public read, admins create/edit/cancel.
+    // Cleanup actions: public read, admins create/edit/cancel. updatedBy names
+    // the admin behind every write, so they are left out of its e-mails.
     // ---------------------------------------------------------------------
     match /actions/{actionId} {
       allow read: if true;
@@ -365,15 +366,17 @@ service cloud.firestore {
              'title', 'description', 'date', 'meetingPoint', 'latitude',
              'longitude', 'status', 'reportIds', 'supplies',
              'organizerName', 'organizerNote', 'coverUrl', 'resultImageUrls',
-             'createdAt', 'createdBy'
+             'createdAt', 'createdBy', 'updatedBy'
            ])
         && validActionFields(request.resource.data)
         && request.resource.data.createdAt == request.time
-        && request.resource.data.createdBy == request.auth.uid;
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.updatedBy == request.auth.uid;
 
       allow update: if isAdmin()
         && request.resource.data.createdAt == resource.data.createdAt
         && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.updatedBy == request.auth.uid
         && validActionFields(request.resource.data);
 
       allow delete: if isAdmin();

@@ -6,6 +6,8 @@ Kuka i Motika je zamišljen kao praktičan alat za građane koji žele da prijav
 
 Ideja projekta je jednostavna: umesto da informacije o zapuštenim mestima ostanu rasute po porukama i društvenim mrežama, sve prijave mogu da budu pregledno prikazane na jednoj mapi. Tako zajednica lakše može da proceni gde je pomoć potrebna i da organizuje konkretnu akciju.
 
+Detaljan opis rada aplikacije — uloge, slučajevi korišćenja, životni ciklus prijava i akcija i sva obaveštenja e-poštom — nalazi se u dokumentu [Kako aplikacija radi](docs/use-cases.md).
+
 ## Sadržaj
 
 - [Pregled aplikacije](#pregled-aplikacije)
@@ -142,10 +144,10 @@ Time se smanjuje mogućnost da neprimeren sadržaj ili netačne prijave ostanu b
 
 Aplikacija šalje kratka obaveštenja na adresu Google naloga:
 
-- **autoru prijave** — kada je prijava odobrena ili odbijena (uz razlog), kada je dokaz sanacije potvrđen ili odbijen i kada je prijava uključena u akciju čišćenja ili je ta akcija otkazana;
+- **autoru prijave** — kada je prijava odobrena ili odbijena (uz razlog), kada joj moderator promeni status ili vrati prethodnu verziju posle izmene, kada je dokaz sanacije potvrđen ili odbijen, kada je prijava uključena u akciju čišćenja, kada se toj akciji promeni termin ili mesto okupljanja i kada je akcija otkazana;
 - **moderatorima i administratorima** — kada stigne nova ili ispravljena prijava, izmena objavljene prijave, dokaz sanacije ili oznaka spornog sadržaja.
 
-Niko ne dobija obaveštenje o sopstvenoj radnji. Obaveštenja pravi Cloud Function iz foldera `functions/` i upisuje ih u kolekciju `mail`, a ekstenzija Trigger Email ih šalje preko Gmail SMTP-a. Upisani zapisi se brišu posle nedelju dana. Funkcije, ekstenzija i pravila se objavljuju ručno, jer GitHub Actions objavljuje samo sajt:
+Niko ne dobija obaveštenje o sopstvenoj radnji. Potpun spisak poruka, sa tačnim uslovima kada se šalju i kada ne, nalazi se u [Kako aplikacija radi → Obaveštenja e-poštom](docs/use-cases.md#10-obaveštenja-e-poštom). Obaveštenja pravi Cloud Function iz foldera `functions/` i upisuje ih u kolekciju `mail`, a ekstenzija Trigger Email ih šalje preko Gmail SMTP-a. Upisani zapisi se brišu posle nedelju dana. Funkcije, ekstenzija i pravila se objavljuju ručno, jer GitHub Actions objavljuje samo sajt:
 
 ```sh
 firebase deploy --only functions,extensions,firestore --project ocistimo-novi-sad

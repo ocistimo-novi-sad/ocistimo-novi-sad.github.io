@@ -58,11 +58,15 @@ export const onFlagCreated = onDocumentCreated('flags/{flagId}', async (event) =
   });
 });
 
-/** Authors of linked reports hear when an action is planned or cancelled. */
+/** Authors of linked reports hear when an action is planned, moved or cancelled. */
 export const onActionWritten = onDocumentWritten('actions/{actionId}', async (event) => {
   const before = event.data?.before.data();
   const after = event.data?.after.data();
   if (!after) return;
+
+  // The admin who saved this write. Actions saved before updatedBy existed
+  // only know who created them.
+  const actor = asString(after.updatedBy) || asString(after.createdBy);
 
   const action = {
     title: asString(after.title) || 'Akcija čišćenja',
@@ -71,7 +75,7 @@ export const onActionWritten = onDocumentWritten('actions/{actionId}', async (ev
   };
   for (const change of actionEvents(before, after)) {
     await queueMail(`${event.id}-${change.kind}`, {
-      bccUids: await reportAuthors(change.reportIds, asString(after.createdBy)),
+      bccUids: await reportAuthors(change.reportIds, actor),
       message: actionMessage(change.kind, action),
     });
   }

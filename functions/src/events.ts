@@ -1,16 +1,21 @@
-import type { DocumentData } from 'firebase-admin/firestore';
+import { Timestamp, type DocumentData } from 'firebase-admin/firestore';
 
 /** A change to a report that someone should hear about. */
 export type ReportEvent =
   | { kind: 'submitted'; resubmitted: boolean }
   | { kind: 'edited' }
+  | { kind: 'edit-reverted' }
   | { kind: 'approved' }
   | { kind: 'rejected'; reason: string }
+  | { kind: 'status-changed'; status: string }
   | { kind: 'proof-submitted' }
   | { kind: 'proof-approved'; byModerator: boolean }
   | { kind: 'proof-rejected'; reason: string };
 
-export type ActionEvent = { kind: 'planned' | 'cancelled'; reportIds: string[] };
+export type ActionEvent = {
+  kind: 'planned' | 'rescheduled' | 'cancelled';
+  reportIds: string[];
+};
 
 /** Events that go to moderators and admins; the rest go to the author. */
 const STAFF_EVENTS: ReadonlySet<ReportEvent['kind']> = new Set([
@@ -31,6 +36,10 @@ function stringList(value: unknown): string[] {
   return Array.isArray(value)
     ? value.filter((item: unknown): item is string => typeof item === 'string')
     : [];
+}
+
+function millis(value: unknown): number | null {
+  return value instanceof Timestamp ? value.toMillis() : null;
 }
 
 /** Compares a report before and after a write. A deletion tells no one. */
@@ -57,6 +66,10 @@ export function reportEvents(
   if (after.editReview === 'pending' && before?.editReview !== 'pending') {
     events.push({ kind: 'edited' });
   }
+  // A rollback drops editedAt along with the review; accepting an edit keeps it.
+  if (before?.editReview === 'pending' && after.editReview !== 'pending' && !after.editedAt) {
+    events.push({ kind: 'edit-reverted' });
+  }
 
   const resolution = after.resolution as DocumentData | undefined;
   const state = asString(resolution?.state);
@@ -71,12 +84,24 @@ export function reportEvents(
     }
   }
 
+  // A confirmed fix already tells the author the report is resolved.
+  const status = asString(after.status);
+  if (
+    before &&
+    moderation === 'approved' &&
+    status !== asString(before.status) &&
+    !events.some((item) => item.kind === 'proof-approved')
+  ) {
+    events.push({ kind: 'status-changed', status });
+  }
+
   return events;
 }
 
 /**
  * Compares an action before and after a write. Authors hear when their report
- * joins a planned action, and again if that action is cancelled.
+ * joins a planned action, when its time or meeting point moves, and again if
+ * that action is cancelled.
  */
 export function actionEvents(
   before: DocumentData | undefined,
@@ -95,5 +120,15 @@ export function actionEvents(
   // A cancelled action that is planned again is news to every author.
   const known = before && before.status !== 'cancelled' ? stringList(before.reportIds) : [];
   const added = reportIds.filter((id) => !known.includes(id));
-  return added.length ? [{ kind: 'planned', reportIds: added }] : [];
+  const kept = reportIds.filter((id) => known.includes(id));
+  const events: ActionEvent[] = [];
+  if (added.length) events.push({ kind: 'planned', reportIds: added });
+
+  // New authors already get the current time and place with "planned".
+  const moved =
+    before !== undefined &&
+    (millis(before.date) !== millis(after.date) ||
+      asString(before.meetingPoint) !== asString(after.meetingPoint));
+  if (moved && kept.length) events.push({ kind: 'rescheduled', reportIds: kept });
+  return events;
 }

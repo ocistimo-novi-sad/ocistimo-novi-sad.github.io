@@ -113,6 +113,7 @@ export async function createActionRecord(input: NewActionInput): Promise<void> {
     ...actionPayload(input),
     createdAt: serverTimestamp(),
     createdBy: user.uid,
+    updatedBy: user.uid,
   };
   if (input.coverUrl) payload.coverUrl = input.coverUrl;
 
@@ -132,6 +133,7 @@ export async function updateActionRecord(
   await updateDoc(doc(db, 'actions', actionId), {
     ...actionPayload(input),
     coverUrl: input.coverUrl || deleteField(),
+    updatedBy: user.uid,
   });
 }
 
@@ -145,5 +147,5 @@ export async function updateActionStatus(
     throw new AppError('unauthenticated', 'Prijavite se kao administrator.');
   }
 
-  await updateDoc(doc(db, 'actions', actionId), { status });
+  await updateDoc(doc(db, 'actions', actionId), { status, updatedBy: user.uid });
 }

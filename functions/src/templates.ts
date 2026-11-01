@@ -13,6 +13,22 @@ const FLAG_REASON_LABELS: Record<string, string> = {
   other: 'Drugo',
 };
 
+/** Same labels as REPORT_STATUSES in src/config.ts. */
+const STATUS_LABELS: Record<string, { label: string; description: string }> = {
+  new: { label: 'Nova', description: 'Objavljena, još bez plana akcije.' },
+  verified: { label: 'Proverena', description: 'Problem je potvrđen na terenu.' },
+  planned: {
+    label: 'Planirana akcija',
+    description: 'Prijava je uključena u planirano čišćenje.',
+  },
+  in_progress: { label: 'U toku', description: 'Radovi ili akcija su počeli.' },
+  resolved: { label: 'Rešeno', description: 'Problem je uklonjen.' },
+  not_suitable: {
+    label: 'Nije za akciju',
+    description: 'Problem nije pogodan za volontersko čišćenje.',
+  },
+};
+
 export interface ReportSummary {
   id: string;
   title: string;
@@ -85,6 +101,15 @@ export function reportMessage(event: ReportEvent, report: ReportSummary): Messag
         ],
         toReview,
       );
+    case 'edit-reverted':
+      return compose(
+        'Izmena prijave nije prihvaćena',
+        [
+          `Moderator je vratio prethodnu verziju vaše prijave ${title}.`,
+          'Ako je izmena bila potrebna, možete ponovo da je napravite iz detalja prijave.',
+        ],
+        toReview,
+      );
     case 'approved':
       return compose(
         'Prijava je objavljena',
@@ -101,6 +126,17 @@ export function reportMessage(event: ReportEvent, report: ReportSummary): Messag
         ],
         toReview,
       );
+    case 'status-changed': {
+      const status = STATUS_LABELS[event.status];
+      return compose(
+        'Promenjen status prijave',
+        [
+          `Status vaše prijave ${title} je sada: ${status?.label ?? event.status}.`,
+          ...(status ? [status.description] : []),
+        ],
+        toReview,
+      );
+    }
     case 'proof-submitted':
       return compose(
         'Dokaz sanacije čeka potvrdu',
@@ -155,6 +191,17 @@ export function actionMessage(kind: ActionEvent['kind'], action: ActionSummary):
     return compose(
       'Akcija je otkazana',
       [`Akcija čišćenja ${title}, zakazana za ${formatDate(action.date)}, je otkazana.`],
+      toActions,
+    );
+  }
+  if (kind === 'rescheduled') {
+    return compose(
+      'Promenjen termin ili mesto akcije',
+      [
+        `Akcija čišćenja ${title}, u koju je uključena vaša prijava, ima novi termin ili mesto okupljanja.`,
+        `Kada: ${formatDate(action.date)}`,
+        ...(action.meetingPoint ? [`Mesto okupljanja: ${action.meetingPoint}`] : []),
+      ],
       toActions,
     );
   }
