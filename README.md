@@ -138,6 +138,21 @@ Administratori u panelu „Administracija“ mogu da:
 
 Time se smanjuje mogućnost da neprimeren sadržaj ili netačne prijave ostanu bez reakcije. Ova pravila nisu samo u interfejsu — sprovode ih Firestore Security Rules (vidi [Bezbednost i pravila pristupa](#bezbednost-i-pravila-pristupa)).
 
+### Obaveštenja e-poštom
+
+Aplikacija šalje kratka obaveštenja na adresu Google naloga:
+
+- **autoru prijave** — kada je prijava odobrena ili odbijena (uz razlog), kada je dokaz sanacije potvrđen ili odbijen i kada je prijava uključena u akciju čišćenja ili je ta akcija otkazana;
+- **moderatorima i administratorima** — kada stigne nova ili ispravljena prijava, izmena objavljene prijave, dokaz sanacije ili oznaka spornog sadržaja.
+
+Niko ne dobija obaveštenje o sopstvenoj radnji. Obaveštenja pravi Cloud Function iz foldera `functions/` i upisuje ih u kolekciju `mail`, a ekstenzija Trigger Email ih šalje preko Gmail SMTP-a. Upisani zapisi se brišu posle nedelju dana. Funkcije, ekstenzija i pravila se objavljuju ručno, jer GitHub Actions objavljuje samo sajt:
+
+```sh
+firebase deploy --only functions,extensions,firestore --project ocistimo-novi-sad
+```
+
+Pri prvom objavljivanju ekstenzije Firebase CLI traži Gmail app password i čuva ga u Secret Manager-u. Lozinka se nikada ne upisuje u repozitorijum.
+
 Korisnici treba da objavljuju samo informacije relevantne za problem na javnom prostoru. Fotografije i opisi ne treba nepotrebno da otkrivaju lične podatke ili prikazuju ljude na način koji ugrožava njihovu privatnost.
 
 ## Pristupačnost i korišćenje na različitim uređajima
@@ -154,7 +169,8 @@ Dizajn je usmeren na preglednost i brzo korišćenje: mapa ostaje u prvom planu,
 - Slanje fotografija zahteva Firebase Storage (Blaze plan) i objavljena pravila iz `storage.rules`. Bez podešenog bucket-a (`VITE_FIREBASE_STORAGE_BUCKET`) prijave se šalju bez fotografija, a u demonstracionom režimu fotografije se ne otpremaju.
 - Fotografije se čitaju preko javnih adresa sa nasumičnim imenima, a izlistavanje foldera je zabranjeno. Ko ima tačnu adresu fotografije može da je otvori, pa i fotografije „posle” u dokazu sanacije pre nego što ga moderator potvrdi.
 - Ako slanje forme ne uspe pošto su fotografije već otpremljene, pa korisnik odustane, te fotografije ostaju u Storage-u. Automatsko čišćenje takvih fotografija još ne postoji.
-- Aplikacija trenutno nema komentare, obaveštenja putem e-pošte ni evidenciju prisustva volontera.
+- Aplikacija trenutno nema komentare ni evidenciju prisustva volontera.
+- Obaveštenja e-poštom rade samo uz Firebase (Cloud Functions i ekstenziju Trigger Email), ne u demonstracionom režimu. Korisnik ih za sada ne može isključiti.
 - Pretraga adresa nije automatska; korisnik označava lokaciju na mapi i, po potrebi, unosi adresu kao tekst.
 - Promene se ne osvežavaju automatski u realnom vremenu; podaci se osvežavaju nakon relevantnih radnji ili dugmetom za osvežavanje.
 - Prijave i akcije moraju biti unutar područja Novog Sada (približno 45.05–45.45° S, 19.55–20.05° I).

@@ -41,5 +41,12 @@
       ]
     }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    {
+      "collectionGroup": "mail",
+      "fieldPath": "delivery.expireAt",
+      "ttl": true,
+      "indexes": []
+    }
+  ]
 }
