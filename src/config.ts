@@ -127,6 +127,18 @@ export const ACTION_STATUS_MAP: Record<ActionStatus, string> = Object.fromEntrie
   ACTION_STATUSES.map((status) => [status.id, status.label]),
 ) as Record<ActionStatus, string>;
 
+/**
+ * Report status applied to every report linked to an action when the action is
+ * saved. Reports have no "completed" status, so a completed action resolves
+ * its reports. Cancelling an action leaves the report statuses unchanged.
+ */
+export const ACTION_REPORT_STATUS: Record<ActionStatus, ReportStatus | null> = {
+  planned: 'planned',
+  in_progress: 'in_progress',
+  completed: 'resolved',
+  cancelled: null,
+};
+
 export const SORT_OPTIONS: { id: SortMode; label: string }[] = [
   { id: 'newest', label: 'Najnovije' },
   { id: 'oldest', label: 'Najstarije' },

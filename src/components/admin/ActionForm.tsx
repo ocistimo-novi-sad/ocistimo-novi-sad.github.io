@@ -275,7 +275,11 @@ export function ActionForm({
                 </option>
               ))}
             </select>
-            <p className="field__hint">Status menjajte kada se termin potvrdi ili akcija završi.</p>
+            <p className="field__hint">
+              Status se automatski primenjuje na sve povezane prijave: „Planirano“ → „Akcija
+              planirana“, „U toku“ → „Akcija u toku“, „Završeno“ → „Rešeno“. Otkazivanje ne
+              menja status prijava.
+            </p>
           </div>
         </div>
 
