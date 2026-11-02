@@ -82,39 +82,33 @@ export interface StatusMeta {
 export const REPORT_STATUSES: StatusMeta[] = [
   {
     id: 'new',
-    label: 'Nova',
+    label: 'Nova prijava',
     description: 'Objavljena, još bez plana akcije.',
     weight: 1,
   },
   {
-    id: 'verified',
-    label: 'Proverena',
-    description: 'Problem je potvrđen na terenu.',
+    id: 'planned',
+    label: 'Akcija planirana',
+    description: 'Prijava je uključena u planirano čišćenje.',
     weight: 2,
   },
   {
-    id: 'planned',
-    label: 'Planirana akcija',
-    description: 'Prijava je uključena u planirano čišćenje.',
-    weight: 3,
-  },
-  {
     id: 'in_progress',
-    label: 'U toku',
+    label: 'Akcija u toku',
     description: 'Radovi ili akcija su počeli.',
-    weight: 4,
+    weight: 3,
   },
   {
     id: 'resolved',
     label: 'Rešeno',
     description: 'Problem je uklonjen.',
-    weight: 5,
+    weight: 4,
   },
   {
     id: 'not_suitable',
     label: 'Nije za akciju',
     description: 'Problem nije pogodan za volontersko čišćenje.',
-    weight: 6,
+    weight: 5,
   },
 ];
 
