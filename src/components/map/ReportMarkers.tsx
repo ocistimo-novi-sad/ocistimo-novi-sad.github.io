@@ -57,7 +57,7 @@ interface ReportMarkersProps {
   interactive?: boolean;
 }
 
-const CLUSTER_MAX_ZOOM = 15;
+const CLUSTER_MAX_ZOOM = 20;
 
 /**
  * Markers with Supercluster-based grouping for dense areas. At zoom 16+ the
