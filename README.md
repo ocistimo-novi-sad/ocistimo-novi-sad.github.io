@@ -113,10 +113,9 @@ Prijave su grupisane prema vrsti problema:
 
 ### Prijave
 
-- **Nova** — prijava je poslata i čeka pregled.
-- **Proverena** — problem je potvrđen na terenu.
-- **Planirana akcija** — prijava je uključena u planirano čišćenje.
-- **U toku** — radovi ili akcija su počeli.
+- **Nova prijava** — prijava je objavljena i još nema plan akcije.
+- **Akcija planirana** — prijava je uključena u planirano čišćenje.
+- **Akcija u toku** — radovi ili akcija su počeli.
 - **Rešeno** — problem je uklonjen.
 - **Nije za akciju** — problem nije pogodan za volontersko čišćenje i potrebna je druga vrsta intervencije.
 

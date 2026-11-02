@@ -15,13 +15,12 @@ const FLAG_REASON_LABELS: Record<string, string> = {
 
 /** Same labels as REPORT_STATUSES in src/config.ts. */
 const STATUS_LABELS: Record<string, { label: string; description: string }> = {
-  new: { label: 'Nova', description: 'Objavljena, još bez plana akcije.' },
-  verified: { label: 'Proverena', description: 'Problem je potvrđen na terenu.' },
+  new: { label: 'Nova prijava', description: 'Objavljena, još bez plana akcije.' },
   planned: {
-    label: 'Planirana akcija',
+    label: 'Akcija planirana',
     description: 'Prijava je uključena u planirano čišćenje.',
   },
-  in_progress: { label: 'U toku', description: 'Radovi ili akcija su počeli.' },
+  in_progress: { label: 'Akcija u toku', description: 'Radovi ili akcija su počeli.' },
   resolved: { label: 'Rešeno', description: 'Problem je uklonjen.' },
   not_suitable: {
     label: 'Nije za akciju',

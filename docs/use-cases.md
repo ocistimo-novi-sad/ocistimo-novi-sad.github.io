@@ -144,10 +144,9 @@ Status opisuje stanje problema na terenu. Menja ga moderator ručno; jedini auto
 
 | Status | Značenje |
 |---|---|
-| **Nova** | Objavljena, još bez plana akcije |
-| **Proverena** | Problem je potvrđen na terenu |
-| **Planirana akcija** | Prijava je uključena u planirano čišćenje |
-| **U toku** | Radovi ili akcija su počeli |
+| **Nova prijava** | Objavljena, još bez plana akcije |
+| **Akcija planirana** | Prijava je uključena u planirano čišćenje |
+| **Akcija u toku** | Radovi ili akcija su počeli |
 | **Rešeno** | Problem je uklonjen |
 | **Nije za akciju** | Problem nije pogodan za volontersko čišćenje |
 
@@ -352,7 +351,7 @@ Moderator ima sve što i član zajednice, plus stavku **Moderacija** u meniju na
 - **Gde:** Moderacija → **Nove prijave** (najstarije prvo); ili detalji neobjavljene prijave → okvir „Moderacija“; ili link iz e-pošte
 - **Tok — odobravanje:**
   1. Moderator pregleda prijavu (fotografije, opis, lokacija, „Otvori na mapi“).
-  2. „Odobri i objavi“ → prijava odmah postaje javna, sa statusom „Nova“.
+  2. „Odobri i objavi“ → prijava odmah postaje javna, sa statusom „Nova prijava“.
   3. **E-pošta:** autoru **„Prijava je objavljena“** (E-6).
 - **Tok — odbijanje:**
   1. „Odbij…“ → upis razloga (najmanje 10 znakova) ili izbor čestog razloga:
@@ -401,7 +400,7 @@ Moderator ima sve što i član zajednice, plus stavku **Moderacija** u meniju na
 ### UC-18 Promena statusa prijave
 
 - **Gde:** detalji objavljene prijave → okvir „Moderacija“ → izbor statusa → „Sačuvaj“
-- **Tok:** moderator bira bilo koji od šest statusa (npr. „Proverena“, „Planirana akcija“, „Nije za akciju“).
+- **Tok:** moderator bira bilo koji od pet statusa (npr. „Akcija planirana“, „Akcija u toku“, „Nije za akciju“).
 - **E-pošta:** autoru **„Promenjen status prijave“** sa novim statusom i njegovim značenjem (E-12). Važi za svaki status, uključujući „Rešeno“ izabrano iz liste. Kada prijava postane rešena preko UC-16 ili UC-17, autor umesto toga dobija E-8, ne obe poruke.
 
 ### UC-19 Izmena i brisanje bilo koje prijave
@@ -498,7 +497,7 @@ Naslov svake poruke se završava sa „ – Kuka i Motika“.
 | **E-9** | Dokaz sanacije je odbijen | Moderator (UC-16) | Autor prijave | Dokaz sanacije nije prihvaćen | Naslov, razlog, uputstvo da se pošalje novi dokaz | Otvori prijavu |
 | **E-10** | Prijava je uključena u planiranu akciju | Administrator (UC-21, UC-22) | Autori prijava koje su upravo povezane (vidi tabelu u UC-22) | Akcija čišćenja za vašu prijavu | Naziv akcije, kada (pun datum i vreme), mesto okupljanja, poziv da se pridruže | Otvori Kuka i Motika (početna strana) |
 | **E-11** | Akcija je otkazana | Administrator (UC-23) | Autori svih prijava povezanih sa akcijom | Akcija je otkazana | Naziv akcije i za kada je bila zakazana | Otvori Kuka i Motika (početna strana) |
-| **E-12** | Moderator je promenio status objavljene prijave | Moderator (UC-18) | Autor prijave | Promenjen status prijave | Naslov, novi status i njegovo značenje (npr. „Proverena — Problem je potvrđen na terenu.“) | Otvori prijavu |
+| **E-12** | Moderator je promenio status objavljene prijave | Moderator (UC-18) | Autor prijave | Promenjen status prijave | Naslov, novi status i njegovo značenje (npr. „Akcija planirana — Prijava je uključena u planirano čišćenje.“) | Otvori prijavu |
 | **E-13** | Moderator je vratio prethodnu verziju izmenjene prijave | Moderator (UC-15) | Autor prijave | Izmena prijave nije prihvaćena | Naslov; izmena se može ponovo napraviti iz detalja prijave | Otvori prijavu |
 | **E-14** | Planiranoj akciji je promenjen datum, vreme ili mesto okupljanja | Administrator (UC-22) | Autori prijava koje su već bile povezane sa akcijom | Promenjen termin ili mesto akcije | Naziv akcije, novi datum i vreme, mesto okupljanja | Otvori Kuka i Motika (početna strana) |
 
@@ -558,7 +557,7 @@ sequenceDiagram
     App-->>M: E-2 Ispravljena prijava čeka pregled
     M->>App: Odobrava
     App-->>A: E-6 Prijava je objavljena
-    M->>App: Menja status u „Proverena“
+    M->>App: Menja status u „Akcija planirana“
     App-->>A: E-12 Promenjen status prijave
     Adm->>App: Pravi planiranu akciju sa ovom prijavom
     App-->>A: E-10 Akcija čišćenja za vašu prijavu

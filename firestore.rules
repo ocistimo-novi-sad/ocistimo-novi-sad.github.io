@@ -49,6 +49,8 @@ service cloud.firestore {
     }
 
     function validReportStatus(value) {
+      // 'verified' is no longer offered by the UI; it stays accepted so
+      // reports saved before its removal can still be edited and migrated.
       return value in [
         'new', 'verified', 'planned', 'in_progress', 'resolved', 'not_suitable'
       ];

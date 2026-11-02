@@ -8,7 +8,6 @@ export type Category =
 
 export type ReportStatus =
   | 'new'
-  | 'verified'
   | 'planned'
   | 'in_progress'
   | 'resolved'

@@ -615,7 +615,7 @@ export function ReportDetail() {
       ) : null}
 
       <p className="detail-note">
-        Ovo je prijava iz zajednice. Status „Nova” znači da problem još nije proveren, a ne da je
+        Ovo je prijava iz zajednice. Status „Nova prijava” znači da problem još nije proveren, a ne da je
         rešen. Za tačnost opisa odgovoran je autor prijave.
       </p>
 
