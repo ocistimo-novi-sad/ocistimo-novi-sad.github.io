@@ -3,7 +3,7 @@ import { APP } from '../config';
 export function BrandMark({ size = 26 }: { size?: number }) {
   return (
     <img
-      src={`${import.meta.env.BASE_URL}brand-mark.svg`}
+      src={`${import.meta.env.BASE_URL}brand-mark.png`}
       width={size}
       height={size}
       alt=""
