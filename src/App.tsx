@@ -3,6 +3,7 @@ import { ActionDetail } from './components/ActionDetail';
 import { AdminPanel } from './components/admin/AdminPanel';
 import { ComposeDrawer } from './components/ComposeDrawer';
 import { DiscoveryPanel } from './components/DiscoveryPanel';
+import { FirstVisitGuide } from './components/FirstVisitGuide';
 import { Header } from './components/Header';
 import { MapCanvas } from './components/MapCanvas';
 import { MobileTabBar } from './components/MobileTabBar';
@@ -79,6 +80,7 @@ function AppShell() {
       </main>
 
       <MobileTabBar />
+      <FirstVisitGuide />
       <Toasts />
       <ModalHost />
     </div>

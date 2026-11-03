@@ -81,6 +81,7 @@ export function MobileTabBar() {
         <button
           type="button"
           className="tabbar__item tabbar__item--cta"
+          data-guide="create"
           onClick={onCreate}
           aria-expanded={auth.isAdmin ? menuOpen : undefined}
           aria-haspopup={auth.isAdmin ? 'menu' : undefined}
@@ -120,6 +121,7 @@ export function MobileTabBar() {
         className={`tabbar__item${mobileTab === 'list' ? ' is-active' : ''}`}
         aria-current={mobileTab === 'list' ? 'page' : undefined}
         onClick={() => switchTab('list')}
+        data-guide="list"
       >
         <Rows3 size={18} aria-hidden="true" />
         <span>Lista</span>

@@ -1358,3 +1358,67 @@
   gap: 5px;
   margin-top: 8px;
 }
+
+.info-guide {
+  margin: -8px 0 18px;
+}
+
+/* First-visit guide: the screen dims except for the highlighted element. */
+.guide {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+}
+
+.guide__dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(16, 22, 18, 0.62);
+}
+
+.guide__spot {
+  position: fixed;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0 0 9999px rgba(16, 22, 18, 0.62);
+  pointer-events: none;
+  transition:
+    top var(--dur-3) var(--ease),
+    left var(--dur-3) var(--ease),
+    width var(--dur-3) var(--ease),
+    height var(--dur-3) var(--ease);
+}
+
+.guide__bubble {
+  position: fixed;
+  right: max(12px, env(safe-area-inset-right, 0px));
+  left: max(12px, env(safe-area-inset-left, 0px));
+  display: grid;
+  gap: 8px;
+  max-width: 420px;
+  margin: 0 auto;
+  padding: 14px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-3);
+  animation: pop-in var(--dur-2) var(--ease);
+}
+
+.guide__step {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.guide__text {
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.guide__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
