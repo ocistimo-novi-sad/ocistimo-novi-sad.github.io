@@ -207,24 +207,25 @@ fieldset {
   outline-color: var(--ink);
 }
 
-/* Bright call to action: the one thing we want every visitor to do. */
+/* The one thing we want every visitor to do. Same green as every other main
+   button, so there is only one "main button" color in the app. */
 .btn--accent {
-  background: var(--leaf-2);
-  border-color: var(--leaf-2);
-  color: #fff;
+  background: var(--forest);
+  border-color: var(--forest);
+  color: #f6f5ef;
   font-weight: 600;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset, var(--shadow-1);
+  box-shadow: var(--shadow-1);
 }
 
 .btn--accent:hover:not(:disabled) {
-  background: var(--leaf-3);
-  border-color: var(--leaf-3);
-  box-shadow: 0 8px 20px -10px rgba(47, 128, 73, 0.75);
+  background: var(--forest-2);
+  border-color: var(--forest-2);
+  box-shadow: var(--shadow-2);
   transform: translateY(-1px);
 }
 
 .btn--accent:active:not(:disabled) {
-  background: var(--leaf-3);
+  background: #143024;
   box-shadow: none;
   transform: none;
 }
