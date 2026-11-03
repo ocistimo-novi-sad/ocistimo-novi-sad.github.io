@@ -137,6 +137,14 @@
   right: 54px;
   left: 10px;
   z-index: var(--z-map-ui);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.map-mobile-bar .segmented {
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
 }
 
 .map-mobile-search {

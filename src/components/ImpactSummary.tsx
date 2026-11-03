@@ -9,7 +9,7 @@ import { useApp } from '../state/app-context';
  * community's progress (reports, resolved share, upcoming cleanups).
  */
 export function ImpactSummary() {
-  const { reports, actions, reportsPhase, setView } = useApp();
+  const { reports, actions, reportsPhase, setLayer } = useApp();
 
   const { resolved, upcoming } = useMemo(() => {
     const now = Date.now();
@@ -56,7 +56,7 @@ export function ImpactSummary() {
             <button
               type="button"
               className="impact-stat"
-              onClick={() => setView('actions')}
+              onClick={() => setLayer('actions')}
               title="Pogledajte predstojeće akcije"
             >
               <span className="impact-stat__value">{upcoming}</span>

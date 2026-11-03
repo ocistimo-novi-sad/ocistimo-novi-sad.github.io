@@ -69,20 +69,9 @@
     font-size: 7.5px;
   }
 
+  /* The tab bar carries the report button on mobile. */
   .btn--report {
-    width: auto;
-    height: 36px;
-    gap: 5px;
-    padding: 0 10px;
-  }
-
-  .btn--report .btn__text {
     display: none;
-  }
-
-  .btn--report .btn__text-short {
-    display: inline;
-    font-size: 12px;
   }
 
   .app-header__actions .btn--icon {
@@ -639,15 +628,6 @@
 }
 
 @media (max-width: 380px) {
-  .btn--report {
-    width: 36px;
-    padding: 0;
-  }
-
-  .btn--report .btn__text-short {
-    display: none;
-  }
-
   .brand__name {
     letter-spacing: 0.09em;
   }

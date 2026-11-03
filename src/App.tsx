@@ -51,7 +51,7 @@ function ModalHost() {
 }
 
 function AppShell() {
-  const { view, mobileTab, selectedReport, selectedAction, composeOpen, composeEditing } =
+  const { layer, mobileTab, selectedReport, selectedAction, composeOpen, composeEditing } =
     useApp();
   const drawerOpen = composeOpen || Boolean(selectedReport) || Boolean(selectedAction);
 
@@ -61,7 +61,7 @@ function AppShell() {
 
       <main className="workspace">
         <div className={`discovery${mobileTab === 'map' ? ' is-hidden-mobile' : ''}`}>
-          {view === 'actions' ? <ActionsPanel /> : <DiscoveryPanel />}
+          {layer === 'actions' ? <ActionsPanel /> : <DiscoveryPanel />}
         </div>
 
         <div className="map-slot">

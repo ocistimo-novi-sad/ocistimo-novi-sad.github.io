@@ -48,10 +48,10 @@ import type {
   CleanupAction,
   Coordinates,
   Filters,
+  Layer,
   Report,
   ReportContent,
   ReportStatus,
-  View,
 } from '../types';
 
 type PendingIntent = { kind: 'create' } | { kind: 'flag'; reportId: string };
@@ -115,7 +115,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     load: loadActions,
   } = useActions();
 
-  const [view, setViewState] = useState<View>('map');
+  const [layer, setLayerState] = useState<Layer>('reports');
   const [mobileTab, setMobileTabState] = useState<MobileTab>('map');
   const [filters, setFilters] = useState<Filters>(() => ({
     ...DEFAULT_FILTERS,
@@ -311,18 +311,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const setView = useCallback((next: View) => {
-    setViewState(next);
-    setMobileTabState(next === 'actions' ? 'actions' : 'map');
-    if (next === 'actions') {
-      setSelectedReportId(null);
-    }
+  // Switching layers keeps map-or-list as it is and drops the selection
+  // that belongs to the other layer.
+  const setLayer = useCallback((next: Layer) => {
+    setLayerState(next);
+    if (next === 'actions') setSelectedReportId(null);
+    else setSelectedActionId(null);
   }, []);
 
   const setMobileTab = useCallback((tab: MobileTab) => {
     setMobileTabState(tab);
-    setViewState(tab === 'actions' ? 'actions' : 'map');
-    if (tab === 'actions') setSelectedReportId(null);
   }, []);
 
   const selectReport = useCallback(
@@ -331,7 +329,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSelectedActionId(null);
       // On mobile this makes the map the surface behind the detail sheet, and
       // it also makes sure report markers (not action markers) are rendered.
-      setViewState('map');
+      setLayerState('reports');
       setMobileTabState('map');
       if (options?.fly !== false) flyTo(report, APP.focusZoom, { accountForDrawer: true });
     },
@@ -342,7 +340,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     (action: CleanupAction, options?: { fly?: boolean }) => {
       setSelectedActionId(action.id);
       setSelectedReportId(null);
-      setViewState('actions');
+      setLayerState('actions');
       // Keep the map behind the mobile sheet so the meeting point is visible.
       setMobileTabState('map');
       if (options?.fly !== false) flyTo(action, APP.focusZoom, { accountForDrawer: true });
@@ -378,7 +376,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setComposeOpen(true);
     setComposeEditing(null);
     setComposeLocationState(null);
-    setViewState('map');
+    setLayerState('reports');
     setMobileTabState('map');
   }, []);
 
@@ -406,7 +404,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setComposeEditing(report);
     setComposeLocationState({ latitude: report.latitude, longitude: report.longitude });
     setComposeOpen(true);
-    setViewState('map');
+    setLayerState('reports');
     setMobileTabState('map');
   }, []);
 
@@ -454,7 +452,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setComposeLocationState(null);
       setSelectedReportId(report.id);
       setSelectedActionId(null);
-      setViewState('map');
+      setLayerState('reports');
       setMobileTabState('map');
       flyTo(report, APP.focusZoom, { accountForDrawer: true });
     },
@@ -654,7 +652,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setComposeLocationState(null);
       setSelectedReportId(next.id);
       setSelectedActionId(null);
-      setViewState('map');
+      setLayerState('reports');
       setMobileTabState('map');
       notify('success', message);
     },
@@ -944,8 +942,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       selectAction,
       clearSelection,
       closeSelection: clearSelection,
-      view,
-      setView,
+      layer,
+      setLayer,
       mobileTab,
       setMobileTab,
       composeOpen,
@@ -1015,8 +1013,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       showReportOnMap,
       selectAction,
       clearSelection,
-      view,
-      setView,
+      layer,
+      setLayer,
       mobileTab,
       setMobileTab,
       composeOpen,

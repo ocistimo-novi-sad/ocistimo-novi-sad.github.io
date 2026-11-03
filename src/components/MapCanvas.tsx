@@ -32,6 +32,7 @@ import { formatCoordinates } from '../lib/format';
 import { isInServiceArea, roundCoordinate } from '../lib/geo';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { Spinner } from './ui/EmptyState';
+import { LayerSwitch } from './LayerSwitch';
 import { DraftMarkers, ReportMarkers } from './map/ReportMarkers';
 import { ActionMarkers } from './map/ActionMarkers';
 import { tempIcon, userIcon } from './map/map-icons';
@@ -102,7 +103,7 @@ export function MapCanvas() {
     reports,
     myUnpublishedReports,
     actions,
-    view,
+    layer,
     reportsPhase,
     reportsError,
     filters,
@@ -242,7 +243,7 @@ export function MapCanvas() {
           </>
         ) : null}
 
-        {view === 'map' ? (
+        {layer === 'reports' ? (
           <>
             <DraftMarkers
               reports={myUnpublishedReports}
@@ -298,23 +299,26 @@ export function MapCanvas() {
         ) : null}
       </MapContainer>
 
-      {isMobile && view === 'map' && !composeOpen ? (
+      {isMobile && !composeOpen ? (
         <div className="map-mobile-bar">
-          <button
-            type="button"
-            className="map-mobile-search"
-            onClick={() => setMobileTab('reports')}
-          >
-            <Search size={15} aria-hidden="true" />
-            <span>Pretraži prijave</span>
-            {activeFilterCount > 0 ? (
-              <span className="map-mobile-search__count">{activeFilterCount}</span>
-            ) : null}
-          </button>
+          <LayerSwitch />
+          {layer === 'reports' ? (
+            <button
+              type="button"
+              className="map-mobile-search"
+              onClick={() => setMobileTab('list')}
+            >
+              <Search size={15} aria-hidden="true" />
+              <span>Pretraži prijave</span>
+              {activeFilterCount > 0 ? (
+                <span className="map-mobile-search__count">{activeFilterCount}</span>
+              ) : null}
+            </button>
+          ) : null}
         </div>
       ) : null}
 
-      {!isMobile && view === 'map' && !composeOpen ? (
+      {!isMobile && layer === 'reports' && !composeOpen ? (
         <div className="map-area-toggle">
           <button
             type="button"
@@ -427,7 +431,7 @@ export function MapCanvas() {
         </div>
       ) : null}
 
-      {noReports && view === 'map' ? (
+      {noReports && layer === 'reports' ? (
         <div className="map-state">
           <div className="map-state__card">
             <div className="map-state__icon">
@@ -445,7 +449,7 @@ export function MapCanvas() {
         </div>
       ) : null}
 
-      {noResults && view === 'map' ? (
+      {noResults && layer === 'reports' ? (
         <div className="map-state">
           <div className="map-state__card">
             <div className="map-state__icon">
@@ -460,7 +464,7 @@ export function MapCanvas() {
         </div>
       ) : null}
 
-      {!isMobile && legendOpen && view === 'map' ? (
+      {!isMobile && legendOpen && layer === 'reports' ? (
         <div className="map-legend">
           <div className="map-legend__head">
             <span className="eyebrow">Legenda</span>
@@ -516,7 +520,7 @@ export function MapCanvas() {
         </div>
       ) : null}
 
-      {!isMobile && !legendOpen && view === 'map' ? (
+      {!isMobile && !legendOpen && layer === 'reports' ? (
         <button
           type="button"
           className="map-legend-open"
@@ -540,7 +544,7 @@ export function MapCanvas() {
         </div>
       ) : null}
 
-      {view === 'actions' && actions.length === 0 && app.actionsPhase === 'ready' ? (
+      {layer === 'actions' && actions.length === 0 && app.actionsPhase === 'ready' ? (
         <div className="map-state">
           <div className="map-state__card">
             <div className="map-state__icon">
@@ -555,7 +559,7 @@ export function MapCanvas() {
         </div>
       ) : null}
 
-      {view === 'actions' && app.actionsError && actions.length === 0 ? (
+      {layer === 'actions' && app.actionsError && actions.length === 0 ? (
         <div className="map-state">
           <div className="map-state__card">
             <div className="map-state__icon is-alert">

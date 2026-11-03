@@ -12,6 +12,7 @@ import { formatDate, formatTime, formatWeekday, plural, splitDate } from '../lib
 import { optimizedImageUrl } from '../services/images';
 import { useApp } from '../state/app-context';
 import type { CleanupAction } from '../types';
+import { LayerSwitch } from './LayerSwitch';
 import { EmptyState } from './ui/EmptyState';
 
 function ActionCard({
@@ -77,7 +78,7 @@ export function ActionsPanel() {
     selectedAction,
     auth,
     openModal,
-    setView,
+    setLayer,
   } = useApp();
   const [scope, setScope] = useState<'upcoming' | 'past'>('upcoming');
 
@@ -104,6 +105,8 @@ export function ActionsPanel() {
   return (
     <section className="panel panel--actions" aria-label="Akcije čišćenja">
       <div className="panel__head">
+        <LayerSwitch />
+
         <div className="panel__eyebrow-row">
           <span className="eyebrow">Novi Sad · Akcije</span>
           <span className="panel__count">{actions.length}</span>
@@ -209,7 +212,7 @@ export function ActionsPanel() {
                 <button
                   type="button"
                   className="btn btn--quiet btn--sm"
-                  onClick={() => setView('map')}
+                  onClick={() => setLayer('reports')}
                 >
                   Pogledaj prijave
                 </button>

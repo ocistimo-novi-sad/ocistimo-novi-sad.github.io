@@ -277,10 +277,6 @@ fieldset {
   padding: 0 13px 0 11px;
 }
 
-.btn__text-short {
-  display: none;
-}
-
 .link-btn {
   display: inline-flex;
   align-items: center;

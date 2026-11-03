@@ -169,7 +169,8 @@ export interface Filters {
   bounds: Bounds | null;
 }
 
-export type View = 'map' | 'actions';
+/** What the map and the list show; independent of map-or-list on mobile. */
+export type Layer = 'reports' | 'actions';
 
 export interface StoredImage {
   /** Public URL of the full image; the thumbnail is derived from it. */

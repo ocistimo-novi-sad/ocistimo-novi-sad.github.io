@@ -7,10 +7,10 @@ import type {
   CleanupAction,
   Coordinates,
   Filters,
+  Layer,
   Report,
   ReportContent,
   ReportStatus,
-  View,
 } from '../types';
 
 export type ToastTone = 'success' | 'error' | 'info';
@@ -32,7 +32,7 @@ export type ModalState =
   | { kind: 'lightbox'; images: string[]; index: number }
   | null;
 
-export type MobileTab = 'map' | 'reports' | 'actions';
+export type MobileTab = 'map' | 'list';
 
 export interface AppContextValue {
   auth: ReturnType<typeof useAuth>;
@@ -66,8 +66,8 @@ export interface AppContextValue {
   clearSelection: () => void;
   closeSelection: () => void;
 
-  view: View;
-  setView: (view: View) => void;
+  layer: Layer;
+  setLayer: (layer: Layer) => void;
   mobileTab: MobileTab;
   setMobileTab: (tab: MobileTab) => void;
 

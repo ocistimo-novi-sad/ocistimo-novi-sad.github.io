@@ -4,6 +4,7 @@ import { isFirebaseConfigured } from '../services/firebase';
 import { useApp } from '../state/app-context';
 import { FiltersBar } from './FiltersBar';
 import { ImpactSummary } from './ImpactSummary';
+import { LayerSwitch } from './LayerSwitch';
 import { LoadMoreButton, ReportList } from './ReportList';
 
 export function DiscoveryPanel() {
@@ -20,6 +21,8 @@ export function DiscoveryPanel() {
   return (
     <section className="panel" aria-label="Prijave u Novom Sadu">
       <div className="panel__head">
+        <LayerSwitch />
+
         <div className="panel__eyebrow-row">
           <span className="eyebrow">Novi Sad · Prijave</span>
           <span className="panel__count" title="Ukupan broj učitanih prijava">

@@ -6,30 +6,14 @@ import { Brand } from './Brand';
 import { AccountMenu } from './AccountMenu';
 
 export function Header() {
-  const { view, setView, startCompose, openModal } = useApp();
-  const isActions = view === 'actions';
+  const { startCompose, openModal } = useApp();
 
   return (
     <header className="app-header">
       <Brand />
 
+      {/* Reports vs. actions is the layer switch above the list and the map. */}
       <nav className="app-nav" aria-label="Glavna navigacija">
-        <button
-          type="button"
-          className={`nav-link${!isActions ? ' is-active' : ''}`}
-          aria-current={!isActions ? 'page' : undefined}
-          onClick={() => setView('map')}
-        >
-          Mapa
-        </button>
-        <button
-          type="button"
-          className={`nav-link${isActions ? ' is-active' : ''}`}
-          aria-current={isActions ? 'page' : undefined}
-          onClick={() => setView('actions')}
-        >
-          Akcije
-        </button>
         <button
           type="button"
           className="nav-link"
@@ -60,6 +44,7 @@ export function Header() {
           <Info size={16} aria-hidden="true" />
         </button>
 
+        {/* On mobile the report button lives in the tab bar. */}
         <button
           type="button"
           className="btn btn--accent btn--report"
@@ -68,7 +53,6 @@ export function Header() {
         >
           <Plus size={15} aria-hidden="true" />
           <span className="btn__text">Prijavi problem</span>
-          <span className="btn__text-short">Prijavi</span>
         </button>
 
         <AccountMenu />

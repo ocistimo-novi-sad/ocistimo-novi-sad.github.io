@@ -1004,6 +1004,22 @@ button.impact-stat:hover {
   box-shadow: var(--shadow-1);
 }
 
+/* Reports vs. actions: filled so it never reads as a sub-filter. */
+.segmented--layer .segmented__item {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.segmented--layer .segmented__item.is-active {
+  border-color: var(--forest);
+  background: var(--forest);
+  color: #fff;
+}
+
+.segmented--layer .segmented__item.is-active span {
+  color: rgba(255, 255, 255, 0.72);
+}
+
 /* --- Action cards -------------------------------------------------------- */
 
 .action-list {
@@ -1213,6 +1229,59 @@ button.impact-stat:hover {
   .tabbar__item.is-active svg {
     background: var(--leaf-tint);
     color: var(--leaf-3);
+  }
+
+  /* The report button in the middle: a filled circle that stands out. */
+  .tabbar__create {
+    position: relative;
+    display: flex;
+    flex: 1;
+  }
+
+  .tabbar__item--cta {
+    color: var(--forest-2);
+    font-weight: 600;
+  }
+
+  .tabbar__item--cta svg {
+    padding: 6px;
+    border-radius: 50%;
+    background: var(--forest);
+    color: #fff;
+    box-shadow: var(--shadow-2);
+  }
+
+  .tabbar__menu {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    display: flex;
+    flex-direction: column;
+    min-width: 188px;
+    padding: 5px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    box-shadow: var(--shadow-3);
+    transform: translateX(-50%);
+  }
+
+  .tabbar__menu button {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    min-height: 42px;
+    padding: 0 12px;
+    border-radius: var(--radius);
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 500;
+    text-align: left;
+  }
+
+  .tabbar__menu button:hover,
+  .tabbar__menu button:focus-visible {
+    background: var(--forest-tint);
   }
 
   .tabbar__count {
