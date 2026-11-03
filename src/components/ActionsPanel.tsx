@@ -110,10 +110,7 @@ export function ActionsPanel() {
       <div className="panel__head">
         <LayerSwitch />
 
-        <p className="panel__intro">
-          Zajednička čišćenja povezuju prijave sa iste lokacije. Otvorite akciju da vidite gde se
-          okupljamo i šta je potrebno poneti.
-        </p>
+        <p className="panel__intro">Pridruži se akciji. Akcija sanira jednu ili više prijava.</p>
 
         <SearchInput
           value={actionQuery}

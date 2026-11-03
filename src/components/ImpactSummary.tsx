@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { APP } from '../config';
+import { isUpcomingAction } from '../lib/counts';
 import { plural } from '../lib/format';
 import { useApp } from '../state/app-context';
 
@@ -15,11 +16,7 @@ export function ImpactSummary() {
     const now = Date.now();
     return {
       resolved: reports.filter((report) => report.status === 'resolved').length,
-      upcoming: actions.filter(
-        (action) =>
-          (action.status === 'planned' || action.status === 'in_progress') &&
-          action.date.getTime() >= now,
-      ).length,
+      upcoming: actions.filter((action) => isUpcomingAction(action, now)).length,
     };
   }, [reports, actions]);
 

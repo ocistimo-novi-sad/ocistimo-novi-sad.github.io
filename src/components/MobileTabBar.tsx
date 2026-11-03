@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { CalendarPlus, Map, Plus, Rows3, TriangleAlert } from 'lucide-react';
+import { isOpenReport, isUpcomingAction } from '../lib/counts';
 import { useApp, type MobileTab } from '../state/app-context';
 
 /**
@@ -55,7 +56,12 @@ export function MobileTabBar() {
 
   if (selectedReport || selectedAction || composeOpen) return null;
 
-  const listCount = layer === 'actions' ? actions.length : reports.length;
+  // Only what people can still act on: upcoming actions, open reports (#31, #33).
+  const now = Date.now();
+  const listCount =
+    layer === 'actions'
+      ? actions.filter((action) => isUpcomingAction(action, now)).length
+      : reports.filter(isOpenReport).length;
 
   const onCreate = () => {
     if (auth.isAdmin) {

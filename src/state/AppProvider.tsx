@@ -11,6 +11,7 @@ import { APP, CATEGORY_MAP, DEFAULT_FILTERS, STATUS_MAP } from '../config';
 import { useAuth } from '../hooks/useAuth';
 import { useReports } from '../hooks/useReports';
 import { useActions } from '../hooks/useActions';
+import { isUpcomingAction } from '../lib/counts';
 import { isWithinBounds } from '../lib/geo';
 import { distanceInMeters } from '../lib/geo';
 import { toSerbianError } from '../services/errors';
@@ -286,12 +287,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [reports, filters, userPosition]);
 
   const { upcomingActions, pastActions } = useMemo(() => {
-    // An action stays "upcoming" until 4 hours after its start.
-    const cutoff = Date.now() - 4 * 3_600_000;
+    // The same "upcoming" rule as every count (src/lib/counts.ts).
+    const now = Date.now();
     const query = fold(actionQuery.trim());
-    const isUpcoming = (action: CleanupAction) =>
-      (action.status === 'planned' || action.status === 'in_progress') &&
-      action.date.getTime() >= cutoff;
+    const isUpcoming = (action: CleanupAction) => isUpcomingAction(action, now);
     const matching = query
       ? actions.filter((action) =>
           fold(
