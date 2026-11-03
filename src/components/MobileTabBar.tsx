@@ -6,7 +6,8 @@ import { useApp, type MobileTab } from '../state/app-context';
 
 /**
  * Mobile navigation: map or list (what they show is the layer switch), with
- * the report button in the middle. Admins also get "Nova akcija" from it.
+ * the report button in the middle. Moderators and admins also get
+ * "Nova akcija" from it.
  */
 export function MobileTabBar() {
   const {
@@ -64,7 +65,7 @@ export function MobileTabBar() {
       : reports.filter(isOpenReport).length;
 
   const onCreate = () => {
-    if (auth.isAdmin) {
+    if (auth.isModerator) {
       setMenuOpen((value) => !value);
       return;
     }
@@ -89,8 +90,8 @@ export function MobileTabBar() {
           className="tabbar__item tabbar__item--cta"
           data-guide="create"
           onClick={onCreate}
-          aria-expanded={auth.isAdmin ? menuOpen : undefined}
-          aria-haspopup={auth.isAdmin ? 'menu' : undefined}
+          aria-expanded={auth.isModerator ? menuOpen : undefined}
+          aria-haspopup={auth.isModerator ? 'menu' : undefined}
         >
           <Plus size={20} aria-hidden="true" />
           <span>Prijavi</span>
