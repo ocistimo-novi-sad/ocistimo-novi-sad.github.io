@@ -636,6 +636,27 @@ export function ComposeDrawer() {
             Izabrana tačka je izvan Novog Sada.
           </p>
         ) : null}
+
+        {/* Address next to the map point, so the place is described in one spot (#38). */}
+        <div className="field">
+          <div className="field__top">
+            <label htmlFor="report-address">
+              Adresa ili orijentir <span className="field__optional">opciono</span>
+            </label>
+            <span className="field__counter">{address.length}/{LIMITS.addressMax}</span>
+          </div>
+          <input
+            id="report-address"
+            type="text"
+            value={address}
+            maxLength={LIMITS.addressMax}
+            placeholder="Na primer: Dunavski park, ulaz sa Keja"
+            onChange={(event) => setAddress(event.target.value)}
+            disabled={submitting}
+            autoComplete="off"
+          />
+          <p className="field__hint">Pomaže drugima da pronađu mesto bez otvaranja mape.</p>
+        </div>
       </section>
 
       <section className="form-section" aria-labelledby="compose-details-label">
@@ -739,26 +760,6 @@ export function ComposeDrawer() {
               {errors.description}
             </p>
           ) : null}
-        </div>
-
-        <div className="field">
-          <div className="field__top">
-            <label htmlFor="report-address">
-              Adresa ili orijentir <span className="field__optional">opciono</span>
-            </label>
-            <span className="field__counter">{address.length}/{LIMITS.addressMax}</span>
-          </div>
-          <input
-            id="report-address"
-            type="text"
-            value={address}
-            maxLength={LIMITS.addressMax}
-            placeholder="Na primer: Dunavski park, ulaz sa Keja"
-            onChange={(event) => setAddress(event.target.value)}
-            disabled={submitting}
-            autoComplete="off"
-          />
-          <p className="field__hint">Pomaže drugima da pronađu mesto bez otvaranja mape.</p>
         </div>
       </section>
 
