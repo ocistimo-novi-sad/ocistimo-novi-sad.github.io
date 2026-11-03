@@ -12,6 +12,7 @@ import type {
   Report,
   ReportContent,
   ReportStatus,
+  SortMode,
 } from '../types';
 
 export type ToastTone = 'success' | 'error' | 'info';
@@ -60,9 +61,14 @@ export interface AppContextValue {
   setActionScope: (scope: ActionScope) => void;
   actionQuery: string;
   setActionQuery: (query: string) => void;
+  /** Upcoming and past actions ordered by distance from the user. */
+  actionsNearest: boolean;
+  setActionsNearest: (on: boolean) => void;
 
   filters: Filters;
   updateFilters: (patch: Partial<Filters>) => void;
+  /** Like updateFilters({ sort }), but "nearest" first asks for the user's location. */
+  setSort: (sort: SortMode) => void;
   toggleCategory: (category: Category) => void;
   resetFilters: () => void;
 
@@ -140,7 +146,8 @@ export interface AppContextValue {
   ) => void;
   userPosition: (Coordinates & { accuracy: number }) | null;
   locating: boolean;
-  locateUser: () => void;
+  /** Resolves to false when the location could not be read (the user is told why). */
+  locateUser: () => Promise<boolean>;
 }
 
 export const AppContext = createContext<AppContextValue | null>(null);

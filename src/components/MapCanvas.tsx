@@ -32,7 +32,7 @@ import { formatCoordinates } from '../lib/format';
 import { isInServiceArea, roundCoordinate } from '../lib/geo';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { Spinner } from './ui/EmptyState';
-import { FiltersButton, SearchInput } from './FiltersBar';
+import { FiltersButton, SEARCH_PLACEHOLDER, SearchInput } from './FiltersBar';
 import { LayerSwitch } from './LayerSwitch';
 import { DraftMarkers, ReportMarkers } from './map/ReportMarkers';
 import { ActionMarkers } from './map/ActionMarkers';
@@ -310,14 +310,14 @@ export function MapCanvas() {
               <SearchInput
                 value={filters.query}
                 onChange={(query) => updateFilters({ query })}
-                placeholder="Pretraži prijave"
+                placeholder={SEARCH_PLACEHOLDER.reports}
                 label="Pretraga prijava"
               />
             ) : (
               <SearchInput
                 value={actionQuery}
                 onChange={setActionQuery}
-                placeholder="Pretraži akcije"
+                placeholder={SEARCH_PLACEHOLDER.actions}
                 label="Pretraga akcija"
               />
             )}

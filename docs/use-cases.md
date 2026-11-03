@@ -215,9 +215,10 @@ Akcije menja samo administrator; status može da postavi na bilo koju vrednost u
 - **Tok:**
   1. Unos teksta u pretragu (prečica `/`). Traži se po naslovu, opisu, adresi, kategoriji i statusu, bez obzira na kvačice (č, ć, š, ž, đ).
   2. Kategorije su čipovi ispod pretrage (na telefonu jedan red koji se prevlači vodoravno).
-  3. Dugme **Filteri** (broj = koliko je filtera uključeno) otvara panel sa kategorijama, statusima, sortiranjem (najnovije, najstarije, najbliže — zahteva „Moja lokacija“, po statusu) i opcijom „Samo prijave na vidljivom delu mape“. „Očisti“ u panelu uklanja te filtere, a pretraga ostaje.
+  3. Dugme **Filteri** (broj = koliko je filtera uključeno) otvara panel sa kategorijama, statusima, sortiranjem (najnovije, najstarije, najbliže, po statusu) i opcijom „Samo prijave na vidljivom delu mape“. „Očisti“ u panelu uklanja te filtere, a pretraga ostaje.
   4. Na računaru, „Samo ova oblast“ na mapi radi isto što i opcija u panelu.
   5. „Očisti“ pored broja rezultata u listi uklanja sve, uključujući i pretragu.
+  6. **Blizu mene** (iznad liste) ređa prijave od najbliže i na karticama prikazuje udaljenost; isto radi izbor „Najbliže“ u sortiranju. Ako lokacija još nije poznata, aplikacija je traži i približava mapu. Ako pristup lokaciji nije dozvoljen ili ne uspe, prikazuje se poruka i redosled se vraća na „Najnovije“. Ponovni klik („Najbliže prvo ✕“) vraća „Najnovije“.
 
 ### UC-03 Detalji prijave i deljenje
 
@@ -233,7 +234,7 @@ Akcije menja samo administrator; status može da postavi na bilo koju vrednost u
 - **Gde:** prekidač **Prijave | Akcije** → Akcije (lista i mapa)
 - **Tok:**
   1. Lista je podeljena na **Predstojeće** i **Završene**. Mapa prikazuje isti period kao lista (na telefonu se bira u panelu **Filteri**).
-  2. Pretraga po nazivu, opisu, mestu okupljanja i organizatoru sužava i listu i mapu.
+  2. Pretraga po nazivu, opisu, mestu okupljanja i organizatoru sužava i listu i mapu. **Blizu mene** ređa akcije po udaljenosti mesta okupljanja (umesto po datumu), uz isto ponašanje kao kod prijava (UC-02).
   3. Klik na akciju otvara detalje i prikazuje mesto okupljanja na mapi.
   4. Detalji: naslovna fotografija, datum i vreme, opis, mesto okupljanja, organizator i napomena, šta poneti, povezane prijave (klik vodi na prijavu), a za završene i fotografije sa akcije.
 

@@ -8,12 +8,21 @@ import {
   TriangleAlert,
 } from 'lucide-react';
 import { ACTION_STATUS_MAP } from '../config';
-import { formatDate, formatTime, formatWeekday, plural, splitDate } from '../lib/format';
+import {
+  formatDate,
+  formatDistance,
+  formatTime,
+  formatWeekday,
+  plural,
+  splitDate,
+} from '../lib/format';
+import { distanceInMeters } from '../lib/geo';
 import { optimizedImageUrl } from '../services/images';
 import { useApp } from '../state/app-context';
 import type { CleanupAction } from '../types';
-import { SearchInput } from './FiltersBar';
+import { SEARCH_PLACEHOLDER, SearchInput } from './FiltersBar';
 import { LayerSwitch } from './LayerSwitch';
+import { NearMeButton } from './NearMeButton';
 import { EmptyState } from './ui/EmptyState';
 
 function ActionCard({
@@ -23,8 +32,10 @@ function ActionCard({
   action: CleanupAction;
   selected: boolean;
 }) {
-  const { selectAction } = useApp();
+  const { selectAction, actionsNearest, userPosition } = useApp();
   const date = splitDate(action.date);
+  const distance =
+    actionsNearest && userPosition ? distanceInMeters(userPosition, action) : null;
 
   return (
     <button
@@ -61,6 +72,9 @@ function ActionCard({
         <span className="action-card__meta">
           <MapPin size={12} aria-hidden="true" />
           <span>{action.meetingPoint}</span>
+          {distance !== null ? (
+            <span className="card-distance">{formatDistance(distance)}</span>
+          ) : null}
         </span>
         <span className="action-card__meta action-card__meta--time">
           {formatWeekday(action.date)}, {formatDate(action.date)} u {formatTime(action.date)}
@@ -87,6 +101,8 @@ export function ActionsPanel() {
     setActionScope: setScope,
     actionQuery,
     setActionQuery,
+    actionsNearest,
+    setActionsNearest,
   } = useApp();
 
   return (
@@ -102,7 +118,7 @@ export function ActionsPanel() {
         <SearchInput
           value={actionQuery}
           onChange={setActionQuery}
-          placeholder="Pretraži akcije ili mesto okupljanja"
+          placeholder={SEARCH_PLACEHOLDER.actions}
           label="Pretraga akcija"
         />
 
@@ -142,7 +158,7 @@ export function ActionsPanel() {
 
       <div className="panel__scroll">
         <div className="panel__list-head">
-          <span className="eyebrow">{scope === 'upcoming' ? 'Predstojeće' : 'Završene'}</span>
+          <NearMeButton active={actionsNearest} onToggle={setActionsNearest} />
           <span className="panel__list-tools">
             <span className="panel__list-count">
               {list.length} {plural(list.length, 'akcija', 'akcije', 'akcija')}

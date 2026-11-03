@@ -6,6 +6,12 @@ import { CategoryGlyph } from './ui/CategoryGlyph';
 import { StatusDot } from './ui/StatusBadge';
 import { Modal } from './modals/Modal';
 
+/** One placeholder per layer, shared by the list and the map; short enough for a phone. */
+export const SEARCH_PLACEHOLDER = {
+  reports: 'Ulica, kvart ili opis',
+  actions: 'Naziv ili lokacija',
+} as const;
+
 export function SearchInput({
   value,
   onChange,
@@ -91,7 +97,7 @@ function CategoryChips({ scroll = false }: { scroll?: boolean }) {
 }
 
 function ReportFilterOptions() {
-  const { filters, updateFilters } = useApp();
+  const { filters, updateFilters, setSort } = useApp();
 
   const toggleStatus = (status: (typeof REPORT_STATUSES)[number]['id']) => {
     const next = filters.statuses.includes(status)
@@ -141,9 +147,7 @@ function ReportFilterOptions() {
           <ArrowUpDown size={13} aria-hidden="true" />
           <select
             value={filters.sort}
-            onChange={(event) =>
-              updateFilters({ sort: event.target.value as typeof filters.sort })
-            }
+            onChange={(event) => setSort(event.target.value as typeof filters.sort)}
             aria-label="Sortiranje prijava"
           >
             {SORT_OPTIONS.map((option) => (
@@ -287,7 +291,7 @@ export function FiltersBar() {
           inputRef={searchRef}
           value={filters.query}
           onChange={(query) => updateFilters({ query })}
-          placeholder="Pretraži ulicu, kvart ili opis"
+          placeholder={SEARCH_PLACEHOLDER.reports}
           label="Pretraga prijava"
           hint
         />

@@ -9,7 +9,8 @@ import {
   TriangleAlert,
 } from 'lucide-react';
 import { CATEGORY_MAP, STATUS_MAP } from '../config';
-import { formatRelativeTime } from '../lib/format';
+import { formatDistance, formatRelativeTime } from '../lib/format';
+import { distanceInMeters } from '../lib/geo';
 import { optimizedImageUrl } from '../services/images';
 import { useApp } from '../state/app-context';
 import type { Report } from '../types';
@@ -29,8 +30,10 @@ function ReportCard({
   report: Report;
   selected: boolean;
 }) {
-  const { selectReport } = useApp();
+  const { selectReport, filters, userPosition } = useApp();
   const [imageFailed, setImageFailed] = useState(false);
+  const distance =
+    filters.sort === 'nearest' && userPosition ? distanceInMeters(userPosition, report) : null;
   const image = report.imageUrls[0];
   const hasImage = Boolean(image) && !imageFailed;
 
@@ -71,6 +74,9 @@ function ReportCard({
             ·
           </span>
           <span className="report-card__place">{shortPlace(report)}</span>
+          {distance !== null ? (
+            <span className="card-distance">{formatDistance(distance)}</span>
+          ) : null}
           {report.imageUrls.length > 1 ? (
             <span className="report-card__photos">
               <ImageIcon size={11} aria-hidden="true" />

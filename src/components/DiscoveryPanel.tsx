@@ -1,10 +1,12 @@
 import { Info, RefreshCw } from 'lucide-react';
+import { DEFAULT_FILTERS } from '../config';
 import { formatReportCount } from '../lib/format';
 import { isFirebaseConfigured } from '../services/firebase';
 import { useApp } from '../state/app-context';
 import { FiltersBar } from './FiltersBar';
 import { ImpactSummary } from './ImpactSummary';
 import { LayerSwitch } from './LayerSwitch';
+import { NearMeButton } from './NearMeButton';
 import { LoadMoreButton, ReportList } from './ReportList';
 
 export function DiscoveryPanel() {
@@ -17,6 +19,8 @@ export function DiscoveryPanel() {
     openModal,
     startCompose,
     resetFilters,
+    filters,
+    setSort,
   } = useApp();
   const narrowed = filteredReports.length !== reports.length;
 
@@ -44,7 +48,10 @@ export function DiscoveryPanel() {
         <ImpactSummary />
 
         <div className="panel__list-head">
-          <span className="eyebrow">Rezultati</span>
+          <NearMeButton
+            active={filters.sort === 'nearest'}
+            onToggle={(on) => setSort(on ? 'nearest' : DEFAULT_FILTERS.sort)}
+          />
           <span className="panel__list-tools">
             <span className="panel__list-count">
               {narrowed

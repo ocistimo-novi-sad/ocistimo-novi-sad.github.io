@@ -53,6 +53,7 @@ import type {
   Report,
   ReportContent,
   ReportStatus,
+  SortMode,
 } from '../types';
 
 type PendingIntent = { kind: 'create' } | { kind: 'flag'; reportId: string };
@@ -120,6 +121,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [mobileTab, setMobileTabState] = useState<MobileTab>('map');
   const [actionScope, setActionScope] = useState<ActionScope>('upcoming');
   const [actionQuery, setActionQuery] = useState('');
+  const [actionsNearest, setActionsNearestState] = useState(false);
   const [filters, setFilters] = useState<Filters>(() => ({
     ...DEFAULT_FILTERS,
     categories: [],
@@ -299,15 +301,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ).includes(query),
         )
       : actions;
+    const byDistance =
+      actionsNearest && userPosition
+        ? (a: CleanupAction, b: CleanupAction) =>
+            distanceInMeters(userPosition, a) - distanceInMeters(userPosition, b)
+        : null;
     return {
       upcomingActions: matching
         .filter(isUpcoming)
-        .sort((a, b) => a.date.getTime() - b.date.getTime()),
+        .sort(byDistance ?? ((a, b) => a.date.getTime() - b.date.getTime())),
       pastActions: matching
         .filter((action) => !isUpcoming(action))
-        .sort((a, b) => b.date.getTime() - a.date.getTime()),
+        .sort(byDistance ?? ((a, b) => b.date.getTime() - a.date.getTime())),
     };
-  }, [actions, actionQuery]);
+  }, [actions, actionQuery, actionsNearest, userPosition]);
   const filteredActions = actionScope === 'upcoming' ? upcomingActions : pastActions;
 
   const updateFilters = useCallback((patch: Partial<Filters>) => {
@@ -914,35 +921,69 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (url.href !== window.location.href) window.history.replaceState(null, '', url);
   }, [selectedReportId]);
 
-  const locateUser = useCallback(() => {
-    if (!('geolocation' in navigator)) {
-      notify('error', 'Vaš pregledač ne podržava određivanje lokacije.');
-      return;
-    }
-
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocating(false);
-        const coordinates = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-        };
-        setUserPosition(coordinates);
-        flyTo(coordinates, 15);
-      },
-      (error) => {
-        setLocating(false);
-        if (error.code === error.PERMISSION_DENIED) {
-          notify('error', 'Pristup lokaciji je odbijen. Možete ga uključiti u podešavanjima pregledača.');
-        } else {
-          notify('error', 'Lokaciju trenutno nije moguće odrediti.');
+  const locateUser = useCallback(
+    () =>
+      new Promise<boolean>((resolve) => {
+        if (!('geolocation' in navigator)) {
+          notify('error', 'Vaš pregledač ne podržava određivanje lokacije.');
+          resolve(false);
+          return;
         }
-      },
-      { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
-    );
-  }, [flyTo, notify]);
+
+        setLocating(true);
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setLocating(false);
+            const coordinates = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
+            };
+            setUserPosition(coordinates);
+            flyTo(coordinates, 15);
+            resolve(true);
+          },
+          (error) => {
+            setLocating(false);
+            if (error.code === error.PERMISSION_DENIED) {
+              notify(
+                'error',
+                'Pristup lokaciji je odbijen. Možete ga uključiti u podešavanjima pregledača.',
+              );
+            } else {
+              notify('error', 'Lokaciju trenutno nije moguće odrediti.');
+            }
+            resolve(false);
+          },
+          { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
+        );
+      }),
+    [flyTo, notify],
+  );
+
+  // "Nearest" without a known position asks for it; if that fails the order
+  // goes back, so the list never claims "nearest" while it is not.
+  const setSort = useCallback(
+    (sort: SortMode) => {
+      updateFilters({ sort });
+      if (sort !== 'nearest' || userPosition) return;
+      void locateUser().then((found) => {
+        if (!found) updateFilters({ sort: DEFAULT_FILTERS.sort });
+      });
+    },
+    [locateUser, updateFilters, userPosition],
+  );
+
+  const setActionsNearest = useCallback(
+    (on: boolean) => {
+      setActionsNearestState(on);
+      if (!on || userPosition) return;
+      void locateUser().then((found) => {
+        if (!found) setActionsNearestState(false);
+      });
+    },
+    [locateUser, userPosition],
+  );
 
   const value: AppContextValue = useMemo(
     () => ({
@@ -966,8 +1007,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setActionScope,
       actionQuery,
       setActionQuery,
+      actionsNearest,
+      setActionsNearest,
       filters,
       updateFilters,
+      setSort,
       toggleCategory,
       resetFilters,
       selectedReport,
@@ -1043,8 +1087,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       filteredActions,
       actionScope,
       actionQuery,
+      actionsNearest,
+      setActionsNearest,
       filters,
       updateFilters,
+      setSort,
       toggleCategory,
       resetFilters,
       selectedReport,
