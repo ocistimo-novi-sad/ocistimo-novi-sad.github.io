@@ -142,7 +142,7 @@ export function ActionsPanel() {
           </button>
         </div>
 
-        {auth.isAdmin ? (
+        {auth.isModerator ? (
           <button
             type="button"
             className="btn btn--quiet btn--sm btn--block"

@@ -41,11 +41,12 @@ service firebase.storage {
       allow delete: if (signedIn() && request.auth.uid == uid) || isModerator();
     }
 
-    // Cover and result photos of cleanup actions, uploaded by admins.
+    // Cover and result photos of cleanup actions, uploaded by moderators and
+    // admins, who may also remove them when they edit an action.
     match /action-images/{uid}/{fileName} {
       allow get: if true;
-      allow create: if isAdmin() && request.auth.uid == uid && validImage(fileName);
-      allow delete: if isAdmin();
+      allow create: if isModerator() && request.auth.uid == uid && validImage(fileName);
+      allow delete: if isModerator();
     }
 
     // Everything else is closed, including listing any folder.
