@@ -28,6 +28,7 @@ import { useApp } from '../state/app-context';
 import type { Category, NewReportInput, Report } from '../types';
 import { Drawer } from './Drawer';
 import { CategoryGlyph } from './ui/CategoryGlyph';
+import { ConfirmSheet } from './ui/ConfirmSheet';
 import { Spinner } from './ui/EmptyState';
 import { PhotoPicker } from './ui/PhotoPicker';
 
@@ -471,57 +472,36 @@ export function ComposeDrawer() {
       ? 'Moderator pregleda prijavu pre objave. Ne unosite lične podatke.'
       : 'Ne unosite lične podatke. Demo režim: prijava se čuva samo u ovom pregledaču.';
 
-  const footer =
-    confirmClose && !submitting ? (
-      <div className="confirm-panel">
-        <p>
-          {editing
-            ? 'Odbaciti izmene? Prijava ostaje kakva je bila.'
-            : 'Otkazati prijavu? Uneti podaci neće biti sačuvani.'}
-        </p>
-        <div className="confirm-panel__actions">
-          <button
-            type="button"
-            className="btn btn--quiet btn--sm"
-            onClick={() => setConfirmClose(false)}
-          >
-            Nastavi unos
-          </button>
-          <button type="button" className="btn btn--danger btn--sm" onClick={cancelCompose}>
-            {editing ? 'Odbaci izmene' : 'Otkaži prijavu'}
-          </button>
+  const footer = (
+    <div className="compose-foot">
+      {submitError ? (
+        <div className="form-alert" role="alert">
+          <TriangleAlert size={15} aria-hidden="true" />
+          <p>{submitError}</p>
         </div>
+      ) : null}
+      <div className="compose-foot__row">
+        <button
+          type="button"
+          className="btn btn--quiet"
+          onClick={requestClose}
+          disabled={submitting}
+        >
+          Otkaži
+        </button>
+        <button
+          type="button"
+          className="btn btn--primary"
+          onClick={() => void submit()}
+          disabled={submitting}
+        >
+          {submitting ? <Spinner size={15} /> : null}
+          {submitLabel}
+        </button>
       </div>
-    ) : (
-      <div className="compose-foot">
-        {submitError ? (
-          <div className="form-alert" role="alert">
-            <TriangleAlert size={15} aria-hidden="true" />
-            <p>{submitError}</p>
-          </div>
-        ) : null}
-        <div className="compose-foot__row">
-          <button
-            type="button"
-            className="btn btn--quiet"
-            onClick={requestClose}
-            disabled={submitting}
-          >
-            Otkaži
-          </button>
-          <button
-            type="button"
-            className="btn btn--primary"
-            onClick={() => void submit()}
-            disabled={submitting}
-          >
-            {submitting ? <Spinner size={15} /> : null}
-            {submitLabel}
-          </button>
-        </div>
-        <p className="compose-foot__note">{footNote}</p>
-      </div>
-    );
+      <p className="compose-foot__note">{footNote}</p>
+    </div>
+  );
 
   return (
     <Drawer
@@ -877,6 +857,17 @@ export function ComposeDrawer() {
             : 'Prijava se prikazuje na mapi. U pravoj bazi moderator je prvo pregleda, a član zajednice može da je poveže sa akcijom čišćenja.'}
         </p>
       </div>
+
+      {confirmClose && !submitting ? (
+        <ConfirmSheet
+          title={editing ? 'Odbaciti izmene?' : 'Otkazati prijavu?'}
+          message={editing ? 'Prijava ostaje kakva je bila.' : 'Uneti podaci neće biti sačuvani.'}
+          keepLabel="Nastavi unos"
+          confirmLabel={editing ? 'Odbaci izmene' : 'Otkaži prijavu'}
+          onKeep={() => setConfirmClose(false)}
+          onConfirm={cancelCompose}
+        />
+      ) : null}
     </Drawer>
   );
 }

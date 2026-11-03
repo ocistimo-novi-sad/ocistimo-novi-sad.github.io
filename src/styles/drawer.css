@@ -1360,24 +1360,77 @@
   margin-top: 1px;
 }
 
-.confirm-panel {
-  display: flex;
-  flex-direction: column;
+/* "Are you sure?" questions: a panel from the bottom on phones, a card on desktop. */
+.confirm-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: grid;
+  align-items: end;
+  justify-items: center;
+}
+
+.confirm-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(16, 22, 18, 0.5);
+  animation: fade-in var(--dur-2) var(--ease);
+}
+
+.confirm-sheet__panel {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  width: min(100%, 440px);
+  padding: 20px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: var(--surface);
+  box-shadow: var(--shadow-3);
+  animation: confirm-up var(--dur-3) var(--ease);
+}
+
+.confirm-sheet__title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.confirm-sheet__text {
+  margin-bottom: 8px;
+  color: var(--muted);
+}
+
+.confirm-sheet__actions {
+  display: grid;
   gap: 8px;
 }
 
-.confirm-panel p {
-  color: var(--ink-2);
-  font-size: 11.5px;
+.confirm-sheet__actions .btn {
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
 }
 
-.confirm-panel__actions {
-  display: flex;
-  gap: 6px;
+@keyframes confirm-up {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: none;
+  }
 }
 
-.confirm-panel__actions .btn {
-  flex: 1;
+@media (min-width: 901px) {
+  .confirm-sheet {
+    align-items: center;
+  }
+
+  .confirm-sheet__panel {
+    padding-bottom: 18px;
+    border-radius: var(--radius-lg);
+    animation-name: modal-in;
+  }
 }
 
 .form-section__intro {
