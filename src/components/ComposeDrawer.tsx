@@ -12,7 +12,6 @@ import {
   APP,
   CATEGORIES,
   COMMUNITY_CAN_PRESETS,
-  DEFAULT_CATEGORY,
   HELP_NEEDED_PRESETS,
   LIMITS,
 } from '../config';
@@ -166,7 +165,9 @@ export function ComposeDrawer() {
   // read once per report.
   const [initial] = useState(() => ({
     title: editing?.title ?? '',
-    category: editing?.category ?? DEFAULT_CATEGORY,
+    // No category is chosen in advance, so a hurried report is not filed under
+    // the first one by mistake (GOV.UK: do not pre-select answers).
+    category: editing?.category ?? null,
     description: editing?.description ?? '',
     communityCan: editing?.communityCan ?? '',
     helpNeeded: editing?.helpNeeded ?? '',

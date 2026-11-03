@@ -65,9 +65,6 @@ export const CATEGORIES: CategoryMeta[] = [
   },
 ];
 
-/** Category preselected when a new report is opened. */
-export const DEFAULT_CATEGORY: Category = 'unwanted_graffiti';
-
 export const CATEGORY_MAP: Record<Category, CategoryMeta> = Object.fromEntries(
   CATEGORIES.map((category) => [category.id, category]),
 ) as Record<Category, CategoryMeta>;
