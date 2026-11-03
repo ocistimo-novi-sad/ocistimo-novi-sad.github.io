@@ -109,7 +109,7 @@ class FirebaseImageStorage implements ImageStorage {
     assertValidImage(file);
     const uid = auth?.currentUser?.uid;
     if (!uid) {
-      throw new AppError('storage/unauthenticated', 'Prijavite se da biste dodali fotografiju.');
+      throw new AppError('storage/unauthenticated', 'Prijavi se da dodaš fotografiju.');
     }
 
     let prepared: PreparedImage;
@@ -118,7 +118,7 @@ class FirebaseImageStorage implements ImageStorage {
     } catch {
       throw new AppError(
         'storage/processing',
-        'Fotografiju nije moguće obraditi. Probajte drugu fotografiju (JPG, PNG ili WebP).',
+        'Fotografiju nije moguće obraditi. Probaj drugu fotografiju (JPG, PNG ili WebP).',
       );
     }
 

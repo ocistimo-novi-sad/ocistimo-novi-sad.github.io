@@ -77,7 +77,7 @@ export function AdminPanel() {
     return (
       <Modal
         title={editing ? 'Uredi akciju' : 'Nova akcija'}
-        description="Akcije su javne i vidljive svim posetiocima. Sačuvajte tek kada su termin i mesto potvrđeni."
+        description="Akcije su javne i vidljive svim posetiocima. Sačuvaj tek kada su termin i mesto potvrđeni."
         size="xl"
         onClose={() => {
           setFormOpen(false);
@@ -164,7 +164,7 @@ export function AdminPanel() {
             <EmptyState
               icon={<ShieldCheck size={20} />}
               title="Nema akcija"
-              description="Napravite prvu akciju i povežite je sa prijavama koje treba rešiti."
+              description="Napravi prvu akciju i poveži je sa prijavama koje treba rešiti."
             />
           ) : (
             <ul className="admin-action-list">

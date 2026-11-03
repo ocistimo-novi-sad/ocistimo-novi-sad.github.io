@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { APP } from '../config';
+import { isUpcomingAction } from '../lib/counts';
 import { plural } from '../lib/format';
 import { useApp } from '../state/app-context';
 
@@ -9,17 +10,13 @@ import { useApp } from '../state/app-context';
  * community's progress (reports, resolved share, upcoming cleanups).
  */
 export function ImpactSummary() {
-  const { reports, actions, reportsPhase, setView } = useApp();
+  const { reports, actions, reportsPhase, setLayer, setActionScope, setActionQuery } = useApp();
 
   const { resolved, upcoming } = useMemo(() => {
     const now = Date.now();
     return {
       resolved: reports.filter((report) => report.status === 'resolved').length,
-      upcoming: actions.filter(
-        (action) =>
-          (action.status === 'planned' || action.status === 'in_progress') &&
-          action.date.getTime() >= now,
-      ).length,
+      upcoming: actions.filter((action) => isUpcomingAction(action, now)).length,
     };
   }, [reports, actions]);
 
@@ -31,7 +28,7 @@ export function ImpactSummary() {
     <section className="impact" aria-label="Napredak zajednice">
       <h2 className="impact__title">Zajedno čistimo {APP.city}.</h2>
       <p className="impact__sub">
-        Prijavite problem u kraju ili se pridružite sledećoj akciji čišćenja.
+        Prijavi problem u kraju ili se pridruži sledećoj akciji čišćenja.
       </p>
 
       {loading ? (
@@ -56,8 +53,13 @@ export function ImpactSummary() {
             <button
               type="button"
               className="impact-stat"
-              onClick={() => setView('actions')}
-              title="Pogledajte predstojeće akcije"
+              onClick={() => {
+                // Always the upcoming actions it counts, not an old period or search.
+                setActionScope('upcoming');
+                setActionQuery('');
+                setLayer('actions');
+              }}
+              title="Pogledaj predstojeće akcije"
             >
               <span className="impact-stat__value">{upcoming}</span>
               <span className="impact-stat__link">

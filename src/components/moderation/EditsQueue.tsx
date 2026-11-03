@@ -163,7 +163,7 @@ export function EditsQueue() {
       <EmptyState
         icon={<Inbox size={20} />}
         title="Nema izmena za pregled"
-        description="Kada autor izmeni objavljenu prijavu, izmena je odmah javna i pojavljuje se ovde da je pogledate."
+        description="Kada autor izmeni objavljenu prijavu, izmena je odmah javna i pojavljuje se ovde da je pogledaš."
         action={
           <button
             type="button"
@@ -245,7 +245,7 @@ export function EditsQueue() {
               {active.editedAt ? ` · izmenjeno ${formatDateTime(active.editedAt)}` : ''}
             </p>
             <p className="diff__intro">
-              Izmena je već javna. Prihvatite je ili vratite poslednju odobrenu verziju.
+              Izmena je već javna. Prihvati je ili vrati poslednju odobrenu verziju.
             </p>
 
             {!active.previousVersion ? (

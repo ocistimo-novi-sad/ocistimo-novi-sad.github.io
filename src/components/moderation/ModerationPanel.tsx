@@ -24,7 +24,7 @@ export function ModerationPanel() {
       <Modal title="Moderacija" size="sm" onClose={closeModal}>
         <EmptyState
           icon={<ShieldAlert size={20} />}
-          title="Nemate pristup moderaciji"
+          title="Nemaš pristup moderaciji"
           description="Moderaciju vide samo moderatori i administratori. Ulogu moderatora dodeljuje administrator."
           action={
             <button type="button" className="btn btn--quiet btn--sm" onClick={closeModal}>
@@ -39,13 +39,13 @@ export function ModerationPanel() {
   return (
     <Modal
       title="Moderacija"
-      description="Nove prijave postaju javne tek kada ih odobrite."
+      description="Nove prijave postaju javne tek kada ih odobriš."
       size="xl"
       onClose={closeModal}
       footer={
         <div className="modal-actions">
           <span className="modal-foot-note">
-            <ShieldCheck size={12} aria-hidden="true" /> Svaka odluka se beleži uz vaš nalog.
+            <ShieldCheck size={12} aria-hidden="true" /> Svaka odluka se beleži uz tvoj nalog.
           </span>
           <button type="button" className="btn btn--quiet btn--sm" onClick={closeModal}>
             Zatvori

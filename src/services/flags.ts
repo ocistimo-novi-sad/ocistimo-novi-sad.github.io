@@ -43,7 +43,7 @@ export async function createFlag(
   const db = requireDb();
   const user = requireAuth().currentUser;
   if (!user) {
-    throw new AppError('unauthenticated', 'Prijavite se da biste prijavili sadržaj.');
+    throw new AppError('unauthenticated', 'Prijavi se da prijaviš sadržaj.');
   }
 
   // Deterministic id: one flag per user per report, enforced by rules as well.
@@ -78,7 +78,7 @@ export async function resolveFlag(
   const db = requireDb();
   const user = requireAuth().currentUser;
   if (!user) {
-    throw new AppError('unauthenticated', 'Prijavite se kao moderator.');
+    throw new AppError('unauthenticated', 'Prijavi se kao moderator.');
   }
 
   await updateDoc(doc(db, 'flags', flagId), {

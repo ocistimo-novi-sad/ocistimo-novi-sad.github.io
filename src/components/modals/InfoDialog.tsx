@@ -1,10 +1,13 @@
 import { Map } from 'lucide-react';
 import { APP } from '../../config';
+import { useIsMobile } from '../../hooks/useMediaQuery';
 import { useApp } from '../../state/app-context';
+import { GUIDE_EVENT } from '../FirstVisitGuide';
 import { Modal } from './Modal';
 
 export function InfoDialog() {
   const { closeModal } = useApp();
+  const isMobile = useIsMobile();
 
   return (
     <Modal
@@ -29,8 +32,8 @@ export function InfoDialog() {
           Moderatori zajednice zatim organizuju akcije čišćenja, a svako može da im se pridruži.
         </p>
         <p>
-          Pišite na <a href="mailto:kontakt@kukaimotika.rs">kontakt@kukaimotika.rs</a> da prijavite
-          koordinatora vaše zajednice.
+          Piši na <a href="mailto:kontakt@kukaimotika.rs">kontakt@kukaimotika.rs</a> da prijaviš
+          koordinatora tvoje zajednice.
         </p>
       </div>
 
@@ -56,6 +59,19 @@ export function InfoDialog() {
           </div>
         </li>
       </ol>
+
+      {isMobile ? (
+        <button
+          type="button"
+          className="link-btn info-guide"
+          onClick={() => {
+            closeModal();
+            window.dispatchEvent(new Event(GUIDE_EVENT));
+          }}
+        >
+          Pokreni kratak vodič kroz aplikaciju
+        </button>
+      ) : null}
 
       <div className="info-block">
         <h4>Podaci i privatnost</h4>

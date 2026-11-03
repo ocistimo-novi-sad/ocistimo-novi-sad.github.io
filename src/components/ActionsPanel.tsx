@@ -1,17 +1,28 @@
-import { useState } from 'react';
 import {
   CalendarPlus,
   HandHeart,
   MapPin,
   Plus,
   RefreshCw,
+  Search,
   TriangleAlert,
 } from 'lucide-react';
 import { ACTION_STATUS_MAP } from '../config';
-import { formatDate, formatTime, formatWeekday, plural, splitDate } from '../lib/format';
+import {
+  formatDate,
+  formatDistance,
+  formatTime,
+  formatWeekday,
+  plural,
+  splitDate,
+} from '../lib/format';
+import { distanceInMeters } from '../lib/geo';
 import { optimizedImageUrl } from '../services/images';
 import { useApp } from '../state/app-context';
 import type { CleanupAction } from '../types';
+import { SEARCH_PLACEHOLDER, SearchInput } from './FiltersBar';
+import { LayerSwitch } from './LayerSwitch';
+import { NearMeButton } from './NearMeButton';
 import { EmptyState } from './ui/EmptyState';
 
 function ActionCard({
@@ -21,8 +32,10 @@ function ActionCard({
   action: CleanupAction;
   selected: boolean;
 }) {
-  const { selectAction } = useApp();
+  const { selectAction, actionsNearest, userPosition } = useApp();
   const date = splitDate(action.date);
+  const distance =
+    actionsNearest && userPosition ? distanceInMeters(userPosition, action) : null;
 
   return (
     <button
@@ -59,6 +72,9 @@ function ActionCard({
         <span className="action-card__meta">
           <MapPin size={12} aria-hidden="true" />
           <span>{action.meetingPoint}</span>
+          {distance !== null ? (
+            <span className="card-distance">{formatDistance(distance)}</span>
+          ) : null}
         </span>
         <span className="action-card__meta action-card__meta--time">
           {formatWeekday(action.date)}, {formatDate(action.date)} u {formatTime(action.date)}
@@ -77,56 +93,31 @@ export function ActionsPanel() {
     selectedAction,
     auth,
     openModal,
-    setView,
+    setLayer,
+    upcomingActions: upcoming,
+    pastActions: past,
+    filteredActions: list,
+    actionScope: scope,
+    setActionScope: setScope,
+    actionQuery,
+    setActionQuery,
+    actionsNearest,
+    setActionsNearest,
   } = useApp();
-  const [scope, setScope] = useState<'upcoming' | 'past'>('upcoming');
-
-  const cutoff = Date.now() - 4 * 3_600_000;
-  const upcoming = actions
-    .filter(
-      (action) =>
-        (action.status === 'planned' || action.status === 'in_progress') &&
-        action.date.getTime() >= cutoff,
-    )
-    .sort((a, b) => a.date.getTime() - b.date.getTime());
-  const past = actions
-    .filter(
-      (action) =>
-        !(
-          (action.status === 'planned' || action.status === 'in_progress') &&
-          action.date.getTime() >= cutoff
-        ),
-    )
-    .sort((a, b) => b.date.getTime() - a.date.getTime());
-
-  const list = scope === 'upcoming' ? upcoming : past;
 
   return (
     <section className="panel panel--actions" aria-label="Akcije čišćenja">
       <div className="panel__head">
-        <div className="panel__eyebrow-row">
-          <span className="eyebrow">Novi Sad · Akcije</span>
-          <span className="panel__count">{actions.length}</span>
-          <button
-            type="button"
-            className="icon-btn icon-btn--ghost"
-            onClick={() => void reloadActions()}
-            aria-label="Osveži akcije"
-            title="Osveži akcije"
-            disabled={actionsPhase === 'loading'}
-          >
-            <RefreshCw
-              size={14}
-              aria-hidden="true"
-              className={actionsPhase === 'loading' ? 'spinner' : undefined}
-            />
-          </button>
-        </div>
+        <LayerSwitch />
 
-        <p className="panel__intro">
-          Zajednička čišćenja povezuju prijave sa iste lokacije. Otvorite akciju da vidite gde se
-          okupljamo i šta je potrebno poneti.
-        </p>
+        <p className="panel__intro">Pridruži se akciji. Akcija sanira jednu ili više prijava.</p>
+
+        <SearchInput
+          value={actionQuery}
+          onChange={setActionQuery}
+          placeholder={SEARCH_PLACEHOLDER.actions}
+          label="Pretraga akcija"
+        />
 
         <div className="segmented" role="tablist" aria-label="Period akcija">
           <button
@@ -163,6 +154,29 @@ export function ActionsPanel() {
       </div>
 
       <div className="panel__scroll">
+        <div className="panel__list-head">
+          <NearMeButton active={actionsNearest} onToggle={setActionsNearest} />
+          <span className="panel__list-tools">
+            <span className="panel__list-count">
+              {list.length} {plural(list.length, 'akcija', 'akcije', 'akcija')}
+            </span>
+            <button
+              type="button"
+              className="icon-btn icon-btn--ghost"
+              onClick={() => void reloadActions()}
+              aria-label="Osveži akcije"
+              title="Osveži akcije"
+              disabled={actionsPhase === 'loading'}
+            >
+              <RefreshCw
+                size={14}
+                aria-hidden="true"
+                className={actionsPhase === 'loading' ? 'spinner' : undefined}
+              />
+            </button>
+          </span>
+        </div>
+
         {actionsPhase === 'loading' && actions.length === 0 ? (
           <div className="list-skeleton" aria-hidden="true">
             {[0, 1, 2].map((index) => (
@@ -182,7 +196,7 @@ export function ActionsPanel() {
           <EmptyState
             icon={<TriangleAlert size={20} />}
             title="Akcije nisu učitane"
-            description={actionsError ?? 'Proverite internet vezu i pokušajte ponovo.'}
+            description={actionsError ?? 'Proveri internet vezu i pokušaj ponovo.'}
             action={
               <button
                 type="button"
@@ -195,13 +209,30 @@ export function ActionsPanel() {
           />
         ) : null}
 
-        {actionsPhase === 'ready' && list.length === 0 ? (
+        {actionsPhase === 'ready' && list.length === 0 && actionQuery.trim() ? (
+          <EmptyState
+            icon={<Search size={20} />}
+            title="Nema akcija za ovu pretragu"
+            description="Pokušaj drugi naziv ili mesto okupljanja."
+            action={
+              <button
+                type="button"
+                className="btn btn--quiet btn--sm"
+                onClick={() => setActionQuery('')}
+              >
+                Obriši pretragu
+              </button>
+            }
+          />
+        ) : null}
+
+        {actionsPhase === 'ready' && list.length === 0 && !actionQuery.trim() ? (
           <EmptyState
             icon={scope === 'upcoming' ? <HandHeart size={20} /> : <CalendarPlus size={20} />}
             title={scope === 'upcoming' ? 'Nema planiranih akcija' : 'Još nema završenih akcija'}
             description={
               scope === 'upcoming'
-                ? 'Kada se za istu lokaciju prikupi dovoljno prijava, administracija objavljuje akciju čišćenja. Do tada možete pregledati prijave na mapi.'
+                ? 'Moderatori i koordinatori zajednice organizuju akcije čišćenja. Do tada možeš pregledati prijave na mapi.'
                 : 'Završene akcije se prikazuju ovde sa svim rešenim prijavama.'
             }
             action={
@@ -209,7 +240,7 @@ export function ActionsPanel() {
                 <button
                   type="button"
                   className="btn btn--quiet btn--sm"
-                  onClick={() => setView('map')}
+                  onClick={() => setLayer('reports')}
                 >
                   Pogledaj prijave
                 </button>

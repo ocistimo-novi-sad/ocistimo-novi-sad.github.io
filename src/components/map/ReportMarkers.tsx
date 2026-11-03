@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Marker, Tooltip, useMap } from 'react-leaflet';
+import { Fragment, useEffect, useMemo, useState } from 'react';
+import type { LatLng } from 'leaflet';
+import { Marker, Polyline, Tooltip, useMap } from 'react-leaflet';
 import Supercluster from 'supercluster';
 import { CATEGORIES, CATEGORY_MAP, MODERATION_LABELS, STATUS_MAP } from '../../config';
 import { formatRelativeTime, plural } from '../../lib/format';
@@ -58,6 +59,18 @@ interface ReportMarkersProps {
 }
 
 const CLUSTER_MAX_ZOOM = 15;
+
+/** A group whose reports are shown around it, because zooming in no longer separates them. */
+interface Spread {
+  clusterId: number;
+  latitude: number;
+  longitude: number;
+}
+
+interface SpreadLeaf {
+  report: Report;
+  position: LatLng;
+}
 
 /**
  * Markers with Supercluster-based grouping for dense areas. At zoom 16+ the
@@ -138,6 +151,49 @@ export function ReportMarkers({
     [reports],
   );
 
+  const [spread, setSpread] = useState<Spread | null>(null);
+
+  // New reports or filters make an open group meaningless.
+  useEffect(() => setSpread(null), [index]);
+
+  useEffect(() => {
+    if (!spread) return;
+    const close = () => setSpread(null);
+    map.on('click', close);
+    map.on('zoomstart', close);
+    return () => {
+      map.off('click', close);
+      map.off('zoomstart', close);
+    };
+  }, [map, spread]);
+
+  // The group's reports on a circle around it, with room for every marker.
+  const spreadLeaves = useMemo((): SpreadLeaf[] => {
+    if (!spread) return [];
+    let leaves;
+    try {
+      leaves = index.getLeaves(spread.clusterId, 24);
+    } catch {
+      return [];
+    }
+    const center = map.latLngToContainerPoint([spread.latitude, spread.longitude]);
+    const radius = Math.max(52, leaves.length * 11);
+    return leaves.flatMap((leaf, position) => {
+      const report = reportsById.get((leaf.properties as PointProps).reportId);
+      if (!report) return [];
+      const angle = -Math.PI / 2 + (position * 2 * Math.PI) / leaves.length;
+      return [
+        {
+          report,
+          position: map.containerPointToLatLng([
+            center.x + radius * Math.cos(angle),
+            center.y + radius * Math.sin(angle),
+          ]),
+        },
+      ];
+    });
+  }, [spread, index, map, reportsById]);
+
   if (reports.length === 0) return null;
 
   return (
@@ -155,18 +211,25 @@ export function ReportMarkers({
               icon={clusterIcon(count, properties)}
               zIndexOffset={200}
               eventHandlers={{
-                click: () => {
-                  const expansionZoom = Math.min(
-                    index.getClusterExpansionZoom(properties.cluster_id as number),
-                    18,
-                  );
+                click: (event) => {
+                  const clusterId = properties.cluster_id as number;
+                  const expansionZoom = Math.min(index.getClusterExpansionZoom(clusterId), 18);
+                  // Zooming in would not separate these reports, so spread them out instead.
+                  if (map.getZoom() >= CLUSTER_MAX_ZOOM || expansionZoom <= map.getZoom()) {
+                    setSpread((current) =>
+                      current?.clusterId === clusterId ? null : { clusterId, latitude, longitude },
+                    );
+                    // The group's label would cover the report spread above it.
+                    event.target.closeTooltip();
+                    return;
+                  }
                   map.flyTo([latitude, longitude], expansionZoom, { duration: 0.5 });
                 },
               }}
             >
               <Tooltip direction="top" offset={[0, -18]} className="ns-tooltip">
-                {count} {plural(count, 'prijava', 'prijave', 'prijava')} u ovoj oblasti.
-                Kliknite da zumirate.
+                {count} {plural(count, 'prijava', 'prijave', 'prijava')} u ovoj oblasti.{' '}
+                {viewport.zoom >= CLUSTER_MAX_ZOOM ? 'Klikni da ih raširiš.' : 'Klikni da zumiraš.'}
                 <br />
                 <span className="ns-tooltip__meta">{categoryBreakdown(properties)}</span>
               </Tooltip>
@@ -197,6 +260,34 @@ export function ReportMarkers({
           </Marker>
         );
       })}
+
+      {spread
+        ? spreadLeaves.map(({ report, position }) => (
+            <Fragment key={`spread-${report.id}`}>
+              <Polyline
+                positions={[[spread.latitude, spread.longitude], position]}
+                pathOptions={{ color: '#234c3b', weight: 1.5, opacity: 0.7 }}
+                interactive={false}
+              />
+              <Marker
+                position={position}
+                icon={reportIcon(report)}
+                zIndexOffset={1000}
+                bubblingMouseEvents={false}
+                interactive={interactive}
+                eventHandlers={{
+                  click: () => {
+                    if (interactive) onSelect(report);
+                  },
+                }}
+              >
+                <Tooltip direction="top" offset={[0, -18]} className="ns-tooltip ns-tooltip--rich">
+                  <ReportTooltipContent report={report} />
+                </Tooltip>
+              </Marker>
+            </Fragment>
+          ))
+        : null}
 
       {selectedReport ? (
         <Marker
@@ -255,7 +346,7 @@ export function DraftMarkers({
               <br />
               <strong>{report.title}</strong>
               <br />
-              <span className="ns-tooltip__meta">Vidite je samo vi i moderatori.</span>
+              <span className="ns-tooltip__meta">Vidiš je samo ti i moderatori.</span>
             </Tooltip>
           </Marker>
         ))}

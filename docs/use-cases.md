@@ -82,11 +82,9 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 
 | Element | Šta radi |
 |---|---|
-| **Mapa** | Prikaz mape sa prijavama i liste prijava |
-| **Akcije** | Prikaz akcija čišćenja (predstojeće i završene) |
-| **O projektu** | Kratko objašnjenje projekta, kako se koristi i napomena o privatnosti |
+| **O projektu** (ikonica ⓘ) | Kratko objašnjenje projekta, kako se koristi i napomena o privatnosti |
 | **Demo** (oznaka) | Vidi se samo u demo režimu; otvara objašnjenje |
-| **Prijavi problem** | Otvara formu za novu prijavu (traži prijavu nalogom ako korisnik nije prijavljen) |
+| **Prijavi problem** | Samo na računaru. Otvara formu za novu prijavu (traži prijavu nalogom ako korisnik nije prijavljen). Na telefonu je ovo dugme u donjoj traci. |
 | **Prijava** / avatar | Neprijavljenom: dugme „Prijava“. Prijavljenom: avatar koji otvara meni naloga |
 
 ### 3.2 Meni naloga (klik na avatar)
@@ -103,13 +101,14 @@ Na avataru se pojavljuje **crvena tačka** kada nešto čeka korisnika: odbijena
 
 ### 3.3 Glavni ekran
 
-- **Mapa** — oznake prijava (boja i ikonica po kategoriji), grupisanje oznaka kada ih je mnogo na jednom mestu, legenda sa brojem prijava po kategoriji (može da uključi/isključi kategoriju), kontrole za zumiranje, „Prikaži ceo Novi Sad“ i „Moja lokacija“.
-- **Lista prijava** (levo na računaru, tab „Prijave“ na telefonu) — sažetak napretka (ukupno, rešeno, udeo rešenih, predstojeće akcije), pretraga, filteri, sortiranje i lista.
+- **Prijave | Akcije** — prekidač na vrhu liste (i na mapi na telefonu) bira šta mapa i lista prikazuju: prijave ili akcije čišćenja. Isti izbor važi za mapu i za listu.
+- **Mapa** — za prijave: oznake prijava (boja i ikonica po kategoriji), grupisanje oznaka kada ih je mnogo na jednom mestu, legenda sa brojem prijava po kategoriji (može da uključi/isključi kategoriju), kontrole za zumiranje, „Prikaži ceo Novi Sad“ i „Moja lokacija“. Za akcije: oznake mesta okupljanja; izabrana akcija prikazuje i svoje povezane prijave.
+- **Lista** (levo na računaru, tab „Lista“ na telefonu) — za akcije: Predstojeće i Završene. Za prijave: sažetak napretka (ukupno, rešeno, udeo rešenih, predstojeće akcije), pretraga, filteri, sortiranje i lista.
 - **Panel sa detaljima** (desno na računaru, donji list na telefonu) — detalji prijave, detalji akcije ili forma za prijavu.
 
 ### 3.4 Mobilni telefon
 
-Na dnu ekrana je traka sa tri taba: **Mapa**, **Prijave**, **Akcije**. Detalji i forme se otvaraju kao list koji se izvlači odozdo.
+Na dnu ekrana je traka: **Mapa**, **＋ Prijavi** (u sredini), **Lista**. Mapa i Lista prikazuju ono što je izabrano prekidačem **Prijave | Akcije**. „＋ Prijavi“ otvara formu za novu prijavu; administratoru nudi izbor „Prijavi problem“ ili „Nova akcija“. Detalji i forme se otvaraju kao list koji se izvlači odozdo.
 
 ---
 
@@ -212,13 +211,14 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
 ### UC-02 Pretraga, filtriranje i sortiranje
 
 - **Akter:** svako
-- **Gde:** lista prijava
+- **Gde:** lista prijava; na telefonu i iznad mape. Pretraga i filteri važe istovremeno za mapu i za listu.
 - **Tok:**
   1. Unos teksta u pretragu (prečica `/`). Traži se po naslovu, opisu, adresi, kategoriji i statusu, bez obzira na kvačice (č, ć, š, ž, đ).
-  2. Filter po jednoj ili više kategorija i statusa.
-  3. Sortiranje: najnovije, najstarije, najbliže (zahteva „Moja lokacija“), po statusu.
-  4. „Samo ova oblast“ na mapi (ili ikonica u filterima) ograničava listu na trenutno vidljivi deo mape.
-  5. „Očisti“ uklanja sve filtere.
+  2. Kategorije su čipovi ispod pretrage (na telefonu jedan red koji se prevlači vodoravno).
+  3. Dugme **Filteri** (broj = koliko je filtera uključeno) otvara panel sa kategorijama, statusima, sortiranjem (najnovije, najstarije, najbliže, po statusu) i opcijom „Samo prijave na vidljivom delu mape“. „Očisti“ u panelu uklanja te filtere, a pretraga ostaje.
+  4. Na računaru, „Samo ova oblast“ na mapi radi isto što i opcija u panelu.
+  5. „Očisti“ pored broja rezultata u listi uklanja sve, uključujući i pretragu.
+  6. **Blizu mene** (iznad liste) ređa prijave od najbliže i na karticama prikazuje udaljenost; isto radi izbor „Najbliže“ u sortiranju. Ako lokacija još nije poznata, aplikacija je traži i približava mapu. Ako pristup lokaciji nije dozvoljen ili ne uspe, prikazuje se poruka i redosled se vraća na „Najnovije“. Ponovni klik („Najbliže prvo ✕“) vraća „Najnovije“.
 
 ### UC-03 Detalji prijave i deljenje
 
@@ -231,11 +231,12 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
 ### UC-04 Pregled akcija čišćenja
 
 - **Akter:** svako
-- **Gde:** Akcije (zaglavlje ili tab na telefonu)
+- **Gde:** prekidač **Prijave | Akcije** → Akcije (lista i mapa)
 - **Tok:**
-  1. Lista je podeljena na **Predstojeće** i **Završene**.
-  2. Klik na akciju otvara detalje i prikazuje mesto okupljanja na mapi.
-  3. Detalji: naslovna fotografija, datum i vreme, opis, mesto okupljanja, organizator i napomena, šta poneti, povezane prijave (klik vodi na prijavu), a za završene i fotografije sa akcije.
+  1. Lista je podeljena na **Predstojeće** i **Završene**. Mapa prikazuje isti period kao lista (na telefonu se bira u panelu **Filteri**).
+  2. Pretraga po nazivu, opisu, mestu okupljanja i organizatoru sužava i listu i mapu. **Blizu mene** ređa akcije po udaljenosti mesta okupljanja (umesto po datumu), uz isto ponašanje kao kod prijava (UC-02).
+  3. Klik na akciju otvara detalje i prikazuje mesto okupljanja na mapi.
+  4. Detalji: naslovna fotografija, datum i vreme, opis, mesto okupljanja, organizator i napomena, šta poneti, povezane prijave (klik vodi na prijavu), a za završene i fotografije sa akcije.
 
 ### UC-05 Prijava Google nalogom
 
@@ -255,7 +256,7 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
 ### UC-06 Slanje nove prijave
 
 - **Akter:** prijavljen korisnik
-- **Gde:** „Prijavi problem“ u zaglavlju; „Nova prijava“ u praznoj listi „Moje prijave“
+- **Gde:** „Prijavi problem“ u zaglavlju (računar) ili „＋ Prijavi“ u donjoj traci (telefon); „Nova prijava“ u praznoj listi „Moje prijave“
 - **Preduslov:** korisnik je prijavljen (inače se prvo traži prijava, UC-05)
 - **Tok:**
   1. **Lokacija:** korisnik klikne na mapu ili koristi svoju lokaciju. Tačka mora biti u Novom Sadu.
@@ -430,7 +431,7 @@ Administrator ima sva prava moderatora, plus tab „Korisnici i uloge“ u stavc
 
 ### UC-21 Kreiranje akcije čišćenja
 
-- **Gde:** Administracija → Akcije čišćenja → „Nova akcija“; ili prikaz Akcije → dugme za administraciju
+- **Gde:** Administracija → Akcije čišćenja → „Nova akcija“; ili prikaz Akcije → dugme za administraciju; ili na telefonu „＋ Prijavi“ → „Nova akcija“
 - **Tok:**
   1. **Osnovno:** naziv, opis i plan rada, status (podrazumevano „Planirano“).
   2. **Fotografije:** naslovna slika (opciono); fotografije sa akcije (do 6) tek kada je status „Završeno“.
