@@ -87,15 +87,15 @@ export function MyReportsPanel() {
       <EmptyState
         icon={<UserRound size={20} />}
         title="Moje prijave rade uz nalog"
-        description="U demo režimu nema naloga, pa se prijave ne vezuju za autora. Povežite Firebase da biste pratili svoje prijave."
+        description="U demo režimu nema naloga, pa se prijave ne vezuju za autora. Poveži Firebase da pratiš svoje prijave."
       />
     );
   } else if (!auth.user) {
     body = (
       <EmptyState
         icon={<UserRound size={20} />}
-        title="Prijavite se"
-        description="Prijavite se Google nalogom da biste videli svoje prijave i njihov status."
+        title="Prijavi se"
+        description="Prijavi se Google nalogom da vidiš svoje prijave i njihov status."
         action={
           <button
             type="button"
@@ -111,15 +111,15 @@ export function MyReportsPanel() {
     body = (
       <div className="admin-loading" role="status">
         <Spinner size={16} />
-        Učitavanje vaših prijava…
+        Učitavanje tvojih prijava…
       </div>
     );
   } else if (myReports.length === 0) {
     body = (
       <EmptyState
         icon={<Inbox size={20} />}
-        title="Još nemate prijava"
-        description="Kada prijavite problem, ovde pratite da li je objavljen, da li treba nešto ispraviti i kada je rešen."
+        title="Još nemaš prijava"
+        description="Kada prijaviš problem, ovde pratiš da li je objavljen, da li treba nešto ispraviti i kada je rešen."
         action={
           <button
             type="button"
@@ -260,7 +260,7 @@ export function MyReportsPanel() {
   return (
     <Modal
       title="Moje prijave"
-      description="Stanje svakog vašeg problema: pregled, objava i rešavanje."
+      description="Stanje svakog tvog problema: pregled, objava i rešavanje."
       size="lg"
       onClose={closeModal}
     >

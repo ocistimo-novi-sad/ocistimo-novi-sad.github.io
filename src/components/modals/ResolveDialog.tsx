@@ -29,8 +29,8 @@ export function ResolveDialog({ reportId }: { reportId: string }) {
           title={report ? 'Fotografije nisu podešene' : 'Prijava nije pronađena'}
           description={
             report
-              ? 'Za dokaz sanacije potrebna je fotografija, a otpremanje fotografija nije podešeno za ovaj sajt. Javite se moderatoru.'
-              : 'Osvežite „Moje prijave” i pokušajte ponovo.'
+              ? 'Za dokaz sanacije potrebna je fotografija, a otpremanje fotografija nije podešeno za ovaj sajt. Javi se moderatoru.'
+              : 'Osveži „Moje prijave” i pokušaj ponovo.'
           }
           action={
             <button type="button" className="btn btn--quiet btn--sm" onClick={closeModal}>
@@ -44,7 +44,7 @@ export function ResolveDialog({ reportId }: { reportId: string }) {
 
   const submit = async () => {
     if (photos.length === 0) {
-      setError('Dodajte bar jednu fotografiju sadašnjeg stanja.');
+      setError('Dodaj bar jednu fotografiju sadašnjeg stanja.');
       document.getElementById('resolve-photo-button')?.focus();
       return;
     }
@@ -78,7 +78,7 @@ export function ResolveDialog({ reportId }: { reportId: string }) {
   return (
     <Modal
       title="Označi kao sanirano"
-      description="Pošaljite fotografiju sadašnjeg stanja. Kada moderator potvrdi, prijava postaje zelena."
+      description="Pošalji fotografiju sadašnjeg stanja. Kada moderator potvrdi, prijava postaje zelena."
       size="md"
       onClose={() => {
         if (!submitting) closeModal();

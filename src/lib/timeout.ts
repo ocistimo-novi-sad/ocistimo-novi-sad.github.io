@@ -16,7 +16,7 @@ export function withTimeout<T>(
       reject(
         new AppError(
           'timeout',
-          'Baza ne odgovara. Proverite da li je Cloud Firestore kreiran u Firebase konzoli, da li je API omogućen i da li su pravila objavljena.',
+          'Baza ne odgovara. Proveri da li je Cloud Firestore kreiran u Firebase konzoli, da li je API omogućen i da li su pravila objavljena.',
         ),
       );
     }, milliseconds);

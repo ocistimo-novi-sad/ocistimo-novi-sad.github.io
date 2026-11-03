@@ -157,7 +157,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 export const MODERATION_LABELS: Record<ModerationState, { label: string; description: string }> = {
   pending: {
     label: 'Na pregledu',
-    description: 'Moderator još nije pregledao prijavu. Vidite je samo vi i moderatori.',
+    description: 'Moderator još nije pregledao prijavu. Vidiš je samo ti i moderatori.',
   },
   approved: { label: 'Objavljena', description: 'Prijava je javna i vidljiva na mapi.' },
   rejected: {
@@ -176,7 +176,7 @@ export const COMMUNITY_CAN_PRESETS = [
 
 export const HELP_NEEDED_PRESETS = [
   'Odvoz krupnog otpada',
-  'Alat i materijal (džakovi, rukavice, boja)',
+  'Alat i materijal (džakovi, rukavice, boja, merdevine)',
   'Nadležna služba ili JKP',
   'Više volontera',
 ];

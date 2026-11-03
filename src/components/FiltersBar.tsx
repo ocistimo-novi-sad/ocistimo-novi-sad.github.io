@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState, type Ref } from 'react';
 import { ArrowUpDown, ChevronDown, SlidersHorizontal, Search, X } from 'lucide-react';
-import { CATEGORIES, DEFAULT_FILTERS, REPORT_STATUSES, SORT_OPTIONS } from '../config';
+import {
+  CATEGORIES,
+  CATEGORY_MAP,
+  DEFAULT_FILTERS,
+  REPORT_STATUSES,
+  SORT_OPTIONS,
+  STATUS_MAP,
+} from '../config';
 import { useApp } from '../state/app-context';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { StatusDot } from './ui/StatusBadge';
@@ -265,6 +272,83 @@ export function FiltersButton() {
   );
 }
 
+/**
+ * The filters that are on, as chips under the search. Each one can be removed,
+ * so a map or list that shows less than usual always says why.
+ */
+export function ActiveFilters() {
+  const { layer, filters, updateFilters, actionScope, setActionScope } = useApp();
+
+  if (layer === 'actions') {
+    if (actionScope !== 'past') return null;
+    return (
+      <div className="active-filters" role="group" aria-label="Uključeni filteri">
+        <button
+          type="button"
+          className="active-chip"
+          onClick={() => setActionScope('upcoming')}
+          aria-label="Ukloni filter: Završene akcije"
+        >
+          Završene akcije
+          <X size={12} aria-hidden="true" />
+        </button>
+      </div>
+    );
+  }
+
+  const chips = [
+    ...filters.categories.map((category) => ({
+      key: `category-${category}`,
+      label: CATEGORY_MAP[category].label,
+      remove: () =>
+        updateFilters({ categories: filters.categories.filter((item) => item !== category) }),
+    })),
+    ...filters.statuses.map((status) => ({
+      key: `status-${status}`,
+      label: STATUS_MAP[status].label,
+      remove: () => updateFilters({ statuses: filters.statuses.filter((item) => item !== status) }),
+    })),
+    ...(filters.viewportOnly
+      ? [
+          {
+            key: 'area',
+            label: 'Samo ova oblast',
+            remove: () => updateFilters({ viewportOnly: false, bounds: null }),
+          },
+        ]
+      : []),
+  ];
+  if (chips.length === 0) return null;
+
+  return (
+    <div className="active-filters" role="group" aria-label="Uključeni filteri">
+      {chips.map((chip) => (
+        <button
+          key={chip.key}
+          type="button"
+          className="active-chip"
+          onClick={chip.remove}
+          aria-label={`Ukloni filter: ${chip.label}`}
+        >
+          {chip.label}
+          <X size={12} aria-hidden="true" />
+        </button>
+      ))}
+      {chips.length > 1 ? (
+        <button
+          type="button"
+          className="active-chip active-chip--clear"
+          onClick={() =>
+            updateFilters({ categories: [], statuses: [], viewportOnly: false, bounds: null })
+          }
+        >
+          Očisti sve
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 export function FiltersBar() {
   const { filters, updateFilters } = useApp();
   const searchRef = useRef<HTMLInputElement>(null);
@@ -297,6 +381,7 @@ export function FiltersBar() {
         />
         <FiltersButton />
       </div>
+      <ActiveFilters />
 
       <CategoryChips scroll />
     </div>

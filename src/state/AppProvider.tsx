@@ -11,6 +11,7 @@ import { APP, CATEGORY_MAP, DEFAULT_FILTERS, STATUS_MAP } from '../config';
 import { useAuth } from '../hooks/useAuth';
 import { useReports } from '../hooks/useReports';
 import { useActions } from '../hooks/useActions';
+import { isUpcomingAction } from '../lib/counts';
 import { isWithinBounds } from '../lib/geo';
 import { distanceInMeters } from '../lib/geo';
 import { toSerbianError } from '../services/errors';
@@ -285,13 +286,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return list;
   }, [reports, filters, userPosition]);
 
+  // "Upcoming" depends on the clock, so it is recomputed every few minutes; an
+  // app left open moves an action that started hours ago to the past.
+  const [clock, setClock] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setClock(Date.now()), 5 * 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const { upcomingActions, pastActions } = useMemo(() => {
-    // An action stays "upcoming" until 4 hours after its start.
-    const cutoff = Date.now() - 4 * 3_600_000;
+    // The same "upcoming" rule as every count (src/lib/counts.ts).
+    const now = clock;
     const query = fold(actionQuery.trim());
-    const isUpcoming = (action: CleanupAction) =>
-      (action.status === 'planned' || action.status === 'in_progress') &&
-      action.date.getTime() >= cutoff;
+    const isUpcoming = (action: CleanupAction) => isUpcomingAction(action, now);
     const matching = query
       ? actions.filter((action) =>
           fold(
@@ -314,7 +321,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         .filter((action) => !isUpcoming(action))
         .sort(byDistance ?? ((a, b) => b.date.getTime() - a.date.getTime())),
     };
-  }, [actions, actionQuery, actionsNearest, userPosition]);
+  }, [actions, actionQuery, actionsNearest, userPosition, clock]);
   const filteredActions = actionScope === 'upcoming' ? upcomingActions : pastActions;
 
   const updateFilters = useCallback((patch: Partial<Filters>) => {
@@ -907,7 +914,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           'info',
           auth.user
             ? 'Ova prijava još nije javna.'
-            : 'Ova prijava još nije javna. Prijavite se ako ste njen autor.',
+            : 'Ova prijava još nije javna. Prijavi se ako si njen autor.',
         );
       });
   }, [applyReport, auth.ready, auth.user, knownReports, notify, reportsPhase, selectReport]);
@@ -921,11 +928,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (url.href !== window.location.href) window.history.replaceState(null, '', url);
   }, [selectedReportId]);
 
+  // The map's "my location" button flies there; sorting by distance only needs
+  // the position, so it passes fly: false and the map stays where it is.
   const locateUser = useCallback(
-    () =>
+    ({ fly = true }: { fly?: boolean } = {}) =>
       new Promise<boolean>((resolve) => {
         if (!('geolocation' in navigator)) {
-          notify('error', 'Vaš pregledač ne podržava određivanje lokacije.');
+          notify('error', 'Tvoj pregledač ne podržava određivanje lokacije.');
           resolve(false);
           return;
         }
@@ -940,7 +949,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               accuracy: position.coords.accuracy,
             };
             setUserPosition(coordinates);
-            flyTo(coordinates, 15);
+            if (fly) flyTo(coordinates, 15);
             resolve(true);
           },
           (error) => {
@@ -948,7 +957,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             if (error.code === error.PERMISSION_DENIED) {
               notify(
                 'error',
-                'Pristup lokaciji je odbijen. Možete ga uključiti u podešavanjima pregledača.',
+                'Pristup lokaciji je odbijen. Možeš ga uključiti u podešavanjima pregledača.',
               );
             } else {
               notify('error', 'Lokaciju trenutno nije moguće odrediti.');
@@ -962,13 +971,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   // "Nearest" without a known position asks for it; if that fails the order
-  // goes back, so the list never claims "nearest" while it is not.
+  // goes back, so the list never claims "nearest" while it is not. A sort the
+  // user picked while waiting for the position is kept.
   const setSort = useCallback(
     (sort: SortMode) => {
       updateFilters({ sort });
       if (sort !== 'nearest' || userPosition) return;
-      void locateUser().then((found) => {
-        if (!found) updateFilters({ sort: DEFAULT_FILTERS.sort });
+      void locateUser({ fly: false }).then((found) => {
+        if (found) return;
+        setFilters((current) =>
+          current.sort === 'nearest' ? { ...current, sort: DEFAULT_FILTERS.sort } : current,
+        );
       });
     },
     [locateUser, updateFilters, userPosition],
@@ -978,7 +991,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     (on: boolean) => {
       setActionsNearestState(on);
       if (!on || userPosition) return;
-      void locateUser().then((found) => {
+      void locateUser({ fly: false }).then((found) => {
         if (!found) setActionsNearestState(false);
       });
     },

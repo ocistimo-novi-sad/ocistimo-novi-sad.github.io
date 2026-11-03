@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { CalendarPlus, Map, Plus, Rows3, TriangleAlert } from 'lucide-react';
-import { useApp } from '../state/app-context';
+import { isOpenReport, isUpcomingAction } from '../lib/counts';
+import { useApp, type MobileTab } from '../state/app-context';
 
 /**
  * Mobile navigation: map or list (what they show is the layer switch), with
@@ -25,23 +27,41 @@ export function MobileTabBar() {
 
   useEffect(() => {
     if (!menuOpen) return;
-    const onPointerDown = (event: MouseEvent) => {
+    // pointerdown, not mousedown: taps on the map do not always produce a mousedown.
+    const onPointerDown = (event: PointerEvent) => {
       if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setMenuOpen(false);
     };
-    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('pointerdown', onPointerDown);
     document.addEventListener('keydown', onKeyDown);
     return () => {
-      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('pointerdown', onPointerDown);
       document.removeEventListener('keydown', onKeyDown);
     };
   }, [menuOpen]);
 
+  // Map and list slide like two sides of one screen where the browser supports it.
+  const switchTab = (tab: MobileTab) => {
+    if (tab === mobileTab) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!('startViewTransition' in document) || reduceMotion) {
+      setMobileTab(tab);
+      return;
+    }
+    document.documentElement.dataset.slide = tab === 'list' ? 'left' : 'right';
+    document.startViewTransition(() => flushSync(() => setMobileTab(tab)));
+  };
+
   if (selectedReport || selectedAction || composeOpen) return null;
 
-  const listCount = layer === 'actions' ? actions.length : reports.length;
+  // Only what people can still act on: upcoming actions, open reports (#31, #33).
+  const now = Date.now();
+  const listCount =
+    layer === 'actions'
+      ? actions.filter((action) => isUpcomingAction(action, now)).length
+      : reports.filter(isOpenReport).length;
 
   const onCreate = () => {
     if (auth.isAdmin) {
@@ -57,7 +77,7 @@ export function MobileTabBar() {
         type="button"
         className={`tabbar__item${mobileTab === 'map' ? ' is-active' : ''}`}
         aria-current={mobileTab === 'map' ? 'page' : undefined}
-        onClick={() => setMobileTab('map')}
+        onClick={() => switchTab('map')}
       >
         <Map size={18} aria-hidden="true" />
         <span>Mapa</span>
@@ -67,6 +87,7 @@ export function MobileTabBar() {
         <button
           type="button"
           className="tabbar__item tabbar__item--cta"
+          data-guide="create"
           onClick={onCreate}
           aria-expanded={auth.isAdmin ? menuOpen : undefined}
           aria-haspopup={auth.isAdmin ? 'menu' : undefined}
@@ -105,7 +126,8 @@ export function MobileTabBar() {
         type="button"
         className={`tabbar__item${mobileTab === 'list' ? ' is-active' : ''}`}
         aria-current={mobileTab === 'list' ? 'page' : undefined}
-        onClick={() => setMobileTab('list')}
+        onClick={() => switchTab('list')}
+        data-guide="list"
       >
         <Rows3 size={18} aria-hidden="true" />
         <span>Lista</span>

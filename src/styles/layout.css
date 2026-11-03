@@ -1069,10 +1069,37 @@ button.impact-stat:hover {
   font-weight: 600;
 }
 
+.segmented--layer {
+  position: relative;
+}
+
+.segmented--layer .segmented__item {
+  position: relative;
+  z-index: 1;
+}
+
+/* The pill below gives the active layer its green; the button stays clear. */
 .segmented--layer .segmented__item.is-active {
-  border-color: var(--forest);
-  background: var(--forest);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
   color: #fff;
+}
+
+.segmented__pill {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 8px) / 2);
+  border-radius: var(--radius);
+  background: var(--forest);
+  box-shadow: var(--shadow-1);
+  transition: transform var(--dur-3) var(--ease-spring);
+}
+
+.segmented--layer.is-second .segmented__pill {
+  transform: translateX(calc(100% + 2px));
 }
 
 .segmented--layer .segmented__item.is-active span {
@@ -1359,4 +1386,47 @@ button.impact-stat:hover {
     line-height: 1.4;
     text-align: center;
   }
+}
+
+/* Filters that are on, as removable chips under the search, so a map or
+   list that shows less than usual explains itself. */
+.active-filters {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  padding-bottom: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.active-filters::-webkit-scrollbar {
+  display: none;
+}
+
+.active-chip {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px 4px 10px;
+  border: 1px solid var(--forest-line);
+  border-radius: var(--radius-pill);
+  background: var(--forest-tint);
+  color: var(--forest-2);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  animation: pop-in var(--dur-2) var(--ease);
+  transition: background-color var(--dur-1) var(--ease);
+}
+
+.active-chip:hover {
+  background: var(--forest-tint-2);
+}
+
+.active-chip--clear {
+  border-color: var(--line-strong);
+  background: var(--surface);
+  color: var(--ink-2);
 }

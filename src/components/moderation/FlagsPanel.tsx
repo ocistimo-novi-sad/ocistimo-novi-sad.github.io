@@ -54,7 +54,7 @@ export function FlagsPanel() {
   const openReport = (flag: ContentFlag) => {
     const report = reports.find((item) => item.id === flag.reportId);
     if (!report) {
-      notify('info', 'Ova prijava nije učitana na mapi. Osvežite prijave u panelu.');
+      notify('info', 'Ova prijava nije učitana na mapi. Osveži prijave u panelu.');
       return;
     }
     selectReport(report);

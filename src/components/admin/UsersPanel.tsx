@@ -151,7 +151,7 @@ export function UsersPanel() {
           title={users?.length ? 'Nema korisnika za ovu pretragu' : 'Još nema korisnika'}
           description={
             users?.length
-              ? 'Promenite pretragu ili filter po ulozi.'
+              ? 'Promeni pretragu ili filter po ulozi.'
               : 'Korisnik se pojavljuje ovde posle prve prijave Google nalogom.'
           }
         />
@@ -184,7 +184,7 @@ export function UsersPanel() {
                   <span className="user-row__names">
                     <strong>
                       {user.displayName}
-                      {isSelf ? <span className="user-row__self">vi</span> : null}
+                      {isSelf ? <span className="user-row__self">ti</span> : null}
                     </strong>
                     <span className="user-row__email">{user.email ?? 'mejl nije sačuvan'}</span>
                   </span>

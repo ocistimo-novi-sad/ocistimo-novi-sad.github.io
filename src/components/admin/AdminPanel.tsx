@@ -45,7 +45,7 @@ export function AdminPanel() {
       <Modal title="Administracija" size="sm" onClose={closeModal}>
         <EmptyState
           icon={<ShieldAlert size={20} />}
-          title="Nemate administratorski pristup"
+          title="Nemaš administratorski pristup"
           description="Administracija je dostupna samo nalozima upisanim u kolekciju admins u Firestore-u. Pristup se ne može dodeliti iz aplikacije."
           action={
             <button type="button" className="btn btn--quiet btn--sm" onClick={closeModal}>
@@ -75,7 +75,7 @@ export function AdminPanel() {
     return (
       <Modal
         title={editing ? 'Uredi akciju' : 'Nova akcija'}
-        description="Akcije su javne i vidljive svim posetiocima. Sačuvajte tek kada su termin i mesto potvrđeni."
+        description="Akcije su javne i vidljive svim posetiocima. Sačuvaj tek kada su termin i mesto potvrđeni."
         size="xl"
         onClose={() => {
           setFormOpen(false);
@@ -158,7 +158,7 @@ export function AdminPanel() {
             <EmptyState
               icon={<ShieldCheck size={20} />}
               title="Nema akcija"
-              description="Napravite prvu akciju i povežite je sa prijavama koje treba rešiti."
+              description="Napravi prvu akciju i poveži je sa prijavama koje treba rešiti."
             />
           ) : (
             <ul className="admin-action-list">

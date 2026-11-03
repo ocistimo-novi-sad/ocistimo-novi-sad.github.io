@@ -110,10 +110,7 @@ export function ActionsPanel() {
       <div className="panel__head">
         <LayerSwitch />
 
-        <p className="panel__intro">
-          Zajednička čišćenja povezuju prijave sa iste lokacije. Otvorite akciju da vidite gde se
-          okupljamo i šta je potrebno poneti.
-        </p>
+        <p className="panel__intro">Pridruži se akciji. Akcija sanira jednu ili više prijava.</p>
 
         <SearchInput
           value={actionQuery}
@@ -199,7 +196,7 @@ export function ActionsPanel() {
           <EmptyState
             icon={<TriangleAlert size={20} />}
             title="Akcije nisu učitane"
-            description={actionsError ?? 'Proverite internet vezu i pokušajte ponovo.'}
+            description={actionsError ?? 'Proveri internet vezu i pokušaj ponovo.'}
             action={
               <button
                 type="button"
@@ -216,7 +213,7 @@ export function ActionsPanel() {
           <EmptyState
             icon={<Search size={20} />}
             title="Nema akcija za ovu pretragu"
-            description="Pokušajte drugi naziv ili mesto okupljanja."
+            description="Pokušaj drugi naziv ili mesto okupljanja."
             action={
               <button
                 type="button"
@@ -235,7 +232,7 @@ export function ActionsPanel() {
             title={scope === 'upcoming' ? 'Nema planiranih akcija' : 'Još nema završenih akcija'}
             description={
               scope === 'upcoming'
-                ? 'Kada se za istu lokaciju prikupi dovoljno prijava, administracija objavljuje akciju čišćenja. Do tada možete pregledati prijave na mapi.'
+                ? 'Moderatori i koordinatori zajednice organizuju akcije čišćenja. Do tada možeš pregledati prijave na mapi.'
                 : 'Završene akcije se prikazuju ovde sa svim rešenim prijavama.'
             }
             action={
