@@ -82,6 +82,12 @@
     color 0.12s var(--ease);
 }
 
+/* Inside the button: the stack has no gaps, so an outside ring would be covered
+   by the next button. */
+.map-controls button:focus-visible {
+  outline-offset: -3px;
+}
+
 .map-controls button:last-child {
   border-bottom: 0;
 }
@@ -220,24 +226,36 @@
   backdrop-filter: blur(8px);
 }
 
-.map-legend__head {
+.map-legend__toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 24px;
   margin-bottom: 7px;
-}
-
-.map-legend__head button {
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
   border-radius: var(--radius);
   color: var(--muted);
 }
 
-.map-legend__head button:hover {
+.map-legend__toggle:hover {
   color: var(--ink);
+}
+
+/* Closed, the legend is just its title, like a pill. */
+.map-legend.is-closed {
+  width: auto;
+  padding: 4px 11px;
+  border-radius: var(--radius-pill);
+}
+
+.map-legend.is-closed .map-legend__toggle {
+  margin-bottom: 0;
+}
+
+/* While a point is picked, the map needs all the room it can get. */
+.map-shell.is-picking .map-legend {
+  display: none;
 }
 
 .map-legend ul {
@@ -267,8 +285,9 @@
   background: var(--surface-2);
 }
 
+/* Off: grey text and a hollow swatch. Fading it with opacity dropped the text to 2.2:1. */
 .map-legend__item.is-off {
-  opacity: 0.42;
+  color: var(--muted);
 }
 
 .map-legend__item.is-off .legend-swatch {
@@ -315,26 +334,6 @@
   color: var(--muted-2);
   font-size: 12px;
   line-height: 1.4;
-}
-
-.map-legend-open {
-  position: absolute;
-  bottom: 14px;
-  left: 14px;
-  z-index: 400;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 11px;
-  border: 1px solid rgba(28, 34, 30, 0.1);
-  border-radius: var(--radius-pill);
-  background: var(--surface);
-  box-shadow: var(--shadow-2);
-  color: var(--muted);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 /* --- Readout ------------------------------------------------------------- */
@@ -888,6 +887,12 @@
 /* When the detail/compose drawer sits over the map on desktop, keep the map
    controls and status UI inside the still-visible part of the map. */
 @media (min-width: 901px) {
+  /* Below the "Samo ova oblast" button, so the notices never cover it. */
+  .map-loading,
+  .map-error-banner {
+    top: 58px;
+  }
+
   .app.has-drawer .map-controls {
     right: calc(var(--drawer-w) + 14px);
   }
@@ -902,9 +907,13 @@
     left: calc((100% - var(--drawer-w)) / 2);
   }
 
+  /* Left-aligned next to an open panel, so it leaves most of the narrowed map
+     free to click and stays clear of the map buttons. */
   .app.has-drawer .pick-banner {
-    left: calc((100% - var(--drawer-w)) / 2);
-    max-width: min(520px, calc(100% - var(--drawer-w) - 132px));
+    right: calc(var(--drawer-w) + 64px);
+    left: 14px;
+    max-width: 520px;
+    transform: none;
   }
 
   .app.has-drawer .map-state {
@@ -936,4 +945,70 @@
 
 .leaflet-marker-icon:nth-child(4n + 4) :is(.pin, .action-pin) {
   animation-delay: 120ms;
+}
+
+/* --- Keyboard ----------------------------------------------------------- */
+
+/* The map is a Tab stop. Its own outline is cut off by the map slot and drawn
+   under the tiles, so the ring is drawn over the map instead (WCAG 2.4.7). */
+.map-shell:has(> .map:focus-visible)::after {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-map-ui);
+  border: 3px solid var(--forest);
+  content: '';
+  pointer-events: none;
+}
+
+/* Where Enter puts the new report's point while the map has keyboard focus. */
+.map-crosshair {
+  position: absolute;
+  top: calc(50% - var(--pick-y, 0px));
+  left: calc(50% - var(--pick-x, 0px));
+  z-index: var(--z-map-ui);
+  display: none;
+  width: 28px;
+  height: 28px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.map-shell:has(> .map:focus-visible) .map-crosshair {
+  display: block;
+}
+
+.map-crosshair::before,
+.map-crosshair::after {
+  position: absolute;
+  background: var(--forest);
+  box-shadow: 0 0 0 1px #fff;
+  content: '';
+}
+
+.map-crosshair::before {
+  top: 0;
+  bottom: 0;
+  left: 13px;
+  width: 2px;
+}
+
+.map-crosshair::after {
+  top: 13px;
+  right: 0;
+  left: 0;
+  height: 2px;
+}
+
+.map-crosshair__hint {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 50%;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--forest);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  transform: translateX(-50%);
 }

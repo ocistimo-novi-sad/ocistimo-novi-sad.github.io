@@ -1,5 +1,6 @@
-import { useEffect, useId, useRef } from 'react';
+import { useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useModalFocus } from '../../hooks/useModalFocus';
 
 /**
  * One shape for every "are you sure?": the screen dims and a panel with the
@@ -22,29 +23,20 @@ export function ConfirmSheet({
   onConfirm: () => void;
 }) {
   const id = useId();
+  const panel = useRef<HTMLDivElement>(null);
   const keepButton = useRef<HTMLButtonElement>(null);
-  const latestOnKeep = useRef(onKeep);
 
-  useEffect(() => {
-    latestOnKeep.current = onKeep;
+  // Tab stays in the question, Escape keeps going, and focus then goes back.
+  useModalFocus(panel, onKeep, {
+    initialFocus: () => keepButton.current,
+    fallbackFocus: () => document.querySelector<HTMLElement>('.drawer'),
   });
-
-  useEffect(() => {
-    keepButton.current?.focus();
-    // Capture phase, so Escape closes only this question and not the panel under it.
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      event.stopPropagation();
-      latestOnKeep.current();
-    };
-    window.addEventListener('keydown', onKeyDown, true);
-    return () => window.removeEventListener('keydown', onKeyDown, true);
-  }, []);
 
   return createPortal(
     <div className="confirm-sheet">
       <div className="confirm-sheet__backdrop" onClick={onKeep} />
       <div
+        ref={panel}
         className="confirm-sheet__panel"
         role="alertdialog"
         aria-modal="true"

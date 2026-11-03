@@ -56,6 +56,7 @@ import type {
   ReportStatus,
   SortMode,
 } from '../types';
+import { drawerOffset } from '../components/map/drawer-offset';
 
 type PendingIntent = { kind: 'create' } | { kind: 'flag'; reportId: string };
 
@@ -191,14 +192,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // the pin stays in the area that is still visible: to the left on desktop,
       // above the bottom sheet on mobile.
       let projected = map.project([coordinates.latitude, coordinates.longitude], zoom);
-      if (options?.accountForDrawer) {
-        if (window.innerWidth > 900) {
-          const drawerWidth = window.innerWidth > 1150 ? 428 : 384;
-          projected = projected.add([drawerWidth / 2, 0]);
-        } else {
-          projected = projected.add([0, 220]);
-        }
-      }
+      if (options?.accountForDrawer) projected = projected.add(drawerOffset());
 
       map.flyTo(map.unproject(projected, zoom), zoom, { duration: 0.65 });
     },

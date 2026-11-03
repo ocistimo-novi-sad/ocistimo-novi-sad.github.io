@@ -1,5 +1,6 @@
-import { useEffect, useLayoutEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { useIsMobile } from '../hooks/useMediaQuery';
+import { useModalFocus } from '../hooks/useModalFocus';
 import { useApp } from '../state/app-context';
 
 const STORAGE_KEY = 'kim-guide-done';
@@ -84,6 +85,30 @@ export function FirstVisitGuide() {
     markGuideSeen();
     setStep(null);
   };
+
+  return <GuideDialog step={step} box={box} onNext={() => setStep(step + 1)} onFinish={finish} />;
+}
+
+/** The dimmed screen and the bubble. Keyboard focus stays inside while it is open. */
+function GuideDialog({
+  step,
+  box,
+  onNext,
+  onFinish,
+}: {
+  step: number;
+  box: DOMRect | null;
+  onNext: () => void;
+  onFinish: () => void;
+}) {
+  const dialog = useRef<HTMLDivElement>(null);
+  const primary = useRef<HTMLButtonElement>(null);
+  // Escape skips the guide. On a first visit nothing had focus before, so it
+  // goes to the report button, the first thing the guide points at.
+  useModalFocus(dialog, onFinish, {
+    initialFocus: () => primary.current,
+    fallbackFocus: () => findTarget('create'),
+  });
   const last = step === STEPS.length - 1;
 
   // The bubble goes on the side of the highlighted element with more room.
@@ -96,7 +121,7 @@ export function FirstVisitGuide() {
   }
 
   return (
-    <div className="guide" role="dialog" aria-modal="true" aria-label="Kratak vodič">
+    <div ref={dialog} className="guide" role="dialog" aria-modal="true" aria-label="Kratak vodič">
       {box ? (
         <div
           className="guide__spot"
@@ -116,13 +141,14 @@ export function FirstVisitGuide() {
         </p>
         <p className="guide__text">{STEPS[step].text}</p>
         <div className="guide__row">
-          <button type="button" className="btn btn--quiet btn--sm" onClick={finish}>
+          <button type="button" className="btn btn--quiet btn--sm" onClick={onFinish}>
             Preskoči
           </button>
           <button
+            ref={primary}
             type="button"
             className="btn btn--primary btn--sm"
-            onClick={() => (last ? finish() : setStep(step + 1))}
+            onClick={() => (last ? onFinish() : onNext())}
             autoFocus
           >
             {last ? 'Gotovo' : 'Dalje'}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { CalendarPlus, Map, Plus, Rows3, TriangleAlert } from 'lucide-react';
 import { isOpenReport, isUpcomingAction } from '../lib/counts';
@@ -16,29 +16,31 @@ export function MobileTabBar() {
     layer,
     reports,
     actions,
-    selectedReport,
-    selectedAction,
-    composeOpen,
     startCompose,
     openModal,
     auth,
   } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const createRef = useRef<HTMLButtonElement>(null);
+  const menuId = useId();
 
   useEffect(() => {
     if (!menuOpen) return;
-    // pointerdown, not mousedown: taps on the map do not always produce a mousedown.
-    const onPointerDown = (event: PointerEvent) => {
+    // A pointer event, as taps on the map do not always produce mouse events;
+    // on release, not on press (WCAG 2.5.2).
+    const onPointerUp = (event: PointerEvent) => {
       if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMenuOpen(false);
+      if (event.key !== 'Escape') return;
+      setMenuOpen(false);
+      createRef.current?.focus();
     };
-    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('pointerup', onPointerUp);
     document.addEventListener('keydown', onKeyDown);
     return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('pointerup', onPointerUp);
       document.removeEventListener('keydown', onKeyDown);
     };
   }, [menuOpen]);
@@ -54,8 +56,6 @@ export function MobileTabBar() {
     document.documentElement.dataset.slide = tab === 'list' ? 'left' : 'right';
     document.startViewTransition(() => flushSync(() => setMobileTab(tab)));
   };
-
-  if (selectedReport || selectedAction || composeOpen) return null;
 
   // Only what people can still act on: upcoming actions, open reports (#31, #33).
   const now = Date.now();
@@ -84,24 +84,31 @@ export function MobileTabBar() {
         <span>Mapa</span>
       </button>
 
-      <div className="tabbar__create" ref={menuRef}>
+      {/* For moderators a short list that opens and closes (WAI-ARIA disclosure). */}
+      <div
+        className="tabbar__create"
+        ref={menuRef}
+        onBlur={(event) => {
+          if (!menuRef.current?.contains(event.relatedTarget as Node | null)) setMenuOpen(false);
+        }}
+      >
         <button
+          ref={createRef}
           type="button"
           className="tabbar__item tabbar__item--cta"
           data-guide="create"
           onClick={onCreate}
           aria-expanded={auth.isModerator ? menuOpen : undefined}
-          aria-haspopup={auth.isModerator ? 'menu' : undefined}
+          aria-controls={auth.isModerator && menuOpen ? menuId : undefined}
         >
           <Plus size={20} aria-hidden="true" />
           <span>Prijavi</span>
         </button>
 
         {menuOpen ? (
-          <div className="tabbar__menu" role="menu">
+          <div className="tabbar__menu" id={menuId}>
             <button
               type="button"
-              role="menuitem"
               onClick={() => {
                 setMenuOpen(false);
                 startCompose();
@@ -111,7 +118,6 @@ export function MobileTabBar() {
             </button>
             <button
               type="button"
-              role="menuitem"
               onClick={() => {
                 setMenuOpen(false);
                 openModal({ kind: 'admin' });

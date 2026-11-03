@@ -80,6 +80,8 @@ export function ResolveDialog({ reportId }: { reportId: string }) {
       title="Označi kao sanirano"
       description="Pošalji fotografiju sadašnjeg stanja. Kada moderator potvrdi, prijava postaje zelena."
       size="md"
+      // The photo is the one required answer, and a button does not open the phone keyboard.
+      initialFocus={() => document.getElementById('resolve-photo-button')}
       onClose={() => {
         if (!submitting) closeModal();
       }}

@@ -119,11 +119,10 @@ export function ActionsPanel() {
           label="Pretraga akcija"
         />
 
-        <div className="segmented" role="tablist" aria-label="Period akcija">
+        <div className="segmented" role="group" aria-label="Period akcija">
           <button
             type="button"
-            role="tab"
-            aria-selected={scope === 'upcoming'}
+            aria-pressed={scope === 'upcoming'}
             className={`segmented__item${scope === 'upcoming' ? ' is-active' : ''}`}
             onClick={() => setScope('upcoming')}
           >
@@ -132,8 +131,7 @@ export function ActionsPanel() {
           </button>
           <button
             type="button"
-            role="tab"
-            aria-selected={scope === 'past'}
+            aria-pressed={scope === 'past'}
             className={`segmented__item${scope === 'past' ? ' is-active' : ''}`}
             onClick={() => setScope('past')}
           >

@@ -7,9 +7,10 @@ import {
 } from 'react';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useIsMobile } from '../hooks/useMediaQuery';
+import { canFocus } from '../hooks/useModalFocus';
 
 /** The three heights of the drawer on a phone. CSS owns the actual values. */
-type Snap = 'peek' | 'normal' | 'full';
+export type Snap = 'peek' | 'normal' | 'full';
 const SNAPS: Snap[] = ['peek', 'normal', 'full'];
 const SNAP_CLASS: Record<Snap, string> = { peek: ' is-peek', normal: '', full: ' is-expanded' };
 
@@ -23,6 +24,9 @@ function snapHeight(drawer: HTMLElement, snap: Snap): number {
   const measured = drawer.getBoundingClientRect().height;
   drawer.className = className;
   drawer.style.height = height;
+  // Apply the restored height before the transition is back, or the panel
+  // animates from the last measured height on the next frame.
+  void drawer.offsetHeight;
   drawer.style.transition = transition;
   return measured;
 }
@@ -30,7 +34,8 @@ function snapHeight(drawer: HTMLElement, snap: Snap): number {
 interface DragState {
   startY: number;
   startHeight: number;
-  heights: Record<Snap, number>;
+  /** Measured once the finger really moves, so a tap never changes the layout. */
+  heights: Record<Snap, number> | null;
   lastY: number;
   lastTime: number;
   /** Pixels per millisecond, positive when moving up. */
@@ -44,14 +49,15 @@ export function Drawer({
   children,
   footer,
   className = '',
-  collapseSignal,
+  snapRequest,
 }: {
   label: string;
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
   className?: string;
-  collapseSignal?: number;
+  /** Moves the sheet to a height on a phone; a new `id` repeats the same height. */
+  snapRequest?: { snap: Snap; id: number };
 }) {
   const isMobile = useIsMobile();
   const [snap, setSnap] = useState<Snap>('normal');
@@ -61,9 +67,8 @@ export function Drawer({
   const suppressClick = useRef(false);
 
   useEffect(() => {
-    if (collapseSignal === undefined) return;
-    setSnap('normal');
-  }, [collapseSignal]);
+    if (snapRequest) setSnap(snapRequest.snap);
+  }, [snapRequest]);
 
   // Focus moves into the panel when it opens and back when it closes (WAI-ARIA
   // dialog pattern), so keyboard and screen reader users notice it.
@@ -71,7 +76,12 @@ export function Drawer({
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     drawerRef.current?.focus({ preventScroll: true });
     return () => {
-      if (opener?.isConnected) opener.focus({ preventScroll: true });
+      // On a phone the opener can be hidden by then (a report opened from the
+      // list shows on the map tab); the active tab keeps focus on the page.
+      const target = canFocus(opener)
+        ? opener
+        : document.querySelector<HTMLElement>('.tabbar__item.is-active');
+      target?.focus({ preventScroll: true });
     };
   }, []);
 
@@ -90,11 +100,7 @@ export function Drawer({
     drag.current = {
       startY: event.clientY,
       startHeight: drawer.getBoundingClientRect().height,
-      heights: {
-        peek: snapHeight(drawer, 'peek'),
-        normal: snapHeight(drawer, 'normal'),
-        full: snapHeight(drawer, 'full'),
-      },
+      heights: null,
       lastY: event.clientY,
       lastTime: event.timeStamp,
       velocity: 0,
@@ -110,6 +116,11 @@ export function Drawer({
     const distance = state.startY - event.clientY;
     if (!state.moved && Math.abs(distance) < 6) return;
     state.moved = true;
+    state.heights ??= {
+      peek: snapHeight(drawer, 'peek'),
+      normal: snapHeight(drawer, 'normal'),
+      full: snapHeight(drawer, 'full'),
+    };
     state.velocity = (state.lastY - event.clientY) / Math.max(1, event.timeStamp - state.lastTime);
     state.lastY = event.clientY;
     state.lastTime = event.timeStamp;
@@ -121,7 +132,7 @@ export function Drawer({
     const state = drag.current;
     const drawer = drawerRef.current;
     drag.current = null;
-    if (!state || !drawer || !state.moved) return;
+    if (!state || !drawer || !state.moved || !state.heights) return;
     suppressClick.current = true;
     const height = drawer.getBoundingClientRect().height;
     const { heights } = state;
@@ -158,7 +169,9 @@ export function Drawer({
       suppressClick.current = false;
       return;
     }
-    setSnap((value) => (value === 'full' ? 'normal' : value === 'peek' ? 'normal' : 'full'));
+    // A tap goes through all three heights, so the lowest one does not need a
+    // drag (WCAG 2.5.7): normal, full, peek, and back to normal.
+    setSnap((value) => (value === 'normal' ? 'full' : value === 'full' ? 'peek' : 'normal'));
   };
 
   return (

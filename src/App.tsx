@@ -4,6 +4,7 @@ import { AdminPanel } from './components/admin/AdminPanel';
 import { ComposeDrawer } from './components/ComposeDrawer';
 import { DiscoveryPanel } from './components/DiscoveryPanel';
 import { FirstVisitGuide } from './components/FirstVisitGuide';
+import { useIsMobile } from './hooks/useMediaQuery';
 import { Header } from './components/Header';
 import { MapCanvas } from './components/MapCanvas';
 import { MobileTabBar } from './components/MobileTabBar';
@@ -54,6 +55,7 @@ function ModalHost() {
 function AppShell() {
   const { layer, mobileTab, selectedReport, selectedAction, composeOpen, composeEditing } =
     useApp();
+  const isMobile = useIsMobile();
   const drawerOpen = composeOpen || Boolean(selectedReport) || Boolean(selectedAction);
 
   return (
@@ -65,7 +67,9 @@ function AppShell() {
           {layer === 'actions' ? <ActionsPanel /> : <DiscoveryPanel />}
         </div>
 
-        <div className="map-slot">
+        {/* On the phone's list tab the list covers the map, so the map's buttons
+            and markers are left out of Tab and screen readers (WCAG 2.4.11). */}
+        <div className="map-slot" inert={isMobile && mobileTab === 'list'}>
           <MapCanvas />
         </div>
 

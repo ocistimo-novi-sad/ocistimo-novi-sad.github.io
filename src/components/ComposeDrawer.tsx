@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Check,
   Clock3,
@@ -26,9 +26,10 @@ import { imagesEnabled } from '../services/images';
 import { createReportRecord } from '../services/reports';
 import { useApp } from '../state/app-context';
 import type { Category, NewReportInput, Report } from '../types';
-import { Drawer } from './Drawer';
+import { Drawer, type Snap } from './Drawer';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { ConfirmSheet } from './ui/ConfirmSheet';
+import { ErrorSummary, FieldError } from './ui/FormErrors';
 import { Spinner } from './ui/EmptyState';
 import { PhotoPicker } from './ui/PhotoPicker';
 
@@ -41,6 +42,26 @@ type FieldKey =
   | 'helpNeeded'
   | 'photos';
 type FieldErrors = Partial<Record<FieldKey, string>>;
+
+/** Fields in the order of the form, and what gets focus for each error. */
+const FIELD_ORDER: FieldKey[] = [
+  'location',
+  'title',
+  'category',
+  'description',
+  'communityCan',
+  'helpNeeded',
+  'photos',
+];
+const FIELD_TARGET: Record<FieldKey, string> = {
+  location: 'compose-map-button',
+  title: 'report-title',
+  category: 'category-first',
+  description: 'report-description',
+  communityCan: 'report-community',
+  helpNeeded: 'report-help',
+  photos: 'compose-photo-button',
+};
 
 const TITLE_MIN = LIMITS.titleMin;
 const TITLE_MAX = LIMITS.titleMax;
@@ -111,17 +132,13 @@ function PlanField({
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
         aria-invalid={Boolean(error)}
-        aria-describedby={error ? `error-${id}` : `hint-${id}`}
+        aria-describedby={error ? `hint-${id} error-${id}` : `hint-${id}`}
         disabled={disabled}
       />
       <p className="field__hint" id={`hint-${id}`}>
         {hint}
       </p>
-      {error ? (
-        <p className="field__error" id={`error-${id}`} role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? <FieldError id={`error-${id}`}>{error}</FieldError> : null}
     </div>
   );
 }
@@ -165,11 +182,18 @@ export function ComposeDrawer() {
     initialUrls: initial.imageUrls,
   });
   const [errors, setErrors] = useState<FieldErrors>({});
+  // The summary shows after the first try to send, and takes focus on each failed try.
+  const [failedSends, setFailedSends] = useState(0);
+  const summaryRef = useRef<HTMLDivElement>(null);
+  const alertRef = useRef<HTMLDivElement>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
   const [locating, setLocating] = useState(false);
-  const [collapseSignal, setCollapseSignal] = useState(0);
+  // "Izaberi" lowers the sheet as far as it goes, so most of the map is free;
+  // a failed send brings it back up to show the errors.
+  const [snapRequest, setSnapRequest] = useState<{ snap: Snap; id: number }>();
+  const requestSnap = (snap: Snap) => setSnapRequest((value) => ({ snap, id: (value?.id ?? 0) + 1 }));
 
   const outsideArea = composeLocation !== null && !isInServiceArea(composeLocation);
   const locationMoved = editing
@@ -244,28 +268,27 @@ export function ComposeDrawer() {
     return next;
   };
 
-  const focusFirstError = (next: FieldErrors) => {
-    const order: FieldKey[] = [
-      'location',
-      'title',
-      'category',
-      'description',
-      'communityCan',
-      'helpNeeded',
-      'photos',
-    ];
-    const first = order.find((key) => next[key]);
-    const ids: Record<FieldKey, string> = {
-      location: 'compose-map-button',
-      title: 'report-title',
-      category: 'category-first',
-      description: 'report-description',
-      communityCan: 'report-community',
-      helpNeeded: 'report-help',
-      photos: 'compose-photo-button',
-    };
-    if (first) document.getElementById(ids[first])?.focus();
-  };
+  useEffect(() => {
+    if (failedSends > 0) summaryRef.current?.focus();
+  }, [failedSends]);
+
+  // A point on the map answers the location question.
+  useEffect(() => {
+    if (composeLocation) setErrors((prev) => (prev.location ? { ...prev, location: undefined } : prev));
+  }, [composeLocation]);
+
+  // A server error gets focus too, so it is read out and Tab goes on from it.
+  useEffect(() => {
+    if (submitError) alertRef.current?.focus();
+  }, [submitError]);
+
+  const summaryErrors =
+    failedSends > 0
+      ? FIELD_ORDER.flatMap((key) => {
+          const message = errors[key];
+          return message ? [{ id: FIELD_TARGET[key], message }] : [];
+        })
+      : [];
 
   const addFiles = (fileList: FileList | null) => {
     const error = addPhotoFiles(fileList);
@@ -278,10 +301,12 @@ export function ComposeDrawer() {
   };
 
   const submit = async () => {
+    if (submitting) return;
     const nextErrors = validate();
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
-      focusFirstError(nextErrors);
+      setFailedSends((value) => value + 1);
+      requestSnap('normal');
       return;
     }
     if (!composeLocation) return;
@@ -356,12 +381,15 @@ export function ComposeDrawer() {
   };
 
   const focusMap = () => {
-    setCollapseSignal((value) => value + 1);
+    requestSnap('peek');
+    const map = mapRef.current;
+    // Focus goes to the map, where the arrow keys move it and Enter puts the
+    // point under the crosshair. A click or tap works there as before.
+    map?.getContainer().focus({ preventScroll: true });
     if (composeLocation) {
       flyTo(composeLocation, undefined, { accountForDrawer: true });
       return;
     }
-    const map = mapRef.current;
     map?.flyTo([APP.center.latitude, APP.center.longitude], 14, { duration: 0.5 });
   };
 
@@ -375,7 +403,7 @@ export function ComposeDrawer() {
         latitude: userPosition.latitude,
         longitude: userPosition.longitude,
       });
-      setCollapseSignal((value) => value + 1);
+      requestSnap('peek');
       flyTo(userPosition, 17, { accountForDrawer: true });
       return;
     }
@@ -389,7 +417,7 @@ export function ComposeDrawer() {
           longitude: position.coords.longitude,
         };
         setComposeLocation(point);
-        setCollapseSignal((value) => value + 1);
+        requestSnap('peek');
         flyTo(point, 17, { accountForDrawer: true });
         if (!isInServiceArea(point)) {
           notify('error', 'Tvoja lokacija je izvan Novog Sada.');
@@ -406,6 +434,7 @@ export function ComposeDrawer() {
   if (submitted) {
     return (
       <Drawer
+        key="sent"
         label="Prijava je poslata"
         onClose={cancelCompose}
         className="drawer--compose"
@@ -475,17 +504,19 @@ export function ComposeDrawer() {
   const footer = (
     <div className="compose-foot">
       {submitError ? (
-        <div className="form-alert" role="alert">
+        <div className="form-alert" role="alert" ref={alertRef} tabIndex={-1}>
           <TriangleAlert size={15} aria-hidden="true" />
           <p>{submitError}</p>
         </div>
       ) : null}
       <div className="compose-foot__row">
+        {/* Not disabled while sending: a disabled button drops the focus. Both
+            handlers ignore presses until sending is over. */}
         <button
           type="button"
           className="btn btn--quiet"
           onClick={requestClose}
-          disabled={submitting}
+          aria-disabled={submitting || undefined}
         >
           Otkaži
         </button>
@@ -493,12 +524,15 @@ export function ComposeDrawer() {
           type="button"
           className="btn btn--primary"
           onClick={() => void submit()}
-          disabled={submitting}
+          aria-disabled={submitting || undefined}
         >
           {submitting ? <Spinner size={15} /> : null}
           {submitLabel}
         </button>
       </div>
+      <p className="visually-hidden" role="status">
+        {submitting ? submitLabel : ''}
+      </p>
       <p className="compose-foot__note">{footNote}</p>
     </div>
   );
@@ -509,8 +543,10 @@ export function ComposeDrawer() {
       onClose={requestClose}
       footer={footer}
       className="drawer--compose"
-      collapseSignal={collapseSignal}
+      snapRequest={snapRequest}
     >
+      <ErrorSummary ref={summaryRef} errors={summaryErrors} />
+
       <div className="compose-head">
         <span className="eyebrow">{editing ? 'Izmena prijave' : 'Nova prijava'}</span>
         <span className="compose-head__hint">
@@ -589,7 +625,9 @@ export function ComposeDrawer() {
           ) : null}
         </div>
 
-        <div className={`location-pick${composeLocation ? ' is-set' : ''}${outsideArea ? ' is-error' : ''}`}>
+        <div
+          className={`location-pick${composeLocation ? ' is-set' : ''}${outsideArea || errors.location ? ' is-error' : ''}`}
+        >
           <span className="location-pick__icon" aria-hidden="true">
             <Crosshair size={16} />
           </span>
@@ -608,6 +646,7 @@ export function ComposeDrawer() {
             id="compose-map-button"
             className="btn btn--quiet btn--sm"
             onClick={focusMap}
+            aria-describedby={errors.location ? 'error-location' : undefined}
           >
             {composeLocation ? 'Pomeri' : 'Izaberi'}
           </button>
@@ -625,11 +664,7 @@ export function ComposeDrawer() {
           </button>
         </div>
 
-        {errors.location ? (
-          <p className="field__error" role="alert">
-            {errors.location}
-          </p>
-        ) : null}
+        {errors.location ? <FieldError id="error-location">{errors.location}</FieldError> : null}
         {outsideArea && !errors.location ? (
           <p className="field__error" role="alert">
             Izabrana tačka je izvan Novog Sada.
@@ -682,18 +717,20 @@ export function ComposeDrawer() {
               if (errors.title) setErrors((prev) => ({ ...prev, title: undefined }));
             }}
             aria-invalid={Boolean(errors.title)}
-            aria-describedby={errors.title ? 'error-title' : undefined}
+            aria-describedby={errors.title ? 'hint-title error-title' : 'hint-title'}
             disabled={submitting}
             autoComplete="off"
           />
-          {errors.title ? (
-            <p className="field__error" id="error-title" role="alert">
-              {errors.title}
-            </p>
-          ) : null}
+          <p className="field__hint" id="hint-title">
+            Najmanje {TITLE_MIN} znakova. Kratko: šta je i gde.
+          </p>
+          {errors.title ? <FieldError id="error-title">{errors.title}</FieldError> : null}
         </div>
 
-        <fieldset className={`field field--fieldset${errors.category ? ' has-error' : ''}`}>
+        <fieldset
+          className={`field field--fieldset${errors.category ? ' has-error' : ''}`}
+          aria-describedby={errors.category ? 'error-category' : undefined}
+        >
           <legend className="field__label">Kategorija</legend>
           <div className="category-grid">
             {CATEGORIES.map((option, index) => (
@@ -721,11 +758,7 @@ export function ComposeDrawer() {
               </label>
             ))}
           </div>
-          {errors.category ? (
-            <p className="field__error" role="alert">
-              {errors.category}
-            </p>
-          ) : null}
+          {errors.category ? <FieldError id="error-category">{errors.category}</FieldError> : null}
         </fieldset>
 
         <div className={`field${errors.description ? ' has-error' : ''}`}>
@@ -748,16 +781,16 @@ export function ComposeDrawer() {
               }
             }}
             aria-invalid={Boolean(errors.description)}
-            aria-describedby={errors.description ? 'error-description' : 'hint-description'}
+            aria-describedby={
+              errors.description ? 'hint-description error-description' : 'hint-description'
+            }
             disabled={submitting}
           />
           <p className="field__hint" id="hint-description">
             Najmanje {DESC_MIN} znakova. Bez ličnih podataka i bez optužbi.
           </p>
           {errors.description ? (
-            <p className="field__error" id="error-description" role="alert">
-              {errors.description}
-            </p>
+            <FieldError id="error-description">{errors.description}</FieldError>
           ) : null}
         </div>
       </section>
@@ -837,9 +870,9 @@ export function ComposeDrawer() {
         )}
 
         {errors.photos ? (
-          <p className="field__error" role="alert">
+          <FieldError id="error-photos" alert>
             {errors.photos}
-          </p>
+          </FieldError>
         ) : null}
 
         {photos.some((photo) => photo.error) ? (

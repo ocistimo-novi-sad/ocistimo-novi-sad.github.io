@@ -26,7 +26,7 @@
 
   .app-header {
     gap: 8px;
-    padding: 0 10px;
+    padding: env(safe-area-inset-top, 0px) calc(10px + var(--safe-r)) 0 calc(10px + var(--safe-l));
   }
 
   .app-header__actions {
@@ -120,8 +120,7 @@
 
   .map-area-toggle,
   .map-readout,
-  .map-legend,
-  .map-legend-open {
+  .map-legend {
     display: none;
   }
 
@@ -134,12 +133,18 @@
     padding: 18px;
   }
 
+  /* One line on a phone, so the strip of map above the form stays free to tap. */
   .pick-banner {
     top: 10px;
-    right: 58px;
-    left: 10px;
+    right: calc(58px + var(--safe-r));
+    left: calc(10px + var(--safe-l));
     max-width: none;
+    padding: 8px 10px;
     transform: none;
+  }
+
+  .pick-banner__text span {
+    display: none;
   }
 
   .drawer {
@@ -212,6 +217,8 @@
 
   .drawer__scroll {
     padding: 40px 16px 16px;
+    /* Whatever gets focus scrolls clear of the handle above it. */
+    scroll-padding-top: 48px;
   }
 
   .drawer__foot {
@@ -456,8 +463,10 @@
     bottom: calc(70px + env(safe-area-inset-bottom, 0px));
   }
 
+  /* Over an open sheet a toast would cover its buttons; the map strip above is free. */
   .app.has-drawer .toasts {
-    bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+    top: calc(var(--header-h) + env(safe-area-inset-top, 0px) + 8px);
+    bottom: auto;
   }
 
   .lightbox {
@@ -612,6 +621,11 @@
   .map-area-btn,
   .modal__close,
   .icon-btn,
+  .search-field__clear,
+  .toast__close,
+  .lightbox__close,
+  .preset-chip,
+  .active-chip,
   .btn {
     position: relative;
   }
@@ -625,6 +639,11 @@
   .modal__close::after,
   .drawer__close::after,
   .icon-btn::after,
+  .search-field__clear::after,
+  .toast__close::after,
+  .lightbox__close::after,
+  .preset-chip::after,
+  .active-chip::after,
   .btn::after {
     position: absolute;
     top: 50%;
@@ -664,6 +683,42 @@
     min-height: 36px;
   }
 
+  .preset-row {
+    gap: 8px;
+  }
+
+  .preset-chip {
+    min-height: 36px;
+  }
+
+  .location-box__actions {
+    row-gap: 12px;
+  }
+
+  .field input[type='text'],
+  .field input[type='search'],
+  .field input[type='datetime-local'],
+  .field select,
+  .tabbar__menu button,
+  .account__trigger {
+    min-height: 44px;
+  }
+
+  .lightbox__nav {
+    width: 44px;
+    height: 56px;
+  }
+
+  .photo-draft__remove {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* The "/" shortcut needs a keyboard. */
+  .search-field__hint {
+    display: none;
+  }
+
   .popover__row,
   .filter-sheet__section .popover__row {
     min-height: 44px;
@@ -672,5 +727,95 @@
   .popover__row input[type='checkbox'] {
     width: 18px;
     height: 18px;
+  }
+}
+
+/* --- Short screens, landscape phones and zoom ---------------------------- */
+
+/* At 400% zoom or on a phone in landscape the fixed header, list head and tab
+   bar leave no room for the list. Here the list panel and the sheet scroll as
+   one column instead (WCAG 1.4.10, technique C34). */
+@media (max-height: 520px) {
+  :root {
+    --header-h: 44px;
+    --tabbar-h: 48px;
+  }
+
+  .panel {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .panel__head,
+  .panel__scroll,
+  .panel__foot {
+    flex: none;
+  }
+
+  .panel__scroll {
+    min-height: auto;
+    overflow: visible;
+  }
+
+  .drawer {
+    overflow-y: auto;
+  }
+
+  .drawer__scroll {
+    flex: none;
+    min-height: auto;
+    overflow: visible;
+  }
+}
+
+/* --- Notch and Dynamic Island in landscape ------------------------------- */
+
+.tabbar,
+.discovery {
+  padding-right: var(--safe-r);
+  padding-left: var(--safe-l);
+}
+
+.drawer__scroll,
+.drawer__foot {
+  padding-right: calc(20px + var(--safe-r));
+}
+
+.toasts {
+  width: min(420px, calc(100vw - 24px - var(--safe-l) - var(--safe-r)));
+}
+
+@media (max-width: 900px) {
+  .map-mobile-bar {
+    right: calc(58px + var(--safe-r));
+    left: calc(10px + var(--safe-l));
+  }
+
+  .map-controls {
+    right: calc(10px + var(--safe-r));
+  }
+
+  .drawer__close {
+    right: calc(10px + var(--safe-r));
+  }
+
+  .drawer__scroll,
+  .drawer__foot {
+    padding-right: calc(16px + var(--safe-r));
+    padding-left: calc(16px + var(--safe-l));
+  }
+
+  .map-mobile-bar .map-loading,
+  .map-mobile-bar .map-error-banner {
+    position: static;
+    align-self: flex-start;
+    max-width: 100%;
+    transform: none;
+  }
+
+  /* The dialog sheet keeps clear of the notch; the dimmed backdrop fills the sides. */
+  .modal-overlay {
+    padding-right: var(--safe-r);
+    padding-left: var(--safe-l);
   }
 }

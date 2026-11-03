@@ -183,6 +183,12 @@ fieldset {
   opacity: 0.5;
 }
 
+/* A send button stays focusable while it works; it only looks busy. */
+.btn[aria-disabled='true'] {
+  opacity: 0.75;
+  cursor: progress;
+}
+
 .btn--primary {
   background: var(--forest);
   border-color: var(--forest);
@@ -410,6 +416,41 @@ fieldset {
   line-height: 1.4;
 }
 
+/* GOV.UK error summary: every error of the form, as links, at the top. */
+.error-summary {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border: 3px solid var(--alert);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.error-summary__title {
+  margin-bottom: 8px;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.error-summary__list {
+  display: grid;
+  gap: 6px;
+  padding-left: 18px;
+  list-style: disc;
+  color: var(--alert);
+}
+
+.error-summary__list a {
+  /* Each link is at least a 24px target (WCAG 2.5.8). */
+  display: inline-block;
+  line-height: 24px;
+  color: var(--alert);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .field input[type='text'],
 .field input[type='search'],
 .field input[type='datetime-local'],
@@ -418,7 +459,7 @@ fieldset {
   width: 100%;
   min-height: 36px;
   padding: 8px 10px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--line-field);
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--ink);
@@ -512,8 +553,8 @@ fieldset {
 
 /* An active category chip wears its own colour, matching its map pins. */
 .chip[data-category].is-active {
-  background: var(--cat);
-  border-color: var(--cat);
+  background: var(--cat-ink);
+  border-color: var(--cat-ink);
   color: #fff;
 }
 
@@ -529,7 +570,7 @@ fieldset {
   border: 1px solid rgba(28, 34, 30, 0.07);
   border-radius: var(--radius-pill);
   background: var(--cat-tint);
-  color: var(--cat);
+  color: var(--cat-ink);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -841,6 +882,11 @@ label.popover__row:hover {
   box-shadow: var(--shadow-3);
   pointer-events: auto;
   animation: toast-in 0.26s var(--ease-spring);
+}
+
+/* Toasts are dark, so the green ring would not show (1.5:1); white does. */
+.toast :focus-visible {
+  outline-color: #fff;
 }
 
 @keyframes toast-in {

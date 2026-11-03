@@ -18,7 +18,7 @@
   align-items: center;
   gap: 20px;
   height: calc(var(--header-h) + env(safe-area-inset-top, 0px));
-  padding: env(safe-area-inset-top, 0px) 16px 0 18px;
+  padding: env(safe-area-inset-top, 0px) calc(16px + var(--safe-r)) 0 calc(18px + var(--safe-l));
   border-bottom: 1px solid var(--line);
   background: var(--paper);
 }
@@ -563,7 +563,7 @@ button.impact-stat:hover {
   gap: 7px;
   height: 40px;
   padding: 0 11px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--line-field);
   border-radius: var(--radius-md);
   background: var(--surface-2);
   transition:
@@ -597,6 +597,10 @@ button.impact-stat:hover {
   background: transparent;
   box-shadow: none;
   font-size: 13px;
+}
+
+.search-field input::placeholder {
+  color: var(--muted);
 }
 
 .search-field input:focus {
@@ -752,7 +756,7 @@ button.impact-stat:hover {
   gap: 5px;
   height: 30px;
   padding: 0 7px 0 9px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-field);
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--ink-2);
@@ -781,6 +785,13 @@ button.impact-stat:hover {
 .select-field select:focus {
   outline: none;
   box-shadow: none;
+}
+
+/* The select draws no ring of its own, so the box shows focus (WCAG 2.4.7),
+   like a text field. */
+.select-field:focus-within {
+  border-color: var(--forest);
+  box-shadow: 0 0 0 1px var(--forest);
 }
 
 .select-field--wide {
@@ -838,6 +849,8 @@ button.impact-stat:hover {
 
 .report-card.is-selected {
   background: var(--leaf-tint);
+  /* The tint alone is too faint to tell a selected card apart (WCAG 1.4.11). */
+  box-shadow: inset 0 0 0 2px var(--leaf-2);
 }
 
 .report-card.is-selected::before {
@@ -886,7 +899,7 @@ button.impact-stat:hover {
 
 .report-card__category {
   overflow: hidden;
-  color: var(--cat, var(--muted));
+  color: var(--cat-ink, var(--muted));
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 500;
@@ -1282,6 +1295,12 @@ button.impact-stat:hover {
     padding-bottom: env(safe-area-inset-bottom, 0px);
     border-top: 1px solid var(--line);
     background: var(--surface);
+  }
+
+  /* Hidden, not removed, while a panel is open, so focus can return to the
+     button that opened the panel. */
+  .app.has-drawer .tabbar {
+    display: none;
   }
 
   .tabbar__item {

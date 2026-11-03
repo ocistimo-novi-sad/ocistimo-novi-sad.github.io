@@ -38,6 +38,7 @@ import { DraftMarkers, ReportMarkers } from './map/ReportMarkers';
 import { ActionMarkers } from './map/ActionMarkers';
 import { tempIcon, userIcon } from './map/map-icons';
 import { NamedMarker } from './map/NamedMarker';
+import { drawerOffset } from './map/drawer-offset';
 
 function MapBridge() {
   const map = useMap();
@@ -47,7 +48,12 @@ function MapBridge() {
     mapRef.current = map;
     map.attributionControl.setPrefix(false);
 
+    // Leaflet makes the map a Tab stop with no name; this says what it is and
+    // which keys work (WCAG 4.1.2).
     const container = map.getContainer();
+    container.setAttribute('role', 'region');
+    container.setAttribute('aria-label', 'Mapa');
+    container.setAttribute('aria-describedby', 'map-keys');
     let frame = 0;
     const observer = new ResizeObserver(() => {
       window.cancelAnimationFrame(frame);
@@ -83,6 +89,43 @@ function MapEvents({
     mousemove: (event: LeafletMouseEvent) => onPointerMove(event.latlng),
     mouseout: () => onPointerMove(null),
   });
+
+  return null;
+}
+
+/**
+ * While a new report is placed, Enter or Space on the focused map puts the
+ * point in the middle of the visible map, under the crosshair. Without it the
+ * location needs a mouse, a finger or geolocation (WCAG 2.1.1).
+ */
+function KeyboardPick({ onPick }: { onPick: (latlng: { lat: number; lng: number }) => void }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const container = map.getContainer();
+    const shell = container.parentElement;
+    // The crosshair follows the panel's current height.
+    const place = () => {
+      const [dx, dy] = drawerOffset();
+      shell?.style.setProperty('--pick-x', `${dx}px`);
+      shell?.style.setProperty('--pick-y', `${dy}px`);
+      return [dx, dy];
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.target !== container) return;
+      const [dx, dy] = place();
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      const size = map.getSize();
+      onPick(map.containerPointToLatLng([size.x / 2 - dx, size.y / 2 - dy]));
+    };
+    container.addEventListener('focus', place);
+    container.addEventListener('keydown', onKeyDown);
+    return () => {
+      container.removeEventListener('focus', place);
+      container.removeEventListener('keydown', onKeyDown);
+    };
+  }, [map, onPick]);
 
   return null;
 }
@@ -209,103 +252,32 @@ export function MapCanvas() {
     reportsPhase === 'ready' && reports.length > 0 && filteredReports.length === 0;
   const showError = reportsPhase === 'error' && reports.length === 0;
 
+  // Loading and "not refreshed" notices. On a phone they sit under the search
+  // bar instead of over it.
+  const statusBanners = (
+    <>
+      {reportsPhase === 'loading' ? (
+        <div className="map-loading" role="status">
+          <Spinner size={14} />
+          <span>Učitavanje prijava…</span>
+        </div>
+      ) : null}
+      {reportsError && reports.length > 0 ? (
+        <div className="map-error-banner" role="status">
+          <TriangleAlert size={14} aria-hidden="true" />
+          <span>Prijave nisu osvežene. Prikazani su poslednji učitani podaci.</span>
+          <button type="button" onClick={() => void app.reloadReports()}>
+            Pokušaj ponovo
+          </button>
+        </div>
+      ) : null}
+    </>
+  );
+
   return (
     <div className={`map-shell${composeOpen ? ' is-picking' : ''}`}>
-      <MapContainer
-        center={[APP.center.latitude, APP.center.longitude]}
-        zoom={APP.initialZoom}
-        minZoom={11}
-        maxZoom={19}
-        zoomControl={false}
-        className="map"
-        worldCopyJump
-      >
-        <TileLayer
-          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> saradnici'
-          maxZoom={19}
-        />
-        <MapBridge />
-        <MapEvents
-          onMapClick={handleMapClick}
-          onMoveEnd={handleMoveEnd}
-          onZoomChange={setZoom}
-          onPointerMove={handlePointerMove}
-        />
-
-        {userPosition ? (
-          <>
-            <Circle
-              center={[userPosition.latitude, userPosition.longitude]}
-              radius={Math.min(userPosition.accuracy, 250)}
-              pathOptions={{ color: '#234C3B', weight: 1, fillOpacity: 0.08, opacity: 0.35 }}
-            />
-            <Marker
-              position={[userPosition.latitude, userPosition.longitude]}
-              icon={userIcon()}
-              interactive={false}
-              zIndexOffset={500}
-            />
-          </>
-        ) : null}
-
-        {layer === 'reports' ? (
-          <>
-            <DraftMarkers
-              reports={myUnpublishedReports}
-              selectedReportId={selectedReport?.id ?? null}
-              onSelect={handleReportSelect}
-              interactive={!composeOpen}
-            />
-            <ReportMarkers
-              reports={filteredReports}
-              selectedReport={selectedReport}
-              onSelect={handleReportSelect}
-              interactive={!composeOpen}
-            />
-          </>
-        ) : (
-          <>
-            {selectedAction && actionReports.length > 0 ? (
-              <ReportMarkers
-                reports={actionReports}
-                selectedReport={selectedReport}
-                onSelect={handleReportSelect}
-              />
-            ) : null}
-            <ActionMarkers
-              actions={visibleActions}
-              selectedActionId={selectedAction?.id ?? null}
-              onSelect={(action) => selectAction(action)}
-            />
-          </>
-        )}
-
-        {composeLocation ? (
-          <NamedMarker
-            position={[composeLocation.latitude, composeLocation.longitude]}
-            label="Mesto nove prijave. Prevuci ga da ga pomeriš."
-            icon={tempIcon()}
-            draggable
-            autoPan
-            zIndexOffset={1000}
-            eventHandlers={{
-              dragend: (event) => {
-                const latlng = event.target.getLatLng();
-                setComposeLocation({
-                  latitude: roundCoordinate(latlng.lat),
-                  longitude: roundCoordinate(latlng.lng),
-                });
-              },
-            }}
-          >
-            <Tooltip direction="top" offset={[0, -26]} className="ns-tooltip">
-              Nova prijava. Pomeri marker.
-            </Tooltip>
-          </NamedMarker>
-        ) : null}
-      </MapContainer>
-
+      {/* The bars come before the map in the page, so Tab reaches them before
+          the markers (WCAG 2.4.3). They float above it, so nothing moves on screen. */}
       {isMobile && !composeOpen ? (
         <div className="map-mobile-bar">
           <LayerSwitch />
@@ -328,6 +300,7 @@ export function MapCanvas() {
             <FiltersButton />
           </div>
           <ActiveFilters />
+          {statusBanners}
         </div>
       ) : null}
 
@@ -390,6 +363,103 @@ export function MapCanvas() {
         </button>
       </div>
 
+      <MapContainer
+        center={[APP.center.latitude, APP.center.longitude]}
+        zoom={APP.initialZoom}
+        minZoom={11}
+        maxZoom={19}
+        zoomControl={false}
+        className="map"
+        worldCopyJump
+      >
+        <TileLayer
+          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> saradnici'
+          maxZoom={19}
+        />
+        <MapBridge />
+        <MapEvents
+          onMapClick={handleMapClick}
+          onMoveEnd={handleMoveEnd}
+          onZoomChange={setZoom}
+          onPointerMove={handlePointerMove}
+        />
+        {composeOpen ? <KeyboardPick onPick={handleMapClick} /> : null}
+
+        {userPosition ? (
+          <>
+            <Circle
+              center={[userPosition.latitude, userPosition.longitude]}
+              radius={Math.min(userPosition.accuracy, 250)}
+              pathOptions={{ color: '#234C3B', weight: 1, fillOpacity: 0.08, opacity: 0.35 }}
+            />
+            <Marker
+              position={[userPosition.latitude, userPosition.longitude]}
+              icon={userIcon()}
+              interactive={false}
+              keyboard={false}
+              zIndexOffset={500}
+            />
+          </>
+        ) : null}
+
+        {layer === 'reports' ? (
+          <>
+            <DraftMarkers
+              reports={myUnpublishedReports}
+              selectedReportId={selectedReport?.id ?? null}
+              onSelect={handleReportSelect}
+              interactive={!composeOpen}
+            />
+            <ReportMarkers
+              reports={filteredReports}
+              selectedReport={selectedReport}
+              onSelect={handleReportSelect}
+              interactive={!composeOpen}
+            />
+          </>
+        ) : (
+          <>
+            {selectedAction && actionReports.length > 0 ? (
+              <ReportMarkers
+                reports={actionReports}
+                selectedReport={selectedReport}
+                onSelect={handleReportSelect}
+              />
+            ) : null}
+            <ActionMarkers
+              actions={visibleActions}
+              selectedActionId={selectedAction?.id ?? null}
+              onSelect={(action) => selectAction(action)}
+            />
+          </>
+        )}
+
+        {composeLocation ? (
+          <NamedMarker
+            position={[composeLocation.latitude, composeLocation.longitude]}
+            label="Mesto nove prijave"
+            icon={tempIcon()}
+            draggable
+            autoPan
+            zIndexOffset={1000}
+            eventHandlers={{
+              dragend: (event) => {
+                const latlng = event.target.getLatLng();
+                setComposeLocation({
+                  latitude: roundCoordinate(latlng.lat),
+                  longitude: roundCoordinate(latlng.lng),
+                });
+              },
+            }}
+          >
+            <Tooltip direction="top" offset={[0, -26]} className="ns-tooltip">
+              Nova prijava. Pomeri marker.
+            </Tooltip>
+          </NamedMarker>
+        ) : null}
+      </MapContainer>
+
       {composeOpen ? (
         <div className="pick-banner" role="status">
           <Crosshair size={16} aria-hidden="true" />
@@ -408,12 +478,18 @@ export function MapCanvas() {
         </div>
       ) : null}
 
-      {reportsPhase === 'loading' ? (
-        <div className="map-loading" role="status">
-          <Spinner size={14} />
-          <span>Učitavanje prijava…</span>
+      {composeOpen ? (
+        // Shown only while the map has keyboard focus: Enter puts the point here.
+        <div className="map-crosshair" aria-hidden="true">
+          <span className="map-crosshair__hint">Enter postavlja tačku ovde</span>
         </div>
       ) : null}
+
+      <p id="map-keys" className="visually-hidden">
+        {composeOpen
+          ? 'Strelicama pomeri mapu, pa pritisni Enter da postaviš tačku na sredinu.'
+          : 'Strelicama pomeraš mapu, a tasterima plus i minus menjaš uvećanje.'}
+      </p>
 
       {showError ? (
         <div className="map-state">
@@ -434,15 +510,7 @@ export function MapCanvas() {
         </div>
       ) : null}
 
-      {reportsError && reports.length > 0 ? (
-        <div className="map-error-banner" role="status">
-          <TriangleAlert size={14} aria-hidden="true" />
-          <span>Prijave nisu osvežene. Prikazani su poslednji učitani podaci.</span>
-          <button type="button" onClick={() => void app.reloadReports()}>
-            Pokušaj ponovo
-          </button>
-        </div>
-      ) : null}
+      {isMobile && !composeOpen ? null : statusBanners}
 
       {noReports && layer === 'reports' ? (
         <div className="map-state">
@@ -477,70 +545,67 @@ export function MapCanvas() {
         </div>
       ) : null}
 
-      {!isMobile && legendOpen && layer === 'reports' ? (
-        <div className="map-legend">
-          <div className="map-legend__head">
+      {!isMobile && layer === 'reports' ? (
+        <div className={`map-legend${legendOpen ? '' : ' is-closed'}`}>
+          {/* One button opens and closes it, so focus stays put (WAI-ARIA disclosure). */}
+          <button
+            type="button"
+            className="map-legend__toggle"
+            onClick={() => setLegendOpen((open) => !open)}
+            aria-expanded={legendOpen}
+            aria-controls="map-legend-body"
+          >
             <span className="eyebrow">Legenda</span>
-            <button
-              type="button"
-              onClick={() => setLegendOpen(false)}
-              aria-label="Sakrij legendu"
-            >
+            {legendOpen ? (
               <ChevronDown size={14} aria-hidden="true" />
-            </button>
-          </div>
-          <ul>
-            {CATEGORIES.map((category) => {
-              const active =
-                filters.categories.length === 0 || filters.categories.includes(category.id);
-              return (
-                <li key={category.id}>
-                  <button
-                    type="button"
-                    className={`map-legend__item${active ? '' : ' is-off'}`}
-                    onClick={() => toggleCategory(category.id)}
-                    aria-pressed={filters.categories.includes(category.id)}
-                    title={`Prikaži ili sakrij: ${category.label}`}
-                  >
-                    <span
-                      className={`legend-swatch legend-swatch--${category.id}`}
-                      data-category={category.id}
+            ) : (
+              <ChevronUp size={14} aria-hidden="true" />
+            )}
+          </button>
+          <div id="map-legend-body" hidden={!legendOpen}>
+            <ul>
+              {CATEGORIES.map((category) => {
+                const active =
+                  filters.categories.length === 0 || filters.categories.includes(category.id);
+                return (
+                  <li key={category.id}>
+                    <button
+                      type="button"
+                      className={`map-legend__item${active ? '' : ' is-off'}`}
+                      onClick={() => toggleCategory(category.id)}
+                      aria-pressed={filters.categories.includes(category.id)}
+                      title={`Prikaži ili sakrij: ${category.label}`}
                     >
-                      <CategoryGlyph category={category.id} size={11} />
-                    </span>
-                    <span className="map-legend__label">{category.label}</span>
-                    <span className="map-legend__count">
-                      {categoryCounts[category.id] ?? 0}
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-          {filters.categories.length > 0 ? (
-            <button
-              type="button"
-              className="map-legend__reset"
-              onClick={() => updateFilters({ categories: [] })}
-            >
-              Prikaži sve
-            </button>
-          ) : null}
-          <p className="map-legend__note">
-            Klikni kategoriju da je uključiš ili isključiš. Tačka u uglu markera označava
-            status prijave.
-          </p>
+                      <span
+                        className={`legend-swatch legend-swatch--${category.id}`}
+                        data-category={category.id}
+                      >
+                        <CategoryGlyph category={category.id} size={11} />
+                      </span>
+                      <span className="map-legend__label">{category.label}</span>
+                      <span className="map-legend__count">
+                        {categoryCounts[category.id] ?? 0}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            {filters.categories.length > 0 ? (
+              <button
+                type="button"
+                className="map-legend__reset"
+                onClick={() => updateFilters({ categories: [] })}
+              >
+                Prikaži sve
+              </button>
+            ) : null}
+            <p className="map-legend__note">
+              Klikni kategoriju da je uključiš ili isključiš. Tačka u uglu markera označava
+              status prijave.
+            </p>
+          </div>
         </div>
-      ) : null}
-
-      {!isMobile && !legendOpen && layer === 'reports' ? (
-        <button
-          type="button"
-          className="map-legend-open"
-          onClick={() => setLegendOpen(true)}
-        >
-          <ChevronUp size={13} aria-hidden="true" /> Legenda
-        </button>
       ) : null}
 
       {!isMobile ? (

@@ -344,6 +344,11 @@
   animation: fade-in 0.14s ease;
 }
 
+/* The green ring is invisible on the dark backdrop (1.7:1); white is about 17:1. */
+.lightbox :focus-visible {
+  outline-color: #fff;
+}
+
 .lightbox__frame {
   display: flex;
   flex-direction: column;
@@ -593,7 +598,7 @@
 
 .coord-input input {
   padding: 7px 8px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--line-field);
   border-radius: var(--radius);
   background: var(--surface);
   font-family: var(--font-mono);

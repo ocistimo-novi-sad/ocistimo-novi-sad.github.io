@@ -8,6 +8,7 @@ import {
   SORT_OPTIONS,
   STATUS_MAP,
 } from '../config';
+import { focusableIn } from '../hooks/useModalFocus';
 import { useApp } from '../state/app-context';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { StatusDot } from './ui/StatusBadge';
@@ -204,6 +205,7 @@ function FiltersSheet({ onClose }: { onClose: () => void }) {
   const { layer, filteredReports, filteredActions, updateFilters, setActionScope } = useApp();
   const isActions = layer === 'actions';
   const count = isActions ? filteredActions.length : filteredReports.length;
+  const sheet = useRef<HTMLDivElement>(null);
 
   // Clears what the sheet sets; the search stays as typed.
   const clear = () => {
@@ -225,6 +227,8 @@ function FiltersSheet({ onClose }: { onClose: () => void }) {
       description="Filteri važe i za mapu i za listu."
       onClose={onClose}
       size="sm"
+      // Start at the top of the sheet, the categories, not at the first checkbox.
+      initialFocus={() => focusableIn(sheet.current)[0]}
       footer={
         <div className="filter-sheet__foot">
           <button type="button" className="link-btn" onClick={clear}>
@@ -236,7 +240,7 @@ function FiltersSheet({ onClose }: { onClose: () => void }) {
         </div>
       }
     >
-      <div className="filter-sheet">
+      <div className="filter-sheet" ref={sheet}>
         {isActions ? <ActionFilterOptions /> : <ReportFilterOptions />}
       </div>
     </Modal>
@@ -357,8 +361,11 @@ export function FiltersBar() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey) return;
       const target = event.target as HTMLElement | null;
-      const tag = target?.tagName.toLowerCase();
-      if (tag === 'input' || tag === 'textarea' || tag === 'select' || target?.isContentEditable) {
+      // Only inside the list panel, so a stray "/" elsewhere (or from speech
+      // input) does not move focus (WCAG 2.1.4).
+      if (!target?.closest('.discovery')) return;
+      const tag = target.tagName.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select' || target.isContentEditable) {
         return;
       }
       event.preventDefault();
