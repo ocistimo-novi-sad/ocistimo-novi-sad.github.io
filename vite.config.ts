@@ -1,4 +1,3 @@
-/// <reference types="vitest/config" />
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -19,10 +18,6 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       host: true,
-    },
-    // Component tests render into jsdom, a browser DOM that runs in Node.
-    test: {
-      environment: 'jsdom',
     },
   };
 });
