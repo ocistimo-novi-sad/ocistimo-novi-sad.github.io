@@ -23,6 +23,13 @@ export function DiscoveryPanel() {
     setSort,
   } = useApp();
   const narrowed = filteredReports.length !== reports.length;
+  // Any filter that is on, even one that happens to match every report.
+  const filtered =
+    narrowed ||
+    filters.categories.length > 0 ||
+    filters.statuses.length > 0 ||
+    filters.viewportOnly ||
+    filters.query.trim() !== '';
 
   return (
     <section className="panel" aria-label="Prijave u Novom Sadu">
@@ -58,7 +65,7 @@ export function DiscoveryPanel() {
                 ? `${filteredReports.length} od ${reports.length}`
                 : formatReportCount(reports.length)}
             </span>
-            {narrowed ? (
+            {filtered ? (
               <button type="button" className="link-btn" onClick={resetFilters}>
                 Očisti
               </button>

@@ -147,7 +147,7 @@ export interface AppContextValue {
   userPosition: (Coordinates & { accuracy: number }) | null;
   locating: boolean;
   /** Resolves to false when the location could not be read (the user is told why). */
-  locateUser: () => Promise<boolean>;
+  locateUser: (options?: { fly?: boolean }) => Promise<boolean>;
 }
 
 export const AppContext = createContext<AppContextValue | null>(null);

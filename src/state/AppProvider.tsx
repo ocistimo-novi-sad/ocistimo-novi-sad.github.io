@@ -286,9 +286,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return list;
   }, [reports, filters, userPosition]);
 
+  // "Upcoming" depends on the clock, so it is recomputed every few minutes; an
+  // app left open moves an action that started hours ago to the past.
+  const [clock, setClock] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setClock(Date.now()), 5 * 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const { upcomingActions, pastActions } = useMemo(() => {
     // The same "upcoming" rule as every count (src/lib/counts.ts).
-    const now = Date.now();
+    const now = clock;
     const query = fold(actionQuery.trim());
     const isUpcoming = (action: CleanupAction) => isUpcomingAction(action, now);
     const matching = query
@@ -313,7 +321,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         .filter((action) => !isUpcoming(action))
         .sort(byDistance ?? ((a, b) => b.date.getTime() - a.date.getTime())),
     };
-  }, [actions, actionQuery, actionsNearest, userPosition]);
+  }, [actions, actionQuery, actionsNearest, userPosition, clock]);
   const filteredActions = actionScope === 'upcoming' ? upcomingActions : pastActions;
 
   const updateFilters = useCallback((patch: Partial<Filters>) => {
@@ -920,8 +928,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (url.href !== window.location.href) window.history.replaceState(null, '', url);
   }, [selectedReportId]);
 
+  // The map's "my location" button flies there; sorting by distance only needs
+  // the position, so it passes fly: false and the map stays where it is.
   const locateUser = useCallback(
-    () =>
+    ({ fly = true }: { fly?: boolean } = {}) =>
       new Promise<boolean>((resolve) => {
         if (!('geolocation' in navigator)) {
           notify('error', 'Tvoj pregledač ne podržava određivanje lokacije.');
@@ -939,7 +949,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
               accuracy: position.coords.accuracy,
             };
             setUserPosition(coordinates);
-            flyTo(coordinates, 15);
+            if (fly) flyTo(coordinates, 15);
             resolve(true);
           },
           (error) => {
@@ -961,13 +971,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   // "Nearest" without a known position asks for it; if that fails the order
-  // goes back, so the list never claims "nearest" while it is not.
+  // goes back, so the list never claims "nearest" while it is not. A sort the
+  // user picked while waiting for the position is kept.
   const setSort = useCallback(
     (sort: SortMode) => {
       updateFilters({ sort });
       if (sort !== 'nearest' || userPosition) return;
-      void locateUser().then((found) => {
-        if (!found) updateFilters({ sort: DEFAULT_FILTERS.sort });
+      void locateUser({ fly: false }).then((found) => {
+        if (found) return;
+        setFilters((current) =>
+          current.sort === 'nearest' ? { ...current, sort: DEFAULT_FILTERS.sort } : current,
+        );
       });
     },
     [locateUser, updateFilters, userPosition],
@@ -977,7 +991,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     (on: boolean) => {
       setActionsNearestState(on);
       if (!on || userPosition) return;
-      void locateUser().then((found) => {
+      void locateUser({ fly: false }).then((found) => {
         if (!found) setActionsNearestState(false);
       });
     },

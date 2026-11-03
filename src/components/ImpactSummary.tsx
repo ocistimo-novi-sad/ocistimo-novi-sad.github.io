@@ -10,7 +10,7 @@ import { useApp } from '../state/app-context';
  * community's progress (reports, resolved share, upcoming cleanups).
  */
 export function ImpactSummary() {
-  const { reports, actions, reportsPhase, setLayer } = useApp();
+  const { reports, actions, reportsPhase, setLayer, setActionScope, setActionQuery } = useApp();
 
   const { resolved, upcoming } = useMemo(() => {
     const now = Date.now();
@@ -53,7 +53,12 @@ export function ImpactSummary() {
             <button
               type="button"
               className="impact-stat"
-              onClick={() => setLayer('actions')}
+              onClick={() => {
+                // Always the upcoming actions it counts, not an old period or search.
+                setActionScope('upcoming');
+                setActionQuery('');
+                setLayer('actions');
+              }}
               title="Pogledaj predstojeće akcije"
             >
               <span className="impact-stat__value">{upcoming}</span>

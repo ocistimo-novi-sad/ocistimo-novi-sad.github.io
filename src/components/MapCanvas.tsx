@@ -378,7 +378,7 @@ export function MapCanvas() {
         </button>
         <button
           type="button"
-          onClick={locateUser}
+          onClick={() => void locateUser()}
           aria-label="Moja lokacija"
           title="Moja lokacija"
           aria-busy={locating}
