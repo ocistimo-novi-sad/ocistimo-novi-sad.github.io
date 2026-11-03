@@ -1024,3 +1024,9 @@ label.popover__row:hover {
 .action-card__title {
   overflow-wrap: anywhere;
 }
+
+/* Over the limit: the text stays, the counter turns red, and sending asks to shorten it. */
+.field__counter.is-over {
+  color: var(--alert);
+  font-weight: 600;
+}

@@ -29,6 +29,7 @@ import type { Category, NewReportInput, Report } from '../types';
 import { Drawer, type Snap } from './Drawer';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { ConfirmSheet } from './ui/ConfirmSheet';
+import { CharCount } from './ui/CharCount';
 import { ErrorSummary, FieldError } from './ui/FormErrors';
 import { Spinner } from './ui/EmptyState';
 import { PhotoPicker } from './ui/PhotoPicker';
@@ -36,6 +37,7 @@ import { prefersReducedMotion } from '../lib/motion';
 
 type FieldKey =
   | 'location'
+  | 'address'
   | 'title'
   | 'category'
   | 'description'
@@ -47,6 +49,7 @@ type FieldErrors = Partial<Record<FieldKey, string>>;
 /** Fields in the order of the form, and what gets focus for each error. */
 const FIELD_ORDER: FieldKey[] = [
   'location',
+  'address',
   'title',
   'category',
   'description',
@@ -56,6 +59,7 @@ const FIELD_ORDER: FieldKey[] = [
 ];
 const FIELD_TARGET: Record<FieldKey, string> = {
   location: 'compose-map-button',
+  address: 'report-address',
   title: 'report-title',
   category: 'category-first',
   description: 'report-description',
@@ -104,9 +108,7 @@ function PlanField({
     <div className={`field${error ? ' has-error' : ''}`}>
       <div className="field__top">
         <label htmlFor={id}>{label}</label>
-        <span className="field__counter">
-          {value.length}/{COMMUNITY_MAX}
-        </span>
+        <CharCount value={value} max={COMMUNITY_MAX} />
       </div>
       <div className="preset-row" role="group" aria-label={`Brzi izbor: ${label}`}>
         {presets.map((preset) => {
@@ -129,7 +131,6 @@ function PlanField({
         id={id}
         rows={3}
         value={value}
-        maxLength={COMMUNITY_MAX}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
         aria-invalid={Boolean(error)}
@@ -252,10 +253,16 @@ export function ComposeDrawer() {
       next.location = 'Lokacija mora biti u Novom Sadu.';
     }
 
+    if (address.trim().length > LIMITS.addressMax) {
+      next.address = `Adresa može imati najviše ${LIMITS.addressMax} znakova. Skrati je.`;
+    }
+
     const trimmedTitle = title.trim();
     if (!trimmedTitle) next.title = 'Unesi naslov prijave.';
     else if (trimmedTitle.length < TITLE_MIN) {
       next.title = `Naslov mora imati najmanje ${TITLE_MIN} znakova.`;
+    } else if (trimmedTitle.length > TITLE_MAX) {
+      next.title = `Naslov može imati najviše ${TITLE_MAX} znakova. Skrati ga.`;
     }
 
     if (!category) next.category = 'Izaberi kategoriju.';
@@ -264,17 +271,23 @@ export function ComposeDrawer() {
     if (!trimmedDescription) next.description = 'Opiši problem.';
     else if (trimmedDescription.length < DESC_MIN) {
       next.description = `Opis mora imati najmanje ${DESC_MIN} znakova.`;
+    } else if (trimmedDescription.length > DESC_MAX) {
+      next.description = `Opis može imati najviše ${DESC_MAX} znakova. Skrati ga.`;
     }
 
     if (communityCan.trim().length < COMMUNITY_MIN) {
       next.communityCan = communityCan.trim()
         ? `Napiši bar ${COMMUNITY_MIN} znakova ili izaberi ponuđeno.`
         : 'Napiši šta zajednica može sama ili izaberi ponuđeno.';
+    } else if (communityCan.trim().length > COMMUNITY_MAX) {
+      next.communityCan = `Ovde može najviše ${COMMUNITY_MAX} znakova. Skrati tekst.`;
     }
     if (helpNeeded.trim().length < COMMUNITY_MIN) {
       next.helpNeeded = helpNeeded.trim()
         ? `Napiši bar ${COMMUNITY_MIN} znakova ili izaberi ponuđeno.`
         : 'Napiši za šta je potrebna pomoć ili izaberi ponuđeno.';
+    } else if (helpNeeded.trim().length > COMMUNITY_MAX) {
+      next.helpNeeded = `Ovde može najviše ${COMMUNITY_MAX} znakova. Skrati tekst.`;
     }
 
     if (photos.length > LIMITS.imagesMax) {
@@ -645,7 +658,7 @@ export function ComposeDrawer() {
           <span className="form-section__num">01</span>
           <h3 id="compose-location-label">Lokacija</h3>
           {composeLocation && !outsideArea ? (
-            <span className="form-section__done" aria-label="Lokacija je izabrana">
+            <span className="form-section__done" role="img" aria-label="Lokacija je izabrana">
               <Check size={12} aria-hidden="true" />
             </span>
           ) : null}
@@ -706,19 +719,26 @@ export function ComposeDrawer() {
             <label htmlFor="report-address">
               Adresa ili orijentir <span className="field__optional">opciono</span>
             </label>
-            <span className="field__counter">{address.length}/{LIMITS.addressMax}</span>
+            <CharCount value={address} max={LIMITS.addressMax} />
           </div>
           <input
             id="report-address"
             type="text"
             value={address}
-            maxLength={LIMITS.addressMax}
             placeholder="Na primer: Dunavski park, ulaz sa Keja"
-            onChange={(event) => setAddress(event.target.value)}
+            onChange={(event) => {
+              setAddress(event.target.value);
+              if (errors.address) setErrors((prev) => ({ ...prev, address: undefined }));
+            }}
+            aria-invalid={Boolean(errors.address)}
+            aria-describedby={errors.address ? 'hint-address error-address' : 'hint-address'}
             disabled={submitting}
             autoComplete="off"
           />
-          <p className="field__hint">Pomaže drugima da pronađu mesto bez otvaranja mape.</p>
+          <p className="field__hint" id="hint-address">
+            Pomaže drugima da pronađu mesto bez otvaranja mape.
+          </p>
+          {errors.address ? <FieldError id="error-address">{errors.address}</FieldError> : null}
         </div>
       </section>
 
@@ -731,15 +751,12 @@ export function ComposeDrawer() {
         <div className={`field${errors.title ? ' has-error' : ''}`}>
           <div className="field__top">
             <label htmlFor="report-title">Naslov</label>
-            <span className="field__counter">
-              {title.length}/{TITLE_MAX}
-            </span>
+            <CharCount value={title} max={TITLE_MAX} />
           </div>
           <input
             id="report-title"
             type="text"
             value={title}
-            maxLength={TITLE_MAX}
             placeholder="Na primer: Polomljena klupa u Dunavskom parku"
             onChange={(event) => {
               setTitle(event.target.value);
@@ -793,15 +810,12 @@ export function ComposeDrawer() {
         <div className={`field${errors.description ? ' has-error' : ''}`}>
           <div className="field__top">
             <label htmlFor="report-description">Opis problema</label>
-            <span className="field__counter">
-              {description.length}/{DESC_MAX}
-            </span>
+            <CharCount value={description} max={DESC_MAX} />
           </div>
           <textarea
             id="report-description"
             rows={5}
             value={description}
-            maxLength={DESC_MAX}
             placeholder="Šta je oštećeno ili zapušteno? Koliko je prostor pristupačan? Šta bi trebalo uraditi?"
             onChange={(event) => {
               setDescription(event.target.value);
@@ -837,7 +851,7 @@ export function ComposeDrawer() {
         <PlanField
           id="report-community"
           label="Šta zajednica može sama"
-          hint="Na primer rad, alat koji već imaš ili termin kada komšije mogu da se okupe."
+          hint={`Najmanje ${COMMUNITY_MIN} znakova ili izaberi ponuđeno. Na primer rad, alat koji već imaš ili termin kada komšije mogu da se okupe.`}
           placeholder="Možemo da skupimo sitan otpad u džakove i očistimo stazu."
           presets={COMMUNITY_CAN_PRESETS}
           value={communityCan}
@@ -852,7 +866,7 @@ export function ComposeDrawer() {
         <PlanField
           id="report-help"
           label="Za šta nam treba pomoć"
-          hint="Na primer odvoz, materijal, stručan rad ili nadležna služba."
+          hint={`Najmanje ${COMMUNITY_MIN} znakova ili izaberi ponuđeno. Na primer odvoz, materijal, stručan rad ili nadležna služba.`}
           placeholder="Potreban je kontejner za krupni otpad i odvoz šuta."
           presets={HELP_NEEDED_PRESETS}
           value={helpNeeded}

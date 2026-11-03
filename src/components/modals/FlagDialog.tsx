@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Flag, TriangleAlert } from 'lucide-react';
 import { FLAG_REASONS } from '../../config';
-import { toSerbianError } from '../../services/errors';
+import { errorCode, toSerbianError } from '../../services/errors';
 import { createFlag } from '../../services/flags';
 import { useApp } from '../../state/app-context';
 import type { FlagReason } from '../../types';
@@ -17,6 +17,7 @@ export function FlagDialog({ reportId }: { reportId: string }) {
   const [error, setError] = useState<string | null>(null);
 
   const submit = async () => {
+    if (busy) return;
     setBusy(true);
     setError(null);
     try {
@@ -24,11 +25,11 @@ export function FlagDialog({ reportId }: { reportId: string }) {
       notify('success', 'Prijava sadržaja je poslata moderatorima.');
       closeModal();
     } catch (flagError) {
+      // The rules refuse a second flag from the same account, so say exactly that.
       setError(
-        toSerbianError(
-          flagError,
-          'Prijava sadržaja nije poslata. Možda je ova prijava već prijavljena sa tvog naloga.',
-        ),
+        errorCode(flagError) === 'permission-denied'
+          ? 'Ova prijava je već prijavljena sa tvog naloga. Moderatori je pregledaju.'
+          : toSerbianError(flagError, 'Prijava sadržaja nije poslata. Pokušaj ponovo.'),
       );
     } finally {
       setBusy(false);
@@ -50,7 +51,7 @@ export function FlagDialog({ reportId }: { reportId: string }) {
             type="button"
             className="btn btn--primary btn--sm"
             onClick={() => void submit()}
-            disabled={busy}
+            aria-disabled={busy || undefined}
           >
             {busy ? <Spinner size={14} /> : <Flag size={13} aria-hidden="true" />}
             {busy ? 'Slanje…' : 'Pošalji prijavu'}
