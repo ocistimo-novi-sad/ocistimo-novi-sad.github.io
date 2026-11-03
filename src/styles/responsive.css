@@ -573,20 +573,6 @@
     font-size: 20px;
   }
 
-  .status-row__label {
-    width: 92px;
-  }
-
-  .status-row {
-    flex-wrap: wrap;
-  }
-
-  .status-row__value {
-    margin-left: 0;
-    padding-left: 22px;
-    text-align: left;
-  }
-
   .category-grid {
     grid-template-columns: 1fr;
   }
