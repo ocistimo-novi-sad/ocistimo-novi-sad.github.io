@@ -1561,3 +1561,77 @@
   font-size: 10px;
   line-height: 1.5;
 }
+
+/* Where a report is: reported, published, action, fixed. */
+.progress {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  margin: 14px 0 6px;
+  padding: 0;
+  list-style: none;
+}
+
+.progress li {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.25;
+  text-align: center;
+}
+
+/* The line back to the previous step. */
+.progress li + li::before {
+  position: absolute;
+  top: 5px;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--line-strong);
+  content: '';
+}
+
+.progress li.is-done::before,
+.progress li.is-current::before {
+  background: var(--leaf);
+}
+
+.progress__dot {
+  position: relative;
+  z-index: 1;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.progress li.is-done .progress__dot {
+  border-color: var(--leaf);
+  background: var(--leaf);
+}
+
+.progress li.is-current {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.progress li.is-current .progress__dot {
+  border-color: var(--forest);
+  background: var(--forest);
+  box-shadow: 0 0 0 4px var(--forest-tint);
+}
+
+.progress li.is-rejected .progress__dot {
+  border-color: var(--alert);
+  background: var(--alert);
+  box-shadow: 0 0 0 4px var(--alert-tint);
+}
+
+.progress li.is-rejected::before {
+  background: var(--alert-line);
+}

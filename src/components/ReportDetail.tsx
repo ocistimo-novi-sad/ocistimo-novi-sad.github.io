@@ -35,6 +35,7 @@ import { BeforeAfter } from './ui/BeforeAfter';
 import { DeleteReportButton } from './ui/DeleteReportButton';
 import { ModerationBadge } from './ui/ModerationBadge';
 import { ReportPlan } from './ui/ReportPlan';
+import { ReportProgress } from './ui/ReportProgress';
 import { StatusBadge } from './ui/StatusBadge';
 import { RejectForm } from './moderation/RejectForm';
 import type { Report, ReportStatus } from '../types';
@@ -473,6 +474,8 @@ export function ReportDetail() {
         {published && report.editedAt ? ' · izmenjeno' : null}
         {report.source === 'demo' ? <span className="demo-pill">demo</span> : null}
       </p>
+
+      <ReportProgress report={report} />
 
       {resolved ? (
         <div className="resolved-banner" role="status">
