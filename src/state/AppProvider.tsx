@@ -15,6 +15,7 @@ import { isWithinBounds } from '../lib/geo';
 import { distanceInMeters } from '../lib/geo';
 import { toSerbianError } from '../services/errors';
 import { isFirebaseConfigured } from '../services/firebase';
+import { deleteActionRecord } from '../services/actions';
 import { droppedImages, removeImages } from '../services/images';
 import {
   acceptEdit,
@@ -527,6 +528,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
     await loadActions();
   }, [loadActions]);
 
+  const deleteAction = useCallback(
+    async (action: CleanupAction) => {
+      try {
+        await deleteActionRecord(action.id);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Akciju nije moguće obrisati.'));
+        throw error;
+      }
+      setSelectedActionId((current) => (current === action.id ? null : current));
+      void removeImages([
+        ...new Set([
+          ...(action.coverUrl ? [action.coverUrl] : []),
+          ...(action.resultImageUrls ?? []),
+        ]),
+      ]);
+      await loadActions();
+      notify('success', 'Akcija je obrisana.');
+    },
+    [loadActions, notify],
+  );
+
   const moderateReport = useCallback(
     async (reportId: string, status: ReportStatus) => {
       try {
@@ -931,6 +953,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       actionsPhase,
       actionsError,
       reloadActions,
+      deleteAction,
       filters,
       updateFilters,
       toggleCategory,
@@ -1003,6 +1026,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       actionsPhase,
       actionsError,
       reloadActions,
+      deleteAction,
       filters,
       updateFilters,
       toggleCategory,

@@ -9,6 +9,7 @@ import {
   MapPin,
   Pencil,
   ShieldCheck,
+  Trash2,
   Users,
   X,
 } from 'lucide-react';
@@ -35,11 +36,12 @@ export function ActionDetail() {
     auth,
     openModal,
     reloadActions,
+    deleteAction,
     notify,
   } = useApp();
 
-  const [confirmCancel, setConfirmCancel] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
+  const [confirming, setConfirming] = useState<'cancel' | 'delete' | null>(null);
+  const [busy, setBusy] = useState(false);
 
   if (!action) return null;
 
@@ -47,16 +49,27 @@ export function ActionDetail() {
   const resultImages = action.resultImageUrls ?? [];
 
   const cancelAction = async () => {
-    setCancelling(true);
+    setBusy(true);
     try {
       await updateActionStatus(action.id, 'cancelled');
       await reloadActions();
-      setConfirmCancel(false);
+      setConfirming(null);
       notify('success', 'Akcija je otkazana.');
     } catch (error) {
       notify('error', toSerbianError(error, 'Akciju nije moguće otkazati.'));
     } finally {
-      setCancelling(false);
+      setBusy(false);
+    }
+  };
+
+  const removeAction = async () => {
+    setBusy(true);
+    try {
+      // On success the drawer closes, since the action is no longer selected.
+      await deleteAction(action);
+    } catch {
+      // The provider already surfaced the error.
+      setBusy(false);
     }
   };
 
@@ -252,7 +265,7 @@ export function ActionDetail() {
             Upravljanje akcijom
           </p>
 
-          {confirmCancel ? (
+          {confirming === 'cancel' ? (
             <div className="admin-confirm">
               <p>Otkazati ovu akciju? Povezane prijave ostaju sačuvane.</p>
               <div className="admin-confirm__actions">
@@ -260,16 +273,42 @@ export function ActionDetail() {
                   type="button"
                   className="btn btn--danger btn--sm"
                   onClick={() => void cancelAction()}
-                  disabled={cancelling}
+                  disabled={busy}
                 >
-                  {cancelling ? <Spinner size={13} /> : <X size={13} aria-hidden="true" />}
+                  {busy ? <Spinner size={13} /> : <X size={13} aria-hidden="true" />}
                   Potvrdi otkazivanje
                 </button>
                 <button
                   type="button"
                   className="btn btn--quiet btn--sm"
-                  onClick={() => setConfirmCancel(false)}
-                  disabled={cancelling}
+                  onClick={() => setConfirming(null)}
+                  disabled={busy}
+                >
+                  Odustani
+                </button>
+              </div>
+            </div>
+          ) : confirming === 'delete' ? (
+            <div className="admin-confirm">
+              <p>
+                Trajno obrisati ovu akciju i njene fotografije? Povezane prijave ostaju
+                sačuvane. Brisanje se ne može poništiti.
+              </p>
+              <div className="admin-confirm__actions">
+                <button
+                  type="button"
+                  className="btn btn--danger btn--sm"
+                  onClick={() => void removeAction()}
+                  disabled={busy}
+                >
+                  {busy ? <Spinner size={13} /> : <Trash2 size={13} aria-hidden="true" />}
+                  Potvrdi brisanje
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--quiet btn--sm"
+                  onClick={() => setConfirming(null)}
+                  disabled={busy}
                 >
                   Odustani
                 </button>
@@ -288,11 +327,18 @@ export function ActionDetail() {
                 <button
                   type="button"
                   className="btn btn--quiet btn--sm"
-                  onClick={() => setConfirmCancel(true)}
+                  onClick={() => setConfirming('cancel')}
                 >
                   <CalendarDays size={13} aria-hidden="true" /> Otkaži akciju
                 </button>
               ) : null}
+              <button
+                type="button"
+                className="btn btn--quiet btn--sm"
+                onClick={() => setConfirming('delete')}
+              >
+                <Trash2 size={13} aria-hidden="true" /> Obriši akciju
+              </button>
             </div>
           )}
           <p className="admin-box__hint">
