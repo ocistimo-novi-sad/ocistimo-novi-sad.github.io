@@ -193,6 +193,9 @@
     justify-content: center;
     gap: 6px;
     height: 44px;
+    /* Solid, so scrolled text never shows through behind the grip. */
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    background: var(--surface);
     color: var(--muted-2);
     cursor: grab;
     touch-action: none;
@@ -239,7 +242,7 @@
   .field textarea,
   .field select {
     min-height: 42px;
-    font-size: 16px;
+    font-size: var(--text-body);
   }
 
   .field textarea {
@@ -251,7 +254,7 @@
   }
 
   .search-field input {
-    font-size: 16px;
+    font-size: var(--text-body);
   }
 
   .btn {
@@ -261,7 +264,7 @@
   .btn--sm {
     height: 32px;
     padding: 0 10px;
-    font-size: 12px;
+    font-size: var(--text-meta);
   }
 
   .btn--icon {
@@ -278,16 +281,16 @@
   .chip {
     height: 32px;
     padding: 0 10px;
-    font-size: 12px;
+    font-size: var(--text-label);
   }
 
   .select-field {
     height: 32px;
-    font-size: 12px;
+    font-size: var(--text-meta);
   }
 
   .select-field select {
-    font-size: 12px;
+    font-size: var(--text-body);
   }
 
   .popover__row {
@@ -300,7 +303,7 @@
 
   .category-option {
     min-height: 44px;
-    font-size: 12px;
+    font-size: var(--text-meta);
   }
 
   .photo-draft,
@@ -454,7 +457,7 @@
     display: block;
     color: var(--muted-2);
     font-family: var(--font-mono);
-    font-size: 10.5px;
+    font-size: var(--text-label);
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
@@ -488,6 +491,10 @@
 }
 
 @media (max-width: 560px) {
+  :root {
+    --text-display: 1.375rem;
+  }
+
   .app-header__actions .env-badge {
     display: none;
   }
@@ -501,11 +508,11 @@
   }
 
   .detail-title {
-    font-size: 21px;
+    font-size: var(--text-display);
   }
 
   .compose-title {
-    font-size: 20px;
+    font-size: var(--text-display);
   }
 
   .impact {
@@ -514,7 +521,7 @@
   }
 
   .impact__title {
-    font-size: 18px;
+    font-size: var(--text-title);
   }
 
   .impact-stat {
@@ -522,7 +529,7 @@
   }
 
   .impact-stat__value {
-    font-size: 21px;
+    font-size: var(--text-display);
   }
 
   .drawer {
@@ -547,7 +554,7 @@
   }
 
   .info-hero h3 {
-    font-size: 20px;
+    font-size: var(--text-lead);
   }
 
   .category-grid {
@@ -569,7 +576,7 @@
   }
 
   .segmented__item {
-    font-size: 12px;
+    font-size: var(--text-meta);
   }
 
   .compose-foot__row .btn {

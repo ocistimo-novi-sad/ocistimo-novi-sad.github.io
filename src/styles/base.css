@@ -21,7 +21,7 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: var(--text-ui);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -115,7 +115,7 @@ fieldset {
 
 .eyebrow {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-label);
   font-weight: 500;
   letter-spacing: 0.11em;
   line-height: 1.3;
@@ -158,7 +158,7 @@ fieldset {
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--ink);
-  font-size: 13px;
+  font-size: var(--text-ui);
   font-weight: 500;
   letter-spacing: 0.005em;
   white-space: nowrap;
@@ -264,7 +264,7 @@ fieldset {
 .btn--sm {
   height: 30px;
   padding: 0 10px;
-  font-size: 12px;
+  font-size: var(--text-meta);
 }
 
 .btn--block {
@@ -286,7 +286,7 @@ fieldset {
   min-height: 24px;
   gap: 4px;
   color: var(--forest);
-  font-size: 12.5px;
+  font-size: var(--text-ui);
   font-weight: 500;
   text-decoration: underline;
   text-decoration-thickness: 1px;
@@ -381,7 +381,7 @@ fieldset {
 .field label,
 .field__label {
   color: var(--ink-2);
-  font-size: 13.5px;
+  font-size: var(--text-ui);
   font-weight: 600;
   letter-spacing: 0.005em;
 }
@@ -390,7 +390,7 @@ fieldset {
   margin-left: 4px;
   color: var(--muted-2);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-label);
   font-weight: 400;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -399,19 +399,19 @@ fieldset {
 .field__counter {
   color: var(--muted-2);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-label);
   white-space: nowrap;
 }
 
 .field__hint {
   color: var(--muted);
-  font-size: 12.5px;
+  font-size: var(--text-ui);
   line-height: 1.45;
 }
 
 .field__error {
   color: var(--alert);
-  font-size: 13px;
+  font-size: var(--text-ui);
   font-weight: 600;
   line-height: 1.4;
 }
@@ -428,7 +428,7 @@ fieldset {
 .error-summary__title {
   margin-bottom: 8px;
   color: var(--ink);
-  font-size: 16px;
+  font-size: var(--text-heading);
   font-weight: 700;
 }
 
@@ -445,7 +445,7 @@ fieldset {
   display: inline-block;
   line-height: 24px;
   color: var(--alert);
-  font-size: 14px;
+  font-size: var(--text-ui);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -463,7 +463,7 @@ fieldset {
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--ink);
-  font-size: 13px;
+  font-size: var(--text-body);
   transition:
     border-color 0.14s var(--ease),
     box-shadow 0.14s var(--ease);
@@ -523,7 +523,7 @@ fieldset {
   border-radius: var(--radius-pill);
   background: var(--surface);
   color: var(--ink-2);
-  font-size: 12px;
+  font-size: var(--text-label);
   font-weight: 500;
   white-space: nowrap;
   transition:
@@ -571,7 +571,7 @@ fieldset {
   border-radius: var(--radius-pill);
   background: var(--cat-tint);
   color: var(--cat-ink);
-  font-size: 12px;
+  font-size: var(--text-label);
   font-weight: 600;
   letter-spacing: 0.01em;
   white-space: nowrap;
@@ -619,7 +619,7 @@ fieldset {
   border-radius: var(--radius-pill);
   background: var(--surface-2);
   color: var(--ink-2);
-  font-size: 12px;
+  font-size: var(--text-label);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -668,7 +668,7 @@ fieldset {
   padding: 2px 8px;
   border: 1px solid;
   border-radius: var(--radius-pill);
-  font-size: 12px;
+  font-size: var(--text-label);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -701,7 +701,7 @@ fieldset {
 .status-badge.is-compact {
   padding: 1px 5px;
   gap: 4px;
-  font-size: 11px;
+  font-size: var(--text-label);
 }
 
 .action-status {
@@ -711,7 +711,7 @@ fieldset {
   border: 1px solid;
   border-radius: var(--radius-pill);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-label);
   font-weight: 500;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -764,7 +764,7 @@ fieldset {
   padding: 0 8px;
   border-radius: var(--radius);
   color: var(--ink-2);
-  font-size: 12px;
+  font-size: var(--text-meta);
   text-align: left;
 }
 
@@ -810,7 +810,7 @@ label.popover__row:hover {
 .empty-state__title {
   color: var(--ink);
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: var(--text-heading);
   font-weight: 650;
   letter-spacing: -0.015em;
 }
@@ -818,7 +818,7 @@ label.popover__row:hover {
 .empty-state__text {
   max-width: 290px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--text-ui);
   line-height: 1.55;
 }
 
@@ -830,7 +830,7 @@ label.popover__row:hover {
   margin-bottom: 7px;
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-label);
   font-weight: 500;
   letter-spacing: 0.13em;
   text-transform: uppercase;
@@ -877,7 +877,7 @@ label.popover__row:hover {
   border-radius: var(--radius-md);
   background: var(--ink);
   color: #f4f3ed;
-  font-size: 12.5px;
+  font-size: var(--text-ui);
   line-height: 1.45;
   box-shadow: var(--shadow-3);
   pointer-events: auto;
@@ -1010,4 +1010,15 @@ label.popover__row:hover {
     opacity: 0;
     transform: translateX(-24%);
   }
+}
+
+/* Text people type can hold long links and e-mail addresses; they wrap instead
+   of making the panel scroll sideways (WCAG 1.4.10, technique C33). */
+.detail-prose,
+.detail-title,
+.location-box__head,
+.organizer__note,
+.report-card__title,
+.action-card__title {
+  overflow-wrap: anywhere;
 }

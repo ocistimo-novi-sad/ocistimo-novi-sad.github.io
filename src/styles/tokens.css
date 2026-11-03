@@ -72,6 +72,19 @@
   --shadow-2: 0 1px 2px rgba(28, 34, 30, 0.06), 0 10px 28px -12px rgba(28, 34, 30, 0.28);
   --shadow-3: 0 2px 6px rgba(28, 34, 30, 0.08), 0 18px 40px -16px rgba(28, 34, 30, 0.32);
 
+  /* Type scale by role, in rem so it follows the reader's browser setting.
+     Apple HIG and Material 3 put body text at 16-17px; nothing people read is
+     under 13px, and 11px is only for numbers in small badges. */
+  --text-display: 1.5rem; /* 24px: detail and form titles */
+  --text-title: 1.25rem; /* 20px: dialog and section titles */
+  --text-lead: 1.125rem; /* 18px: hero headings, action date and time */
+  --text-heading: 1rem; /* 16px: card titles, form sections */
+  --text-body: 1rem; /* 16px: descriptions and other long text, text fields */
+  --text-ui: 0.875rem; /* 14px: buttons, labels, hints, notices, errors */
+  --text-meta: 0.8125rem; /* 13px: card details, bylines, small buttons */
+  --text-label: 0.75rem; /* 12px: overlines, badges, counters, chips */
+  --text-micro: 0.6875rem; /* 11px: numbers in small badges */
+
   --font-display: 'Space Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
     system-ui, sans-serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui,

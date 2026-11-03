@@ -119,7 +119,7 @@
   background: rgba(255, 255, 255, 0.92);
   box-shadow: var(--shadow-2);
   color: var(--ink-2);
-  font-size: 12px;
+  font-size: var(--text-meta);
   font-weight: 500;
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
@@ -185,15 +185,14 @@
 }
 
 .pick-banner__text strong {
-  font-size: 12.5px;
+  font-size: var(--text-ui);
   font-weight: 600;
   line-height: 1.35;
 }
 
 .pick-banner__text span {
   color: rgba(244, 243, 237, 0.72);
-  font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-meta);
   line-height: 1.4;
   white-space: normal;
 }
@@ -274,7 +273,7 @@
   box-sizing: content-box;
   border-radius: var(--radius);
   color: var(--ink-2);
-  font-size: 12.5px;
+  font-size: var(--text-label);
   text-align: left;
   transition:
     background-color 0.12s var(--ease),
@@ -304,13 +303,13 @@
 .map-legend__count {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-label);
 }
 
 .map-legend__reset {
   margin-top: 6px;
   color: var(--forest);
-  font-size: 12px;
+  font-size: var(--text-meta);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -332,16 +331,17 @@
   padding-top: 7px;
   border-top: 1px solid var(--line);
   color: var(--muted-2);
-  font-size: 12px;
+  font-size: var(--text-meta);
   line-height: 1.4;
 }
 
 /* --- Readout ------------------------------------------------------------- */
 
+/* Right side, above the map attribution, so it never covers the legend. */
 .map-readout {
   position: absolute;
-  bottom: 14px;
-  left: 50%;
+  right: 14px;
+  bottom: 30px;
   z-index: 400;
   display: flex;
   align-items: center;
@@ -354,7 +354,6 @@
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 0.03em;
-  transform: translateX(-50%);
 }
 
 .map-readout__coords {
@@ -384,7 +383,7 @@
   background: var(--surface);
   box-shadow: var(--shadow-2);
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--text-meta);
   transform: translateX(-50%);
 }
 
@@ -415,7 +414,7 @@
 .map-state__card h2 {
   color: var(--ink);
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: var(--text-title);
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -423,7 +422,7 @@
 .map-state__card p {
   margin-bottom: 3px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--text-ui);
   line-height: 1.55;
 }
 
@@ -458,13 +457,13 @@
   border-radius: var(--radius-lg);
   background: var(--alert-tint);
   color: var(--alert-ink);
-  font-size: 12.5px;
+  font-size: var(--text-ui);
   transform: translateX(-50%);
 }
 
 .map-error-banner button {
   color: inherit;
-  font-size: 12.5px;
+  font-size: var(--text-ui);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -813,7 +812,7 @@
   box-shadow: 0 8px 22px -6px rgba(20, 28, 22, 0.45);
   color: #f4f3ed;
   font-family: var(--font-sans);
-  font-size: 12.5px;
+  font-size: var(--text-meta);
   line-height: 1.4;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -826,14 +825,14 @@
 .ns-tooltip__label {
   color: var(--sun);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-label);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .ns-tooltip__meta {
   color: rgba(244, 243, 237, 0.68);
-  font-size: 12px;
+  font-size: var(--text-meta);
 }
 
 .leaflet-tooltip.ns-tooltip--rich {
@@ -868,7 +867,7 @@
 
 .ns-tooltip__title {
   overflow: hidden;
-  font-size: 12px;
+  font-size: var(--text-meta);
   font-weight: 600;
   line-height: 1.35;
   text-overflow: ellipsis;
@@ -901,10 +900,15 @@
     right: var(--drawer-w);
   }
 
-  .app.has-drawer .map-readout,
   .app.has-drawer .map-loading,
   .app.has-drawer .map-error-banner {
     left: calc((100% - var(--drawer-w)) / 2);
+  }
+
+  /* With a panel open the map is too narrow for the legend and the readout
+     side by side; the readout is decoration, so it goes. */
+  .app.has-drawer .map-readout {
+    display: none;
   }
 
   /* Left-aligned next to an open panel, so it leaves most of the narrowed map
@@ -1007,7 +1011,7 @@
   border-radius: var(--radius-pill);
   background: var(--forest);
   color: #fff;
-  font-size: 12px;
+  font-size: var(--text-meta);
   font-weight: 600;
   white-space: nowrap;
   transform: translateX(-50%);
