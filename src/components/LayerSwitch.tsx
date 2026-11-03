@@ -6,10 +6,12 @@ export function LayerSwitch({ className }: { className?: string }) {
 
   return (
     <div
-      className={`segmented segmented--layer${className ? ` ${className}` : ''}`}
+      className={`segmented segmented--layer${layer === 'actions' ? ' is-second' : ''}${className ? ` ${className}` : ''}`}
       role="tablist"
       aria-label="Šta prikazati"
     >
+      {/* The green pill slides to the chosen layer instead of jumping. */}
+      <span className="segmented__pill" aria-hidden="true" />
       <button
         type="button"
         role="tab"

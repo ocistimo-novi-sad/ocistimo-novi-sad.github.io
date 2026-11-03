@@ -920,3 +920,16 @@
   margin-top: 10px;
   pointer-events: auto;
 }
+
+/* Markers that appear together pop in one after another instead of all at once. */
+.leaflet-marker-icon:nth-child(4n + 2) :is(.pin, .action-pin) {
+  animation-delay: 40ms;
+}
+
+.leaflet-marker-icon:nth-child(4n + 3) :is(.pin, .action-pin) {
+  animation-delay: 80ms;
+}
+
+.leaflet-marker-icon:nth-child(4n + 4) :is(.pin, .action-pin) {
+  animation-delay: 120ms;
+}
