@@ -136,9 +136,17 @@ function KeyboardPick({ onPick }: { onPick: (latlng: { lat: number; lng: number 
       const size = map.getSize();
       onPick(map.containerPointToLatLng([size.x / 2 - dx, size.y / 2 - dy]));
     };
+    // The crosshair also follows the form panel as it changes height.
+    place();
+    const drawer = document.querySelector('.drawer');
+    const observer = new ResizeObserver(() => place());
+    if (drawer) observer.observe(drawer);
+    window.addEventListener('resize', place);
     container.addEventListener('focus', place);
     container.addEventListener('keydown', onKeyDown);
     return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', place);
       container.removeEventListener('focus', place);
       container.removeEventListener('keydown', onKeyDown);
     };
@@ -310,7 +318,9 @@ export function MapCanvas() {
   );
 
   return (
-    <div className={`map-shell${composeOpen ? ' is-picking' : ''}`}>
+    <div
+      className={`map-shell${composeOpen ? ' is-picking' : ''}${composeLocation ? ' has-point' : ''}`}
+    >
       <h2 className="visually-hidden">{layer === 'actions' ? 'Mapa akcija' : 'Mapa prijava'}</h2>
       {/* The bars come before the map in the page, so Tab reaches them before
           the markers (WCAG 2.4.3). They float above it, so nothing moves on screen. */}
@@ -393,7 +403,7 @@ export function MapCanvas() {
           aria-label="Moja lokacija"
           title="Moja lokacija"
           aria-busy={locating}
-          disabled={locating}
+          aria-disabled={locating || undefined}
         >
           {locating ? <Spinner size={15} /> : <Navigation size={16} aria-hidden="true" />}
         </button>
@@ -513,14 +523,15 @@ export function MapCanvas() {
             {composeLocation ? (
               <span>{formatCoordinates(composeLocation.latitude, composeLocation.longitude)}</span>
             ) : (
-              <span>Možeš i da prevučeš marker radi preciznijeg položaja.</span>
+              <span>Ili pomeri mapu i izaberi „Postavi na sredinu mape“.</span>
             )}
           </div>
         </div>
       ) : null}
 
       {composeOpen ? (
-        // Shown only while the map has keyboard focus: Enter puts the point here.
+        // Shown until a point is chosen, and while the map has keyboard focus:
+        // "Postavi na sredinu mape" and Enter put the point here.
         <div className="map-crosshair" aria-hidden="true">
           <span className="map-crosshair__hint">Enter postavlja tačku ovde</span>
         </div>

@@ -43,7 +43,7 @@ button {
   cursor: pointer;
 }
 
-button:disabled {
+button:is(:disabled, [aria-disabled='true']) {
   cursor: not-allowed;
 }
 
@@ -170,12 +170,12 @@ fieldset {
     transform 0.18s var(--ease);
 }
 
-.btn:hover:not(:disabled) {
+.btn:hover:not(:disabled, [aria-disabled='true']) {
   background: var(--surface-2);
   border-color: var(--muted-2);
 }
 
-.btn:active:not(:disabled) {
+.btn:active:not(:disabled, [aria-disabled='true']) {
   background: var(--surface-3);
 }
 
@@ -196,14 +196,14 @@ fieldset {
   font-weight: 600;
 }
 
-.btn--primary:hover:not(:disabled) {
+.btn--primary:hover:not(:disabled, [aria-disabled='true']) {
   background: var(--forest-2);
   border-color: var(--forest-2);
   box-shadow: var(--shadow-2);
   transform: translateY(-1px);
 }
 
-.btn--primary:active:not(:disabled) {
+.btn--primary:active:not(:disabled, [aria-disabled='true']) {
   background: #143024;
   box-shadow: none;
   transform: none;
@@ -223,14 +223,14 @@ fieldset {
   box-shadow: var(--shadow-1);
 }
 
-.btn--accent:hover:not(:disabled) {
+.btn--accent:hover:not(:disabled, [aria-disabled='true']) {
   background: var(--forest-2);
   border-color: var(--forest-2);
   box-shadow: var(--shadow-2);
   transform: translateY(-1px);
 }
 
-.btn--accent:active:not(:disabled) {
+.btn--accent:active:not(:disabled, [aria-disabled='true']) {
   background: #143024;
   box-shadow: none;
   transform: none;
@@ -245,7 +245,7 @@ fieldset {
   border-color: var(--line);
 }
 
-.btn--quiet:hover:not(:disabled) {
+.btn--quiet:hover:not(:disabled, [aria-disabled='true']) {
   background: var(--surface-2);
   border-color: var(--line-strong);
 }
@@ -256,7 +256,7 @@ fieldset {
   color: #fff;
 }
 
-.btn--danger:hover:not(:disabled) {
+.btn--danger:hover:not(:disabled, [aria-disabled='true']) {
   background: var(--alert-strong);
   border-color: var(--alert-strong);
 }
@@ -323,7 +323,7 @@ fieldset {
     color 0.14s var(--ease);
 }
 
-.icon-btn:hover:not(:disabled) {
+.icon-btn:hover:not(:disabled, [aria-disabled='true']) {
   background: var(--surface-2);
   border-color: var(--line-strong);
 }
@@ -342,12 +342,12 @@ fieldset {
   color: var(--muted);
 }
 
-.icon-btn--ghost:hover:not(:disabled) {
+.icon-btn--ghost:hover:not(:disabled, [aria-disabled='true']) {
   background: var(--surface-3);
   color: var(--ink);
 }
 
-.icon-btn:disabled {
+.icon-btn:is(:disabled, [aria-disabled='true']) {
   opacity: 0.5;
 }
 

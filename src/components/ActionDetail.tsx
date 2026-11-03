@@ -257,7 +257,7 @@ export function ActionDetail() {
                   type="button"
                   className="btn btn--danger btn--sm"
                   onClick={() => void cancelAction()}
-                  disabled={cancelling}
+                  aria-disabled={cancelling || undefined}
                 >
                   {cancelling ? <Spinner size={13} /> : <X size={13} aria-hidden="true" />}
                   Potvrdi otkazivanje
@@ -266,7 +266,7 @@ export function ActionDetail() {
                   type="button"
                   className="btn btn--quiet btn--sm"
                   onClick={() => setConfirmCancel(false)}
-                  disabled={cancelling}
+                  aria-disabled={cancelling || undefined}
                 >
                   Odustani
                 </button>

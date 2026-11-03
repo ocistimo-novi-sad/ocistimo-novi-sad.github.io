@@ -326,7 +326,7 @@
   white-space: nowrap;
 }
 
-.near-btn:hover:not(:disabled) {
+.near-btn:hover:not(:disabled, [aria-disabled='true']) {
   background: var(--surface-2);
 }
 
@@ -336,7 +336,7 @@
   color: #fff;
 }
 
-.near-btn:disabled {
+.near-btn:is(:disabled, [aria-disabled='true']) {
   cursor: progress;
 }
 

@@ -206,7 +206,7 @@ export function LoadMoreButton() {
         type="button"
         className="btn btn--quiet btn--sm"
         onClick={() => void loadMoreReports()}
-        disabled={loadingMoreReports}
+        aria-disabled={loadingMoreReports || undefined}
       >
         {loadingMoreReports ? <Spinner size={14} /> : null}
         {loadingMoreReports ? 'Učitavanje…' : 'Učitaj još prijava'}

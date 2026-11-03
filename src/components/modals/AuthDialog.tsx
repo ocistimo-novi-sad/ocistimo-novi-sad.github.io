@@ -99,7 +99,7 @@ export function AuthDialog({
           type="button"
           className="btn btn--google"
           onClick={() => void signIn()}
-          disabled={busy || !auth.configured}
+          aria-disabled={busy || !auth.configured || undefined}
         >
           {busy ? <Spinner size={16} /> : <GoogleMark />}
           {busy ? 'Prijavljivanje…' : 'Nastavi sa Google'}

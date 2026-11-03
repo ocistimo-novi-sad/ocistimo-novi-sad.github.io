@@ -18,7 +18,7 @@ export function NearMeButton({
       className={`near-btn${active ? ' is-active' : ''}`}
       onClick={() => onToggle(!active)}
       aria-pressed={active}
-      disabled={locating}
+      aria-disabled={locating || undefined}
       title={active ? 'Vrati podrazumevani redosled' : 'Prikaži najbliže prvo'}
     >
       {locating ? <Spinner size={12} /> : <LocateFixed size={13} aria-hidden="true" />}

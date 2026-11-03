@@ -167,7 +167,7 @@ export function ActionsPanel() {
               onClick={() => void reloadActions()}
               aria-label="Osveži akcije"
               title="Osveži akcije"
-              disabled={actionsPhase === 'loading'}
+              aria-disabled={actionsPhase === 'loading' || undefined}
             >
               <RefreshCw
                 size={14}

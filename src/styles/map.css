@@ -1023,6 +1023,7 @@
   pointer-events: none;
 }
 
+.map-shell.is-picking:not(.has-point) .map-crosshair,
 .map-shell:has(> .map:focus-visible) .map-crosshair {
   display: block;
 }
@@ -1049,7 +1050,9 @@
   height: 2px;
 }
 
+/* The Enter hint is for keyboard users only. */
 .map-crosshair__hint {
+  display: none;
   position: absolute;
   top: calc(100% + 6px);
   left: 50%;
@@ -1061,4 +1064,8 @@
   font-weight: 600;
   white-space: nowrap;
   transform: translateX(-50%);
+}
+
+.map-shell:has(> .map:focus-visible) .map-crosshair__hint {
+  display: block;
 }

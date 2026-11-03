@@ -79,7 +79,7 @@ function ResolutionReviewBox({ report }: { report: Report }) {
             type="button"
             className="btn btn--quiet btn--sm"
             onClick={() => setRejecting(true)}
-            disabled={busy}
+            aria-disabled={busy || undefined}
           >
             <X size={13} aria-hidden="true" /> Odbij…
           </button>
@@ -87,7 +87,7 @@ function ResolutionReviewBox({ report }: { report: Report }) {
             type="button"
             className="btn btn--primary btn--sm"
             onClick={() => void run(() => approveReportResolution(report))}
-            disabled={busy}
+            aria-disabled={busy || undefined}
           >
             {busy ? <Spinner size={13} /> : <Check size={13} aria-hidden="true" />}
             Potvrdi sanaciju
@@ -129,7 +129,7 @@ function MarkResolvedButton({ report }: { report: Report }) {
               setConfirming(false);
             });
         }}
-        disabled={busy}
+        aria-disabled={busy || undefined}
       >
         {busy ? <Spinner size={12} /> : <Check size={12} aria-hidden="true" />}
         Da
@@ -138,7 +138,7 @@ function MarkResolvedButton({ report }: { report: Report }) {
         type="button"
         className="btn btn--quiet btn--sm"
         onClick={() => setConfirming(false)}
-        disabled={busy}
+        aria-disabled={busy || undefined}
       >
         Ne
       </button>
@@ -173,7 +173,7 @@ function EditReviewBox({ report }: { report: Report }) {
           type="button"
           className="btn btn--quiet btn--sm"
           onClick={() => void run('revert')}
-          disabled={busy !== null || !report.previousVersion}
+          aria-disabled={busy !== null || !report.previousVersion || undefined}
         >
           {busy === 'revert' ? <Spinner size={13} /> : <Undo2 size={13} aria-hidden="true" />}
           Vrati prethodnu
@@ -182,7 +182,7 @@ function EditReviewBox({ report }: { report: Report }) {
           type="button"
           className="btn btn--primary btn--sm"
           onClick={() => void run('accept')}
-          disabled={busy !== null}
+          aria-disabled={busy !== null || undefined}
         >
           {busy === 'accept' ? <Spinner size={13} /> : <Check size={13} aria-hidden="true" />}
           Prihvati izmenu
@@ -236,7 +236,7 @@ function ModerationDecisionBox({ report }: { report: Report }) {
               type="button"
               className="btn btn--quiet btn--sm"
               onClick={() => setRejecting(true)}
-              disabled={busy}
+              aria-disabled={busy || undefined}
             >
               <X size={13} aria-hidden="true" />
               {report.moderation === 'rejected' ? 'Promeni razlog' : 'Odbij…'}
@@ -245,7 +245,7 @@ function ModerationDecisionBox({ report }: { report: Report }) {
               type="button"
               className="btn btn--primary btn--sm"
               onClick={() => void run(() => approvePendingReport(report))}
-              disabled={busy}
+              aria-disabled={busy || undefined}
             >
               {busy ? <Spinner size={13} /> : <Check size={13} aria-hidden="true" />}
               Odobri i objavi
@@ -297,7 +297,7 @@ function AdminStatusBox({
           type="button"
           className="btn btn--primary btn--sm"
           onClick={onSave}
-          disabled={saving || value === currentStatus}
+          aria-disabled={saving || value === currentStatus || undefined}
         >
           {saving ? <Spinner size={14} /> : 'Sačuvaj'}
         </button>

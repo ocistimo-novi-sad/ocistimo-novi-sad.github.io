@@ -71,7 +71,7 @@ export function Lightbox({
             setIndex((value) => Math.max(value - 1, 0));
             setFailed(false);
           }}
-          disabled={index === 0}
+          aria-disabled={index === 0 || undefined}
           aria-label="Prethodna fotografija"
         >
           <ChevronLeft size={22} aria-hidden="true" />
@@ -102,7 +102,7 @@ export function Lightbox({
             setIndex((value) => Math.min(value + 1, images.length - 1));
             setFailed(false);
           }}
-          disabled={index === images.length - 1}
+          aria-disabled={index === images.length - 1 || undefined}
           aria-label="Sledeća fotografija"
         >
           <ChevronRight size={22} aria-hidden="true" />

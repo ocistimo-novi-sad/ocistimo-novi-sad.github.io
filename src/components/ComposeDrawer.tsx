@@ -17,7 +17,7 @@ import {
 } from '../config';
 import { addDemoReport } from '../demo/store';
 import { formatCoordinates } from '../lib/format';
-import { isInServiceArea } from '../lib/geo';
+import { isInServiceArea, roundCoordinate } from '../lib/geo';
 import { toSerbianError } from '../services/errors';
 import { isFirebaseConfigured } from '../services/firebase';
 import { usePhotoUploads } from '../hooks/usePhotoUploads';
@@ -26,6 +26,7 @@ import { createReportRecord } from '../services/reports';
 import { useApp } from '../state/app-context';
 import type { Category, NewReportInput, Report } from '../types';
 import { Drawer, type Snap } from './Drawer';
+import { drawerOffset } from './map/drawer-offset';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { ConfirmSheet } from './ui/ConfirmSheet';
 import { CharCount } from './ui/CharCount';
@@ -118,7 +119,7 @@ function PlanField({
               type="button"
               className={`preset-chip${used ? ' is-used' : ''}`}
               onClick={() => onChange(appendPreset(value, preset))}
-              disabled={disabled || used}
+              aria-disabled={disabled || used || undefined}
             >
               {used ? <Check size={11} aria-hidden="true" /> : <Plus size={11} aria-hidden="true" />}
               {preset}
@@ -428,6 +429,19 @@ export function ComposeDrawer() {
     });
   };
 
+  // The point under the crosshair in the middle of the visible map. Works the
+  // same with a mouse, a finger or a keyboard (WCAG 2.1.1).
+  const placeAtCentre = () => {
+    const map = mapRef.current;
+    if (!map) return;
+    const size = map.getSize();
+    const [dx, dy] = drawerOffset();
+    const centre = map.containerPointToLatLng([size.x / 2 - dx, size.y / 2 - dy]);
+    const point = { latitude: roundCoordinate(centre.lat), longitude: roundCoordinate(centre.lng) };
+    setComposeLocation(point);
+    if (!isInServiceArea(point)) notify('error', 'Izabrana tačka je izvan područja Novog Sada.');
+  };
+
   const useMyLocation = () => {
     if (locating) return;
     if (!('geolocation' in navigator)) {
@@ -693,6 +707,10 @@ export function ComposeDrawer() {
         </div>
 
         <div className="location-actions">
+          <button type="button" className="btn btn--quiet btn--sm" onClick={placeAtCentre}>
+            <Crosshair size={13} aria-hidden="true" />
+            Postavi na sredinu mape
+          </button>
           <button
             type="button"
             className="btn btn--quiet btn--sm"

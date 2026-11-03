@@ -77,7 +77,7 @@ export function DiscoveryPanel() {
               onClick={() => void reloadReports()}
               aria-label="Osveži prijave"
               title="Osveži prijave"
-              disabled={reportsPhase === 'loading'}
+              aria-disabled={reportsPhase === 'loading' || undefined}
             >
               <RefreshCw
                 size={14}

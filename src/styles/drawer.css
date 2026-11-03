@@ -1467,7 +1467,7 @@
   text-align: left;
 }
 
-.preset-chip:hover:not(:disabled) {
+.preset-chip:hover:not(:disabled, [aria-disabled='true']) {
   border-style: solid;
   border-color: var(--leaf);
   background: var(--leaf-tint);
@@ -1480,7 +1480,7 @@
   color: var(--leaf-3);
 }
 
-.preset-chip:disabled:not(.is-used) {
+.preset-chip:is(:disabled, [aria-disabled='true']):not(.is-used) {
   opacity: 0.55;
 }
 

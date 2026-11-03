@@ -194,7 +194,7 @@ export function EditsQueue() {
               type="button"
               className="link-btn"
               onClick={() => void load()}
-              disabled={loading}
+              aria-disabled={loading || undefined}
             >
               <RefreshCw size={12} aria-hidden="true" /> Osveži
             </button>
@@ -291,7 +291,7 @@ export function EditsQueue() {
                 type="button"
                 className="btn btn--quiet"
                 onClick={() => void decide('revert')}
-                disabled={busy !== null || !active.previousVersion}
+                aria-disabled={busy !== null || !active.previousVersion || undefined}
               >
                 {busy === 'revert' ? <Spinner size={14} /> : <Undo2 size={14} aria-hidden="true" />}
                 Vrati prethodnu
@@ -300,7 +300,7 @@ export function EditsQueue() {
                 type="button"
                 className="btn btn--primary"
                 onClick={() => void decide('accept')}
-                disabled={busy !== null}
+                aria-disabled={busy !== null || undefined}
               >
                 {busy === 'accept' ? <Spinner size={14} /> : <Check size={14} aria-hidden="true" />}
                 Prihvati izmenu

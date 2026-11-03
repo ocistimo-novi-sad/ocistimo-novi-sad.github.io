@@ -199,7 +199,7 @@ export function AdminPanel() {
                           type="button"
                           className="btn btn--danger btn--sm"
                           onClick={() => void cancelAction(action.id)}
-                          disabled={cancelling}
+                          aria-disabled={cancelling || undefined}
                         >
                           {cancelling ? <Spinner size={12} /> : <X size={12} aria-hidden="true" />}
                           Potvrdi
@@ -208,7 +208,7 @@ export function AdminPanel() {
                           type="button"
                           className="btn btn--quiet btn--sm"
                           onClick={() => setConfirmId(null)}
-                          disabled={cancelling}
+                          aria-disabled={cancelling || undefined}
                         >
                           Ne
                         </button>
