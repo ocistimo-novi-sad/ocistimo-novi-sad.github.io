@@ -1,0 +1,32 @@
+{
+  "id": "./",
+  "name": "Kuka i Motika",
+  "short_name": "Kuka i Motika",
+  "description": "Zajednička mapa problema i akcija čišćenja u Novom Sadu. Prijavite zapušten prostor, pronađite akciju i uključite se.",
+  "lang": "sr-Latn",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "theme_color": "#F6F4EE",
+  "background_color": "#F6F4EE",
+  "icons": [
+    {
+      "src": "brand-mark.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
