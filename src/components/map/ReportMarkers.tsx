@@ -211,7 +211,7 @@ export function ReportMarkers({
               icon={clusterIcon(count, properties)}
               zIndexOffset={200}
               eventHandlers={{
-                click: () => {
+                click: (event) => {
                   const clusterId = properties.cluster_id as number;
                   const expansionZoom = Math.min(index.getClusterExpansionZoom(clusterId), 18);
                   // Zooming in would not separate these reports, so spread them out instead.
@@ -219,6 +219,8 @@ export function ReportMarkers({
                     setSpread((current) =>
                       current?.clusterId === clusterId ? null : { clusterId, latitude, longitude },
                     );
+                    // The group's label would cover the report spread above it.
+                    event.target.closeTooltip();
                     return;
                   }
                   map.flyTo([latitude, longitude], expansionZoom, { duration: 0.5 });
