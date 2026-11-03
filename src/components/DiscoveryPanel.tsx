@@ -52,7 +52,8 @@ export function DiscoveryPanel() {
       </div>
 
       <div className="panel__scroll">
-        <ImpactSummary />
+        {/* While searching or filtering, the results come first. */}
+        {filtered ? null : <ImpactSummary />}
 
         <div className="panel__list-head">
           <NearMeButton

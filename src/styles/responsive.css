@@ -844,3 +844,23 @@
     right: calc(62px + var(--safe-r));
   }
 }
+
+/* Tablets (Material 3 medium width): the sheet stays a readable width instead
+   of stretching edge to edge. */
+@media (min-width: 641px) and (max-width: 900px) {
+  .drawer {
+    right: 0;
+    left: 0;
+    width: auto;
+    max-width: 640px;
+    margin-inline: auto;
+    border-inline: 1px solid var(--line);
+  }
+}
+
+/* The coordinate readout is decoration; below 1200px it would sit on the legend. */
+@media (max-width: 1199px) {
+  .map-readout {
+    display: none;
+  }
+}

@@ -1646,3 +1646,10 @@
 .location-note:empty {
   margin: 0;
 }
+
+/* Comfortable line length for sentences on wide panels and tablets. */
+.compose-sub,
+.form-section__intro,
+.detail-note {
+  max-width: 65ch;
+}
