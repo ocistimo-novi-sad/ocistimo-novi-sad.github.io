@@ -28,7 +28,7 @@ Osnovni tok:
 1. Građanin prijavi problem na mapi, sa opisom i fotografijama.
 2. Moderator pregleda prijavu i objavi je, ili je odbije uz razlog.
 3. Objavljena prijava je vidljiva svima na mapi.
-4. Administrator organizuje akciju čišćenja i poveže je sa prijavama.
+4. Moderator (koordinator zajednice) ili administrator organizuje akciju čišćenja i poveže je sa prijavama.
 5. Kada je problem rešen, autor pošalje fotografiju „posle“, a moderator potvrdi da je rešeno.
 
 Kroz ceo tok aplikacija šalje kratka obaveštenja e-poštom onima kojih se promena tiče.
@@ -43,8 +43,8 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 |---|---|---|
 | **Posetilac** | Bilo ko ko otvori sajt, bez prijave | Nije potrebno ništa |
 | **Član zajednice** | Korisnik prijavljen Google nalogom | Klikom na „Prijava“ i izborom Google naloga. Registracija ne postoji. |
-| **Moderator** | Član koji pregleda i uređuje prijave | Dodeljuje ga administrator u aplikaciji (Administracija → Korisnici i uloge) |
-| **Administrator** | Moderator koji uz to upravlja akcijama i ulogama | Dodeljuje ga samo vlasnik projekta, van aplikacije. Iz aplikacije se ne može dodeliti ni oduzeti. |
+| **Moderator** | Član koji pregleda i uređuje prijave i pravi akcije čišćenja (koordinator zajednice) | Dodeljuje ga administrator u aplikaciji (Administracija → Korisnici i uloge) |
+| **Administrator** | Moderator koji uz to briše akcije i upravlja ulogama | Dodeljuje ga samo vlasnik projekta, van aplikacije. Iz aplikacije se ne može dodeliti ni oduzeti. |
 
 ### 2.1 Šta koja uloga može
 
@@ -96,7 +96,7 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 | Ime, e-pošta, oznaka uloge | Svi prijavljeni (oznaka samo za moderatora/administratora) | — |
 | **Moje prijave** | Svi prijavljeni | Lista sopstvenih prijava i njihovog stanja. Crveni broj = prijave koje treba ispraviti. |
 | **Moderacija** | Moderator, administrator | Redovi za pregled: Nove prijave, Izmene, Sanacije, Označen sadržaj. Broj = ukupno stavki koje čekaju. |
-| **Administracija** | Administrator | Akcije čišćenja; Korisnici i uloge |
+| **Administracija** (moderatoru: „Akcije čišćenja“) | Moderator, administrator | Akcije čišćenja; Korisnici i uloge (samo administrator) |
 | **Odjava** | Svi prijavljeni | Odjava sa naloga |
 
 Na avataru se pojavljuje **crvena tačka** kada nešto čeka korisnika: odbijena prijava ili odbijen dokaz sanacije koji treba ispraviti, a za moderatore i stavke u redovima moderacije.
@@ -191,7 +191,7 @@ Kada je prijava rešena uz dokaz, u detaljima se prikazuje poređenje **„Pre i
 
 Akcija sa statusom „Planirano“ ili „U toku“ prelazi u „Završene“ i kada prođe više od 4 sata od zakazanog vremena, čak i ako joj administrator nije promenio status.
 
-Akcije menja samo administrator; status može da postavi na bilo koju vrednost u formi za uređivanje.
+Akcije menjaju moderatori i administratori; status može da se postavi na bilo koju vrednost u formi za uređivanje.
 
 ---
 
@@ -426,7 +426,7 @@ Moderator ima sve što i član zajednice, plus stavku **Moderacija** u meniju na
 
 ## 9. Slučajevi korišćenja — administrator
 
-Administrator ima sva prava moderatora, plus stavku **Administracija** u meniju naloga (tabovi „Akcije čišćenja“ i „Korisnici i uloge“) i dugme za upravljanje akcijama u prikazu Akcije.
+Administrator ima sva prava moderatora, plus tab „Korisnici i uloge“ u stavci **Administracija** u meniju naloga. Kreiranje, uređivanje i otkazivanje akcija (UC-21 do UC-23) mogu i moderatori: njima se ista stavka zove „Akcije čišćenja“, a dugme za upravljanje akcijama vide u prikazu Akcije.
 
 ### UC-21 Kreiranje akcije čišćenja
 

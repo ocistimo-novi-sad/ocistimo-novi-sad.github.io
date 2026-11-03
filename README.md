@@ -138,6 +138,8 @@ Administratori u panelu „Administracija“ mogu da:
 - pregledaju označen sadržaj i odbace ga ili zatvore kao rešen;
 - kreiraju, uređuju i otkazuju akcije čišćenja i povezuju ih sa prijavama.
 
+Akcije čišćenja mogu da kreiraju, uređuju i otkazuju i moderatori (koordinatori zajednica). Njima se isti panel u meniju naloga zove „Akcije čišćenja“ i nema deo „Korisnici i uloge“.
+
 Time se smanjuje mogućnost da neprimeren sadržaj ili netačne prijave ostanu bez reakcije. Ova pravila nisu samo u interfejsu — sprovode ih Firestore Security Rules (vidi [Bezbednost i pravila pristupa](#bezbednost-i-pravila-pristupa)).
 
 ### Obaveštenja e-poštom

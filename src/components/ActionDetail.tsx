@@ -245,7 +245,7 @@ export function ActionDetail() {
         )}
       </section>
 
-      {auth.isAdmin && action.source === 'firestore' ? (
+      {auth.isModerator && action.source === 'firestore' ? (
         <div className="admin-box">
           <p className="admin-box__title">
             <ShieldCheck size={14} aria-hidden="true" />

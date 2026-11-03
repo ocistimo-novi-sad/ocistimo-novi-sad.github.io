@@ -355,13 +355,14 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------------------------
-    // Cleanup actions: public read, admins create/edit/cancel. updatedBy names
-    // the admin behind every write, so they are left out of its e-mails.
+    // Cleanup actions: public read; moderators (community coordinators) and
+    // admins create/edit/cancel; only admins delete. updatedBy names whoever
+    // made each write, so they are left out of its e-mails.
     // ---------------------------------------------------------------------
     match /actions/{actionId} {
       allow read: if true;
 
-      allow create: if isAdmin()
+      allow create: if isModerator()
         && request.resource.data.keys().hasOnly([
              'title', 'description', 'date', 'meetingPoint', 'latitude',
              'longitude', 'status', 'reportIds', 'supplies',
@@ -373,7 +374,7 @@ service cloud.firestore {
         && request.resource.data.createdBy == request.auth.uid
         && request.resource.data.updatedBy == request.auth.uid;
 
-      allow update: if isAdmin()
+      allow update: if isModerator()
         && request.resource.data.createdAt == resource.data.createdAt
         && request.resource.data.createdBy == resource.data.createdBy
         && request.resource.data.updatedBy == request.auth.uid
