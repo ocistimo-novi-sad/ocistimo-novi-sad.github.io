@@ -31,8 +31,6 @@ export const isFirebaseConfigured = Boolean(
     firebaseConfig.appId,
 );
 
-export const firebaseProjectId = firebaseConfig.projectId || null;
-
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;
 let auth: Auth | null = null;

@@ -176,7 +176,7 @@ export const COMMUNITY_CAN_PRESETS = [
 
 export const HELP_NEEDED_PRESETS = [
   'Odvoz krupnog otpada',
-  'Alat i materijal (džakovi, rukavice, boja)',
+  'Alat i materijal (džakovi, rukavice, boja, merdevine)',
   'Nadležna služba ili JKP',
   'Više volontera',
 ];
