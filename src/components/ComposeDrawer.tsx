@@ -788,8 +788,8 @@ export function ComposeDrawer() {
           <h3 id="compose-plan-label">Kako možemo da rešimo</h3>
         </div>
         <p className="form-section__intro">
-          Pojedinci prijavljuju, a Zbor zajedno rešava. Napišite šta komšije mogu same, a gde je
-          potrebna pomoć sa strane.
+          Pojedinci prijavljuju, a zajednica zajedno rešava. Napišite šta komšije mogu same, a gde
+          je potrebna pomoć sa strane.
         </p>
 
         <PlanField
@@ -870,11 +870,11 @@ export function ComposeDrawer() {
       </section>
 
       <div className="compose-review">
-        <p className="eyebrow">Pre objave</p>
+        <p className="eyebrow">Napomena</p>
         <p>
           {isFirebaseConfigured
-            ? 'Moderator pregleda prijavu i objavljuje je na javnoj mapi. Ako nešto treba ispraviti, dobićete razlog. Posle objave Zbor može da je poveže sa akcijom čišćenja.'
-            : 'Prijava se prikazuje na mapi. U pravoj bazi moderator je prvo pregleda, a Zbor može da je poveže sa akcijom čišćenja.'}
+            ? 'Moderator pregleda prijavu i objavljuje je na javnoj mapi. Ako nešto treba ispraviti, dobićete razlog. Posle objave, član zajednice može da je poveže sa akcijom čišćenja.'
+            : 'Prijava se prikazuje na mapi. U pravoj bazi moderator je prvo pregleda, a član zajednice može da je poveže sa akcijom čišćenja.'}
         </p>
       </div>
     </Drawer>
