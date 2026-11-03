@@ -115,7 +115,7 @@ fieldset {
 
 .eyebrow {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.11em;
   line-height: 1.3;
@@ -277,9 +277,10 @@ fieldset {
 .link-btn {
   display: inline-flex;
   align-items: center;
+  min-height: 24px;
   gap: 4px;
   color: var(--forest);
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 500;
   text-decoration: underline;
   text-decoration-thickness: 1px;
@@ -374,7 +375,7 @@ fieldset {
 .field label,
 .field__label {
   color: var(--ink-2);
-  font-size: 12px;
+  font-size: 13.5px;
   font-weight: 600;
   letter-spacing: 0.005em;
 }
@@ -383,7 +384,7 @@ fieldset {
   margin-left: 4px;
   color: var(--muted-2);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 400;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -392,20 +393,20 @@ fieldset {
 .field__counter {
   color: var(--muted-2);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   white-space: nowrap;
 }
 
 .field__hint {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12.5px;
   line-height: 1.45;
 }
 
 .field__error {
   color: var(--alert);
-  font-size: 11.5px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   line-height: 1.4;
 }
 
@@ -529,7 +530,7 @@ fieldset {
   border-radius: var(--radius-pill);
   background: var(--cat-tint);
   color: var(--cat);
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.01em;
   white-space: nowrap;
@@ -577,7 +578,7 @@ fieldset {
   border-radius: var(--radius-pill);
   background: var(--surface-2);
   color: var(--ink-2);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
 }
@@ -626,7 +627,7 @@ fieldset {
   padding: 2px 8px;
   border: 1px solid;
   border-radius: var(--radius-pill);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
 }
@@ -659,7 +660,7 @@ fieldset {
 .status-badge.is-compact {
   padding: 1px 5px;
   gap: 4px;
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .action-status {
@@ -669,7 +670,7 @@ fieldset {
   border: 1px solid;
   border-radius: var(--radius-pill);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -776,7 +777,7 @@ label.popover__row:hover {
 .empty-state__text {
   max-width: 290px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   line-height: 1.55;
 }
 
@@ -788,7 +789,7 @@ label.popover__row:hover {
   margin-bottom: 7px;
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.13em;
   text-transform: uppercase;

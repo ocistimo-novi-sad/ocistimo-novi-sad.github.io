@@ -65,6 +65,16 @@ export function Drawer({
     setSnap('normal');
   }, [collapseSignal]);
 
+  // Focus moves into the panel when it opens and back when it closes (WAI-ARIA
+  // dialog pattern), so keyboard and screen reader users notice it.
+  useEffect(() => {
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    drawerRef.current?.focus({ preventScroll: true });
+    return () => {
+      if (opener?.isConnected) opener.focus({ preventScroll: true });
+    };
+  }, []);
+
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
@@ -157,6 +167,7 @@ export function Drawer({
       className={`drawer${SNAP_CLASS[snap]}${className ? ` ${className}` : ''}`}
       role="dialog"
       aria-label={label}
+      tabIndex={-1}
     >
       {isMobile ? (
         <button
