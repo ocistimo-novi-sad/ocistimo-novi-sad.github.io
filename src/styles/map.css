@@ -142,39 +142,11 @@
   gap: 6px;
 }
 
-.map-mobile-bar .segmented {
+.map-mobile-bar .segmented,
+.map-mobile-bar .search-field,
+.map-mobile-bar .filters-btn {
   background: var(--surface);
   box-shadow: var(--shadow-2);
-}
-
-.map-mobile-search {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  width: 100%;
-  height: 38px;
-  padding: 0 12px;
-  border: 1px solid rgba(28, 34, 30, 0.1);
-  border-radius: var(--radius-pill);
-  background: var(--surface);
-  box-shadow: var(--shadow-2);
-  color: var(--muted);
-  font-size: 12px;
-  text-align: left;
-}
-
-.map-mobile-search svg {
-  color: var(--muted-2);
-}
-
-.map-mobile-search__count {
-  margin-left: auto;
-  padding: 1px 7px;
-  border-radius: var(--radius-pill);
-  background: var(--leaf-tint);
-  color: var(--leaf-3);
-  font-family: var(--font-mono);
-  font-size: 10px;
 }
 
 /* --- Picking mode banner ------------------------------------------------- */

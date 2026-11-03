@@ -135,10 +135,6 @@ fieldset {
   border: 0;
 }
 
-.mobile-only {
-  display: none !important;
-}
-
 .spinner {
   animation: spin 0.8s linear infinite;
 }
@@ -703,25 +699,7 @@ fieldset {
   background: var(--surface-2);
 }
 
-/* --- Popover ------------------------------------------------------------- */
-
-.popover {
-  position: relative;
-}
-
-.popover__panel {
-  position: absolute;
-  top: calc(100% + 5px);
-  left: 0;
-  z-index: 700;
-  width: 210px;
-  padding: 5px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  box-shadow: var(--shadow-3);
-  animation: pop-in 0.14s var(--ease);
-}
+/* --- Pop-in animation and option rows (filters sheet) -------------------- */
 
 @keyframes pop-in {
   from {
@@ -732,15 +710,6 @@ fieldset {
     opacity: 1;
     transform: none;
   }
-}
-
-.popover__title {
-  padding: 6px 7px 5px;
-  color: var(--muted-2);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 
 .popover__row {
@@ -771,13 +740,6 @@ label.popover__row:hover {
   height: 13px;
   margin: 0;
   accent-color: var(--forest);
-}
-
-.popover__check {
-  width: 13px;
-  color: var(--forest);
-  font-size: 11px;
-  text-align: center;
 }
 
 /* --- States -------------------------------------------------------------- */

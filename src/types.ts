@@ -172,6 +172,8 @@ export interface Filters {
 /** What the map and the list show; independent of map-or-list on mobile. */
 export type Layer = 'reports' | 'actions';
 
+export type ActionScope = 'upcoming' | 'past';
+
 export interface StoredImage {
   /** Public URL of the full image; the thumbnail is derived from it. */
   url: string;

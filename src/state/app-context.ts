@@ -3,6 +3,7 @@ import type { Map as LeafletMap } from 'leaflet';
 import type { useAuth } from '../hooks/useAuth';
 import type { DataPhase } from '../hooks/useReports';
 import type {
+  ActionScope,
   Category,
   CleanupAction,
   Coordinates,
@@ -50,6 +51,15 @@ export interface AppContextValue {
   actionsPhase: DataPhase;
   actionsError: string | null;
   reloadActions: () => Promise<void>;
+  /** Actions matching the search, split by period; the map and the list share them. */
+  upcomingActions: CleanupAction[];
+  pastActions: CleanupAction[];
+  /** The period the list and the map show. */
+  filteredActions: CleanupAction[];
+  actionScope: ActionScope;
+  setActionScope: (scope: ActionScope) => void;
+  actionQuery: string;
+  setActionQuery: (query: string) => void;
 
   filters: Filters;
   updateFilters: (patch: Partial<Filters>) => void;

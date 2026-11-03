@@ -12,17 +12,7 @@ export function Header() {
     <header className="app-header">
       <Brand />
 
-      {/* Reports vs. actions is the layer switch above the list and the map. */}
-      <nav className="app-nav" aria-label="Glavna navigacija">
-        <button
-          type="button"
-          className="nav-link"
-          onClick={() => openModal({ kind: 'info' })}
-        >
-          O projektu
-        </button>
-      </nav>
-
+      {/* No nav: reports vs. actions is the layer switch above the list and the map. */}
       <div className="app-header__actions">
         {!isFirebaseConfigured ? (
           <button
@@ -37,9 +27,10 @@ export function Header() {
 
         <button
           type="button"
-          className="btn btn--icon btn--quiet mobile-only"
+          className="btn btn--icon btn--quiet"
           onClick={() => openModal({ kind: 'info' })}
           aria-label="O projektu"
+          title="O projektu"
         >
           <Info size={16} aria-hidden="true" />
         </button>

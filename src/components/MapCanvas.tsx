@@ -32,6 +32,7 @@ import { formatCoordinates } from '../lib/format';
 import { isInServiceArea, roundCoordinate } from '../lib/geo';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { Spinner } from './ui/EmptyState';
+import { FiltersButton, SearchInput } from './FiltersBar';
 import { LayerSwitch } from './LayerSwitch';
 import { DraftMarkers, ReportMarkers } from './map/ReportMarkers';
 import { ActionMarkers } from './map/ActionMarkers';
@@ -103,6 +104,9 @@ export function MapCanvas() {
     reports,
     myUnpublishedReports,
     actions,
+    filteredActions,
+    actionQuery,
+    setActionQuery,
     layer,
     reportsPhase,
     reportsError,
@@ -120,7 +124,6 @@ export function MapCanvas() {
     composeLocation,
     setComposeLocation,
     startCompose,
-    setMobileTab,
     mapRef,
     notify,
     userPosition,
@@ -192,11 +195,11 @@ export function MapCanvas() {
     updateFilters({ viewportOnly: true, bounds });
   };
 
-  const activeFilterCount =
-    filters.categories.length +
-    filters.statuses.length +
-    (filters.query.trim() ? 1 : 0) +
-    (filters.viewportOnly ? 1 : 0);
+  // The open action keeps its pin even when the search or period hides it.
+  const visibleActions =
+    selectedAction && !filteredActions.includes(selectedAction)
+      ? [...filteredActions, selectedAction]
+      : filteredActions;
 
   const noReports = reportsPhase === 'ready' && reports.length === 0;
   const noResults =
@@ -268,7 +271,7 @@ export function MapCanvas() {
               />
             ) : null}
             <ActionMarkers
-              actions={actions}
+              actions={visibleActions}
               selectedActionId={selectedAction?.id ?? null}
               onSelect={(action) => selectAction(action)}
             />
@@ -302,19 +305,24 @@ export function MapCanvas() {
       {isMobile && !composeOpen ? (
         <div className="map-mobile-bar">
           <LayerSwitch />
-          {layer === 'reports' ? (
-            <button
-              type="button"
-              className="map-mobile-search"
-              onClick={() => setMobileTab('list')}
-            >
-              <Search size={15} aria-hidden="true" />
-              <span>Pretraži prijave</span>
-              {activeFilterCount > 0 ? (
-                <span className="map-mobile-search__count">{activeFilterCount}</span>
-              ) : null}
-            </button>
-          ) : null}
+          <div className="filters__row">
+            {layer === 'reports' ? (
+              <SearchInput
+                value={filters.query}
+                onChange={(query) => updateFilters({ query })}
+                placeholder="Pretraži prijave"
+                label="Pretraga prijava"
+              />
+            ) : (
+              <SearchInput
+                value={actionQuery}
+                onChange={setActionQuery}
+                placeholder="Pretraži akcije"
+                label="Pretraga akcija"
+              />
+            )}
+            <FiltersButton />
+          </div>
         </div>
       ) : null}
 

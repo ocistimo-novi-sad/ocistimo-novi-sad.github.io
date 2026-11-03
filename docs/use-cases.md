@@ -82,7 +82,7 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 
 | Element | Šta radi |
 |---|---|
-| **O projektu** | Kratko objašnjenje projekta, kako se koristi i napomena o privatnosti (na telefonu ikonica ⓘ) |
+| **O projektu** (ikonica ⓘ) | Kratko objašnjenje projekta, kako se koristi i napomena o privatnosti |
 | **Demo** (oznaka) | Vidi se samo u demo režimu; otvara objašnjenje |
 | **Prijavi problem** | Samo na računaru. Otvara formu za novu prijavu (traži prijavu nalogom ako korisnik nije prijavljen). Na telefonu je ovo dugme u donjoj traci. |
 | **Prijava** / avatar | Neprijavljenom: dugme „Prijava“. Prijavljenom: avatar koji otvara meni naloga |
@@ -211,13 +211,13 @@ Akcije menja samo administrator; status može da postavi na bilo koju vrednost u
 ### UC-02 Pretraga, filtriranje i sortiranje
 
 - **Akter:** svako
-- **Gde:** lista prijava
+- **Gde:** lista prijava; na telefonu i iznad mape. Pretraga i filteri važe istovremeno za mapu i za listu.
 - **Tok:**
   1. Unos teksta u pretragu (prečica `/`). Traži se po naslovu, opisu, adresi, kategoriji i statusu, bez obzira na kvačice (č, ć, š, ž, đ).
-  2. Filter po jednoj ili više kategorija i statusa.
-  3. Sortiranje: najnovije, najstarije, najbliže (zahteva „Moja lokacija“), po statusu.
-  4. „Samo ova oblast“ na mapi (ili ikonica u filterima) ograničava listu na trenutno vidljivi deo mape.
-  5. „Očisti“ uklanja sve filtere.
+  2. Kategorije su čipovi ispod pretrage (na telefonu jedan red koji se prevlači vodoravno).
+  3. Dugme **Filteri** (broj = koliko je filtera uključeno) otvara panel sa kategorijama, statusima, sortiranjem (najnovije, najstarije, najbliže — zahteva „Moja lokacija“, po statusu) i opcijom „Samo prijave na vidljivom delu mape“. „Očisti“ u panelu uklanja te filtere, a pretraga ostaje.
+  4. Na računaru, „Samo ova oblast“ na mapi radi isto što i opcija u panelu.
+  5. „Očisti“ pored broja rezultata u listi uklanja sve, uključujući i pretragu.
 
 ### UC-03 Detalji prijave i deljenje
 
@@ -232,9 +232,10 @@ Akcije menja samo administrator; status može da postavi na bilo koju vrednost u
 - **Akter:** svako
 - **Gde:** prekidač **Prijave | Akcije** → Akcije (lista i mapa)
 - **Tok:**
-  1. Lista je podeljena na **Predstojeće** i **Završene**.
-  2. Klik na akciju otvara detalje i prikazuje mesto okupljanja na mapi.
-  3. Detalji: naslovna fotografija, datum i vreme, opis, mesto okupljanja, organizator i napomena, šta poneti, povezane prijave (klik vodi na prijavu), a za završene i fotografije sa akcije.
+  1. Lista je podeljena na **Predstojeće** i **Završene**. Mapa prikazuje isti period kao lista (na telefonu se bira u panelu **Filteri**).
+  2. Pretraga po nazivu, opisu, mestu okupljanja i organizatoru sužava i listu i mapu.
+  3. Klik na akciju otvara detalje i prikazuje mesto okupljanja na mapi.
+  4. Detalji: naslovna fotografija, datum i vreme, opis, mesto okupljanja, organizator i napomena, šta poneti, povezane prijave (klik vodi na prijavu), a za završene i fotografije sa akcije.
 
 ### UC-05 Prijava Google nalogom
 

@@ -1,10 +1,10 @@
-import { useState } from 'react';
 import {
   CalendarPlus,
   HandHeart,
   MapPin,
   Plus,
   RefreshCw,
+  Search,
   TriangleAlert,
 } from 'lucide-react';
 import { ACTION_STATUS_MAP } from '../config';
@@ -12,6 +12,7 @@ import { formatDate, formatTime, formatWeekday, plural, splitDate } from '../lib
 import { optimizedImageUrl } from '../services/images';
 import { useApp } from '../state/app-context';
 import type { CleanupAction } from '../types';
+import { SearchInput } from './FiltersBar';
 import { LayerSwitch } from './LayerSwitch';
 import { EmptyState } from './ui/EmptyState';
 
@@ -79,57 +80,31 @@ export function ActionsPanel() {
     auth,
     openModal,
     setLayer,
+    upcomingActions: upcoming,
+    pastActions: past,
+    filteredActions: list,
+    actionScope: scope,
+    setActionScope: setScope,
+    actionQuery,
+    setActionQuery,
   } = useApp();
-  const [scope, setScope] = useState<'upcoming' | 'past'>('upcoming');
-
-  const cutoff = Date.now() - 4 * 3_600_000;
-  const upcoming = actions
-    .filter(
-      (action) =>
-        (action.status === 'planned' || action.status === 'in_progress') &&
-        action.date.getTime() >= cutoff,
-    )
-    .sort((a, b) => a.date.getTime() - b.date.getTime());
-  const past = actions
-    .filter(
-      (action) =>
-        !(
-          (action.status === 'planned' || action.status === 'in_progress') &&
-          action.date.getTime() >= cutoff
-        ),
-    )
-    .sort((a, b) => b.date.getTime() - a.date.getTime());
-
-  const list = scope === 'upcoming' ? upcoming : past;
 
   return (
     <section className="panel panel--actions" aria-label="Akcije čišćenja">
       <div className="panel__head">
         <LayerSwitch />
 
-        <div className="panel__eyebrow-row">
-          <span className="eyebrow">Novi Sad · Akcije</span>
-          <span className="panel__count">{actions.length}</span>
-          <button
-            type="button"
-            className="icon-btn icon-btn--ghost"
-            onClick={() => void reloadActions()}
-            aria-label="Osveži akcije"
-            title="Osveži akcije"
-            disabled={actionsPhase === 'loading'}
-          >
-            <RefreshCw
-              size={14}
-              aria-hidden="true"
-              className={actionsPhase === 'loading' ? 'spinner' : undefined}
-            />
-          </button>
-        </div>
-
         <p className="panel__intro">
           Zajednička čišćenja povezuju prijave sa iste lokacije. Otvorite akciju da vidite gde se
           okupljamo i šta je potrebno poneti.
         </p>
+
+        <SearchInput
+          value={actionQuery}
+          onChange={setActionQuery}
+          placeholder="Pretraži akcije ili mesto okupljanja"
+          label="Pretraga akcija"
+        />
 
         <div className="segmented" role="tablist" aria-label="Period akcija">
           <button
@@ -166,6 +141,29 @@ export function ActionsPanel() {
       </div>
 
       <div className="panel__scroll">
+        <div className="panel__list-head">
+          <span className="eyebrow">{scope === 'upcoming' ? 'Predstojeće' : 'Završene'}</span>
+          <span className="panel__list-tools">
+            <span className="panel__list-count">
+              {list.length} {plural(list.length, 'akcija', 'akcije', 'akcija')}
+            </span>
+            <button
+              type="button"
+              className="icon-btn icon-btn--ghost"
+              onClick={() => void reloadActions()}
+              aria-label="Osveži akcije"
+              title="Osveži akcije"
+              disabled={actionsPhase === 'loading'}
+            >
+              <RefreshCw
+                size={14}
+                aria-hidden="true"
+                className={actionsPhase === 'loading' ? 'spinner' : undefined}
+              />
+            </button>
+          </span>
+        </div>
+
         {actionsPhase === 'loading' && actions.length === 0 ? (
           <div className="list-skeleton" aria-hidden="true">
             {[0, 1, 2].map((index) => (
@@ -198,7 +196,24 @@ export function ActionsPanel() {
           />
         ) : null}
 
-        {actionsPhase === 'ready' && list.length === 0 ? (
+        {actionsPhase === 'ready' && list.length === 0 && actionQuery.trim() ? (
+          <EmptyState
+            icon={<Search size={20} />}
+            title="Nema akcija za ovu pretragu"
+            description="Pokušajte drugi naziv ili mesto okupljanja."
+            action={
+              <button
+                type="button"
+                className="btn btn--quiet btn--sm"
+                onClick={() => setActionQuery('')}
+              >
+                Obriši pretragu
+              </button>
+            }
+          />
+        ) : null}
+
+        {actionsPhase === 'ready' && list.length === 0 && !actionQuery.trim() ? (
           <EmptyState
             icon={scope === 'upcoming' ? <HandHeart size={20} /> : <CalendarPlus size={20} />}
             title={scope === 'upcoming' ? 'Nema planiranih akcija' : 'Još nema završenih akcija'}

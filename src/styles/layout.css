@@ -58,50 +58,6 @@
   text-transform: uppercase;
 }
 
-.app-nav {
-  display: flex;
-  align-self: stretch;
-  gap: 2px;
-  margin-left: 6px;
-}
-
-.nav-link {
-  position: relative;
-  height: 100%;
-  padding: 0 12px;
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.005em;
-  transition: color 0.14s var(--ease);
-}
-
-.nav-link::after {
-  position: absolute;
-  right: 12px;
-  bottom: -1px;
-  left: 12px;
-  height: 3px;
-  border-radius: 3px 3px 0 0;
-  background: var(--leaf);
-  content: '';
-  transform: scaleX(0);
-  transition: transform 0.22s var(--ease);
-}
-
-.nav-link:hover {
-  color: var(--ink);
-}
-
-.nav-link.is-active {
-  color: var(--ink);
-  font-weight: 600;
-}
-
-.nav-link.is-active::after {
-  transform: scaleX(1);
-}
-
 .app-header__actions {
   display: flex;
   align-items: center;
@@ -328,27 +284,6 @@
   border-bottom: 1px solid var(--line);
 }
 
-.panel__eyebrow-row {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.panel__eyebrow-row .icon-btn {
-  margin-left: auto;
-}
-
-.panel__count {
-  padding: 1px 7px;
-  border-radius: var(--radius-pill);
-  background: var(--forest-tint);
-  color: var(--forest);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.03em;
-}
-
 .panel__scroll {
   flex: 1 1 auto;
   min-height: 0;
@@ -368,6 +303,12 @@
   color: var(--muted-2);
   font-family: var(--font-mono);
   font-size: 10px;
+}
+
+.panel__list-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .panel__scroll-pad {
@@ -651,42 +592,119 @@ button.impact-stat:hover {
   color: var(--ink);
 }
 
+.filters__row {
+  display: flex;
+  gap: 6px;
+}
+
+.filters__row .search-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.filters-btn {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.filters-btn:hover {
+  background: var(--surface);
+}
+
+.filters-btn.is-active {
+  border-color: var(--leaf-line);
+  background: var(--leaf-tint);
+  color: var(--leaf-3);
+}
+
+.filters-btn__count {
+  min-width: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: var(--leaf-2);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.6;
+  text-align: center;
+}
+
 .category-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.filter-tools {
+/* On mobile the list keeps one swipeable row; a mouse can't swipe, so the
+   desktop panel wraps the chips instead. */
+@media (max-width: 900px) {
+  .category-chips--scroll {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .category-chips--scroll::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.filter-sheet {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.filter-sheet__section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.filter-sheet__section .popover__row {
+  min-height: 36px;
+  font-size: 13px;
+}
+
+.filter-sheet__section .select-field {
+  align-self: stretch;
+  height: 38px;
+}
+
+.filter-sheet__section .select-field select {
+  flex: 1;
+  font-size: 13px;
+}
+
+.filter-sheet__rows {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+}
+
+/* Six statuses in two columns keep the sheet short enough to skip scrolling. */
+.filter-sheet__rows--grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.filter-sheet__foot {
+  display: flex;
   align-items: center;
-  gap: 6px;
-}
-
-.filter-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 30px;
-  padding: 0 9px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--ink-2);
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.filter-btn:hover {
-  border-color: var(--line-strong);
-  background: var(--surface-2);
-}
-
-.filter-btn.is-active {
-  border-color: var(--leaf-line);
-  background: var(--leaf-tint);
-  color: var(--leaf-3);
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
 }
 
 .select-field {
@@ -706,7 +724,9 @@ button.impact-stat:hover {
   color: var(--muted);
 }
 
+/* The chevron is our own icon (or background), never the browser's. */
 .select-field select {
+  appearance: none;
   width: auto;
   height: 100%;
   padding: 0 2px;

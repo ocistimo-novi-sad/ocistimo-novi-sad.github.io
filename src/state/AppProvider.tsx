@@ -44,6 +44,7 @@ import {
   type ToastTone,
 } from './app-context';
 import type {
+  ActionScope,
   Category,
   CleanupAction,
   Coordinates,
@@ -117,6 +118,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const [layer, setLayerState] = useState<Layer>('reports');
   const [mobileTab, setMobileTabState] = useState<MobileTab>('map');
+  const [actionScope, setActionScope] = useState<ActionScope>('upcoming');
+  const [actionQuery, setActionQuery] = useState('');
   const [filters, setFilters] = useState<Filters>(() => ({
     ...DEFAULT_FILTERS,
     categories: [],
@@ -279,6 +282,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     return list;
   }, [reports, filters, userPosition]);
+
+  const { upcomingActions, pastActions } = useMemo(() => {
+    // An action stays "upcoming" until 4 hours after its start.
+    const cutoff = Date.now() - 4 * 3_600_000;
+    const query = fold(actionQuery.trim());
+    const isUpcoming = (action: CleanupAction) =>
+      (action.status === 'planned' || action.status === 'in_progress') &&
+      action.date.getTime() >= cutoff;
+    const matching = query
+      ? actions.filter((action) =>
+          fold(
+            [action.title, action.description, action.meetingPoint, action.organizerName].join(
+              ' ',
+            ),
+          ).includes(query),
+        )
+      : actions;
+    return {
+      upcomingActions: matching
+        .filter(isUpcoming)
+        .sort((a, b) => a.date.getTime() - b.date.getTime()),
+      pastActions: matching
+        .filter((action) => !isUpcoming(action))
+        .sort((a, b) => b.date.getTime() - a.date.getTime()),
+    };
+  }, [actions, actionQuery]);
+  const filteredActions = actionScope === 'upcoming' ? upcomingActions : pastActions;
 
   const updateFilters = useCallback((patch: Partial<Filters>) => {
     setFilters((current) => {
@@ -929,6 +959,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       actionsPhase,
       actionsError,
       reloadActions,
+      upcomingActions,
+      pastActions,
+      filteredActions,
+      actionScope,
+      setActionScope,
+      actionQuery,
+      setActionQuery,
       filters,
       updateFilters,
       toggleCategory,
@@ -1001,6 +1038,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       actionsPhase,
       actionsError,
       reloadActions,
+      upcomingActions,
+      pastActions,
+      filteredActions,
+      actionScope,
+      actionQuery,
       filters,
       updateFilters,
       toggleCategory,

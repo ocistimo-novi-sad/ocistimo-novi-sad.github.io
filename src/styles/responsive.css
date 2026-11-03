@@ -4,10 +4,6 @@
   :root {
     --panel-w: 344px;
   }
-
-  .app-nav {
-    margin-left: 0;
-  }
 }
 
 @media (max-width: 1024px) {
@@ -17,14 +13,6 @@
 
   .app-header {
     gap: 12px;
-  }
-
-  .nav-link {
-    padding: 0 9px;
-  }
-
-  .brand__city {
-    display: none;
   }
 }
 
@@ -45,14 +33,6 @@
     gap: 6px;
   }
 
-  .app-nav {
-    display: none;
-  }
-
-  .mobile-only {
-    display: inline-flex !important;
-  }
-
   .brand__text {
     gap: 0;
   }
@@ -62,9 +42,7 @@
     letter-spacing: 0.1em;
   }
 
-  /* The nav is hidden on mobile, so there is room for the city line again */
   .brand__city {
-    display: block;
     margin-top: 3px;
     font-size: 7.5px;
   }
@@ -138,11 +116,6 @@
     top: 10px;
     right: 58px;
     left: 10px;
-  }
-
-  .map-mobile-search {
-    height: 38px;
-    font-size: 12.5px;
   }
 
   .map-area-toggle,
@@ -293,13 +266,11 @@
     font-size: 12px;
   }
 
-  .filter-btn,
   .select-field {
     height: 32px;
     font-size: 12px;
   }
 
-  .filter-btn,
   .select-field select {
     font-size: 12px;
   }
