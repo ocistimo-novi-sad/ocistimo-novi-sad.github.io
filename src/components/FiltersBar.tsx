@@ -11,7 +11,7 @@ import {
 import { focusableIn } from '../hooks/useModalFocus';
 import { useApp } from '../state/app-context';
 import { CategoryGlyph } from './ui/CategoryGlyph';
-import { StatusDot } from './ui/StatusBadge';
+import { StatusShape } from './ui/StatusShape';
 import { Modal } from './modals/Modal';
 
 /** One placeholder per layer, shared by the list and the map; short enough for a phone. */
@@ -133,7 +133,7 @@ function ReportFilterOptions() {
                   checked={checked}
                   onChange={() => toggleStatus(status.id)}
                 />
-                <StatusDot status={status.id} />
+                <StatusShape status={status.id} />
                 <span>{status.label}</span>
               </label>
             );

@@ -21,7 +21,7 @@ export function FlagDialog({ reportId }: { reportId: string }) {
     setError(null);
     try {
       await createFlag(reportId, reason, note.trim());
-      notify('success', 'Prijava sadržaja je poslata administratorima.');
+      notify('success', 'Prijava sadržaja je poslata moderatorima.');
       closeModal();
     } catch (flagError) {
       setError(
@@ -38,7 +38,7 @@ export function FlagDialog({ reportId }: { reportId: string }) {
   return (
     <Modal
       title="Prijavi sadržaj"
-      description="Administratori pregledaju prijavu i mogu da uklone ili isprave sadržaj."
+      description="Moderatori pregledaju prijavu i mogu da uklone ili isprave sadržaj."
       size="sm"
       onClose={closeModal}
       footer={

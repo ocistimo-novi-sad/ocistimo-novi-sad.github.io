@@ -55,7 +55,7 @@ export function LocationPicker({
         <SizeFix />
       </MapContainer>
       <p className="picker-map__hint">
-        Klikni na mapu da postaviš mesto okupljanja. Podaci:{' '}
+        Izaberi tačku na mapi za mesto okupljanja. Podaci:{' '}
         <a
           href="https://www.openstreetmap.org/copyright"
           target="_blank"

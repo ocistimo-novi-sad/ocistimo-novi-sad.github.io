@@ -1641,3 +1641,8 @@
 .progress li.is-rejected::before {
   background: var(--alert-line);
 }
+
+/* Always in the page, so screen readers hear it when text appears; no gap while empty. */
+.location-note:empty {
+  margin: 0;
+}

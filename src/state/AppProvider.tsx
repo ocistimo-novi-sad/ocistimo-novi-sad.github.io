@@ -58,6 +58,7 @@ import type {
 } from '../types';
 import { drawerOffset } from '../components/map/drawer-offset';
 import type { Snap } from '../components/Drawer';
+import { prefersReducedMotion } from '../lib/motion';
 
 type PendingIntent = { kind: 'create' } | { kind: 'flag'; reportId: string };
 
@@ -191,16 +192,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const notify = useCallback((tone: ToastTone, message: string) => {
-    toastCounter.current += 1;
-    const id = `toast-${toastCounter.current}`;
-    setToasts((current) => [...current.slice(-2), { id, tone, message }]);
+  // Errors stay until closed. The rest go after 8 s, and wait while the pointer
+  // or keyboard focus is on them, so nobody is rushed (WCAG 2.2.1).
+  const toastsPaused = useRef(false);
+  const toastsRef = useRef(toasts);
+  toastsRef.current = toasts;
+  const startToastTimer = useCallback((id: string, ms: number) => {
     const timer = window.setTimeout(() => {
       setToasts((current) => current.filter((toast) => toast.id !== id));
       toastTimers.current.delete(id);
-    }, 5500);
+    }, ms);
     toastTimers.current.set(id, timer);
   }, []);
+
+  const notify = useCallback(
+    (tone: ToastTone, message: string) => {
+      toastCounter.current += 1;
+      const id = `toast-${toastCounter.current}`;
+      setToasts((current) => [...current.slice(-2), { id, tone, message }]);
+      if (tone !== 'error' && !toastsPaused.current) startToastTimer(id, 8000);
+    },
+    [startToastTimer],
+  );
+
+  const pauseToasts = useCallback(() => {
+    toastsPaused.current = true;
+    toastTimers.current.forEach((timer) => window.clearTimeout(timer));
+    toastTimers.current.clear();
+  }, []);
+
+  const resumeToasts = useCallback(() => {
+    toastsPaused.current = false;
+    for (const toast of toastsRef.current) {
+      if (toast.tone !== 'error' && !toastTimers.current.has(toast.id)) {
+        startToastTimer(toast.id, 4000);
+      }
+    }
+  }, [startToastTimer]);
 
   const dismissToast = useCallback((id: string) => {
     setToasts((current) => current.filter((toast) => toast.id !== id));
@@ -224,7 +252,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       let projected = map.project([coordinates.latitude, coordinates.longitude], zoom);
       if (options?.accountForDrawer) projected = projected.add(drawerOffset());
 
-      map.flyTo(map.unproject(projected, zoom), zoom, { duration: 0.65 });
+      map.flyTo(map.unproject(projected, zoom), zoom, {
+        duration: 0.65,
+        animate: !prefersReducedMotion(),
+      });
     },
     [],
   );
@@ -1262,6 +1293,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toasts,
       notify,
       dismissToast,
+      pauseToasts,
+      resumeToasts,
       addCreatedReport,
       storeCreatedReport,
       moderateReport,
@@ -1342,6 +1375,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toasts,
       notify,
       dismissToast,
+      pauseToasts,
+      resumeToasts,
       addCreatedReport,
       storeCreatedReport,
       moderateReport,

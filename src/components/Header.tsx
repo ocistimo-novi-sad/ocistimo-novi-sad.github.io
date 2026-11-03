@@ -19,7 +19,7 @@ export function Header() {
             type="button"
             className="env-badge"
             onClick={() => openModal({ kind: 'info' })}
-            title="Podaci se ne čuvaju u bazi. Klikni za detalje."
+            title="Podaci se ne čuvaju u bazi. Izaberi za detalje."
           >
             Demo
           </button>

@@ -335,6 +335,42 @@
   line-height: 1.4;
 }
 
+.map-legend__subhead {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: var(--text-label);
+  font-weight: 600;
+}
+
+.map-legend .map-legend__statuses {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 8px;
+  margin-top: 4px;
+  color: var(--ink-2);
+  font-size: var(--text-label);
+}
+
+.map-legend__statuses li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* The pin's status mark outside the pin: same shape, in the text flow. */
+.status-shape {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+}
+
+.status-shape .pin__badge {
+  position: static;
+  border-color: transparent;
+}
+
 /* --- Readout ------------------------------------------------------------- */
 
 /* Right side, above the map attribution, so it never covers the legend. */
@@ -535,8 +571,15 @@
   color: #fff;
 }
 
+/* New: a hollow ring, so it differs from "Proverena" by shape too. */
 .pin__badge--new {
-  background: var(--status-new);
+  background: #fff;
+  box-shadow: inset 0 0 0 2px var(--status-new);
+}
+
+.pin__badge--glyph {
+  width: 13px;
+  height: 13px;
 }
 
 .pin__badge--verified {
@@ -569,8 +612,10 @@
   height: 38px;
   border-width: 3px;
   animation: pin-hop 0.52s var(--ease-spring);
+  /* A white and a green ring mark the selection without relying on motion. */
   box-shadow:
-    0 0 0 3px rgba(255, 255, 255, 0.6),
+    0 0 0 3px #fff,
+    0 0 0 6px var(--forest),
     0 4px 12px -2px rgba(20, 28, 22, 0.45);
 }
 
@@ -612,7 +657,8 @@
   content: '';
   opacity: 0;
   pointer-events: none;
-  animation: pin-pulse 1.8s var(--ease) infinite;
+  /* Two rings, then still: motion that starts on its own stops within 5 s (WCAG 2.2.2). */
+  animation: pin-pulse 1.8s var(--ease) 2;
 }
 
 /* Uses `translate`, which stays separate from the `scale` used on hover. */
@@ -762,7 +808,7 @@
   border: 2px dashed var(--leaf-2);
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.5);
-  animation: temp-pulse 2.4s ease-in-out infinite;
+  animation: temp-pulse 2.4s ease-in-out 1.5;
 }
 
 .temp-pin__glyph {
@@ -802,9 +848,10 @@
 
 /* --- Tooltips ------------------------------------------------------------ */
 
+/* Tooltips wrap instead of cutting text off (WCAG 1.4.13). */
 .leaflet-tooltip.ns-tooltip {
+  width: max-content;
   max-width: 240px;
-  overflow: hidden;
   padding: 6px 9px;
   border: 0;
   border-radius: var(--radius-md);
@@ -814,8 +861,7 @@
   font-family: var(--font-sans);
   font-size: var(--text-meta);
   line-height: 1.4;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .leaflet-tooltip.ns-tooltip::before {

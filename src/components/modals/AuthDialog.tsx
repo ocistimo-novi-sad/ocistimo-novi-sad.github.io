@@ -57,7 +57,7 @@ export function AuthDialog({
     intent === 'create'
       ? 'Prijava problema je vezana za nalog kako bi zajednica mogla da odgovori na pitanja i spreči zloupotrebu.'
       : intent === 'flag'
-        ? 'Prijava neprikladnog sadržaja je vezana za nalog kako bi administratori mogli da provere slučaj.'
+        ? 'Prijava neprikladnog sadržaja je vezana za nalog kako bi moderatori mogli da provere slučaj.'
         : 'Prijavi se da objavljuješ prijave i prijaviš neprikladan sadržaj.';
 
   return (

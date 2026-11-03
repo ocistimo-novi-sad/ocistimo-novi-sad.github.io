@@ -677,8 +677,7 @@
   }
 
   /* These line up in one row or hold a text field, so they grow instead; the
-     2px border leaves a 44px field. The map buttons keep 38px so all four fit
-     above an open panel; pinch and double tap zoom as well. */
+     2px border leaves a 44px field. */
   .search-field,
   .filters-btn,
   .select-field,
@@ -719,6 +718,17 @@
   .photo-draft__remove {
     width: 40px;
     height: 40px;
+  }
+
+  /* Map buttons at 44px. With a panel open, zoom in and out step aside (pinch
+     and double tap still zoom), so the other two fit above the panel. */
+  .map-controls button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .app.has-drawer .map-controls button:nth-child(-n + 2) {
+    display: none;
   }
 
   /* The "/" shortcut needs a keyboard. */
@@ -824,5 +834,13 @@
   .modal-overlay {
     padding-right: var(--safe-r);
     padding-left: var(--safe-l);
+  }
+}
+
+/* The search bar and the pick banner leave room for the 44px map buttons. */
+@media (max-width: 900px) and (pointer: coarse) {
+  .map-mobile-bar,
+  .pick-banner {
+    right: calc(62px + var(--safe-r));
   }
 }

@@ -3,6 +3,7 @@ import { flushSync } from 'react-dom';
 import { CalendarPlus, Map, Plus, Rows3, TriangleAlert } from 'lucide-react';
 import { isOpenReport, isUpcomingAction } from '../lib/counts';
 import { useApp, type MobileTab } from '../state/app-context';
+import { prefersReducedMotion } from '../lib/motion';
 
 /**
  * Mobile navigation: map or list (what they show is the layer switch), with
@@ -52,7 +53,7 @@ export function MobileTabBar() {
 
   // Map and list slide like two sides of one screen where the browser supports it.
   const switchTab = (tab: MobileTab) => {
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduceMotion = prefersReducedMotion();
     // A second tap on Lista goes back to the top of the list.
     if (tab === mobileTab) {
       if (tab === 'list') {

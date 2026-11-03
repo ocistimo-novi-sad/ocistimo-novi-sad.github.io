@@ -11,15 +11,15 @@ export const GUIDE_EVENT = 'kim:guide';
 const STEPS = [
   {
     target: 'create',
-    text: 'Vidiš problem u kraju? Ovde ga prijaviš: tačka na mapi, par reči i fotografija ako je imaš.',
+    text: 'Vidiš problem u kraju? Dugme „Prijavi“ u sredini donje trake otvara formu: tačka na mapi, par reči i fotografija ako je imaš.',
   },
   {
     target: 'layer',
-    text: 'Prijave su problemi koje su ljudi primetili. Akcije su okupljanja za čišćenje. Ovde biraš šta mapa prikazuje.',
+    text: 'Prijave su problemi koje su ljudi primetili. Akcije su okupljanja za čišćenje. „Prijave“ i „Akcije“ na vrhu biraju šta mapa prikazuje.',
   },
   {
     target: 'list',
-    text: 'Ista mesta možeš da pregledaš i kao spisak, sa pretragom i filterima.',
+    text: 'Dugme „Lista“ prikazuje ista mesta kao spisak, sa pretragom i filterima.',
   },
 ];
 
@@ -121,7 +121,14 @@ function GuideDialog({
   }
 
   return (
-    <div ref={dialog} className="guide" role="dialog" aria-modal="true" aria-label="Kratak vodič">
+    <div
+      ref={dialog}
+      className="guide"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Kratak vodič"
+      aria-describedby="guide-text"
+    >
       {box ? (
         <div
           className="guide__spot"
@@ -139,7 +146,9 @@ function GuideDialog({
         <p className="guide__step">
           Korak {step + 1} od {STEPS.length}
         </p>
-        <p className="guide__text">{STEPS[step].text}</p>
+        <p className="guide__text" id="guide-text">
+          {STEPS[step].text}
+        </p>
         <div className="guide__row">
           <button type="button" className="btn btn--quiet btn--sm" onClick={onFinish}>
             Preskoči
@@ -148,6 +157,7 @@ function GuideDialog({
             ref={primary}
             type="button"
             className="btn btn--primary btn--sm"
+            aria-describedby="guide-text"
             onClick={() => (last ? onFinish() : onNext())}
             autoFocus
           >

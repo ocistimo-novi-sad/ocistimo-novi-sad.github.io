@@ -14,12 +14,22 @@ const actionIconCache = new Map<string, DivIcon>();
 // element (and replaying its entry animation) on every pan.
 const clusterIconCache = new Map<string, DivIcon>();
 
-function statusBadge(status: ReportStatus): string {
+/**
+ * The status mark in the corner of a pin. Each status has its own shape as well
+ * as its colour, so it can be told apart without colour (WCAG 1.4.1): a hollow
+ * ring, a dot, a clock, a leaf, a check and a cross. The legend and the filters
+ * use the same marks.
+ */
+export function statusBadge(status: ReportStatus): string {
   if (status === 'resolved') {
     return `<span class="pin__badge pin__badge--resolved">${glyphMarkup('check', 9, 3.2)}</span>`;
   }
   if (status === 'not_suitable') {
     return `<span class="pin__badge pin__badge--muted">${glyphMarkup('cross', 9, 3.2)}</span>`;
+  }
+  if (status === 'planned' || status === 'in_progress') {
+    const glyph = status === 'planned' ? 'clock' : 'action';
+    return `<span class="pin__badge pin__badge--${status} pin__badge--glyph">${glyphMarkup(glyph, 9, 2.6)}</span>`;
   }
   return `<span class="pin__badge pin__badge--${status}"></span>`;
 }

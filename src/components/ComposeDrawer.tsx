@@ -32,6 +32,7 @@ import { ConfirmSheet } from './ui/ConfirmSheet';
 import { ErrorSummary, FieldError } from './ui/FormErrors';
 import { Spinner } from './ui/EmptyState';
 import { PhotoPicker } from './ui/PhotoPicker';
+import { prefersReducedMotion } from '../lib/motion';
 
 type FieldKey =
   | 'location'
@@ -191,6 +192,8 @@ export function ComposeDrawer() {
   const [submitting, setSubmitting] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
   const [locating, setLocating] = useState(false);
+  // Why "Koristi moju lokaciju" did not work; stays until a point is chosen.
+  const [locationNote, setLocationNote] = useState<string | null>(null);
   // "Izaberi" lowers the sheet as far as it goes, so most of the map is free;
   // a failed send brings it back up to show the errors.
   const [snapRequest, setSnapRequest] = useState<{ snap: Snap; id: number }>();
@@ -287,7 +290,9 @@ export function ComposeDrawer() {
 
   // A point on the map answers the location question.
   useEffect(() => {
-    if (composeLocation) setErrors((prev) => (prev.location ? { ...prev, location: undefined } : prev));
+    if (!composeLocation) return;
+    setErrors((prev) => (prev.location ? { ...prev, location: undefined } : prev));
+    setLocationNote(null);
   }, [composeLocation]);
 
   // A server error gets focus too, so it is read out and Tab goes on from it.
@@ -403,10 +408,14 @@ export function ComposeDrawer() {
       flyTo(composeLocation, undefined, { accountForDrawer: true });
       return;
     }
-    map?.flyTo([APP.center.latitude, APP.center.longitude], 14, { duration: 0.5 });
+    map?.flyTo([APP.center.latitude, APP.center.longitude], 14, {
+      duration: 0.5,
+      animate: !prefersReducedMotion(),
+    });
   };
 
   const useMyLocation = () => {
+    if (locating) return;
     if (!('geolocation' in navigator)) {
       notify('error', 'Tvoj pregledač ne podržava određivanje lokacije.');
       return;
@@ -436,9 +445,13 @@ export function ComposeDrawer() {
           notify('error', 'Tvoja lokacija je izvan Novog Sada.');
         }
       },
-      () => {
+      (error) => {
         setLocating(false);
-        notify('error', 'Lokaciju nije moguće odrediti. Izaberi tačku na mapi.');
+        setLocationNote(
+          error.code === error.PERMISSION_DENIED
+            ? 'Pristup lokaciji je odbijen. Izaberi tačku na mapi, ili „Izaberi“ pa Enter na tastaturi.'
+            : 'Lokaciju nije moguće odrediti. Izaberi tačku na mapi.',
+        );
       },
       { enableHighAccuracy: true, timeout: 12_000 },
     );
@@ -482,8 +495,8 @@ export function ComposeDrawer() {
             </li>
           </ol>
           <p className="submit-success__note">
-            Ako nešto treba ispraviti, moderator će napisati razlog. Videćeš ga uz prijavu kada
-            se prijavi ovim nalogom.
+            Ako nešto treba ispraviti, moderator će napisati razlog. Videćeš ga uz prijavu kad
+            se prijaviš ovim nalogom.
           </p>
         </div>
       </Drawer>
@@ -651,7 +664,7 @@ export function ComposeDrawer() {
             <span>
               {composeLocation
                 ? formatCoordinates(composeLocation.latitude, composeLocation.longitude)
-                : 'Klikni na mapu da postaviš marker.'}
+                : 'Izaberi tačku na mapi.'}
             </span>
           </div>
           <button
@@ -670,13 +683,16 @@ export function ComposeDrawer() {
             type="button"
             className="btn btn--quiet btn--sm"
             onClick={useMyLocation}
-            disabled={locating}
+            aria-disabled={locating || undefined}
           >
             {locating ? <Spinner size={13} /> : <Navigation size={13} aria-hidden="true" />}
             {locating ? 'Traženje lokacije…' : 'Koristi moju lokaciju'}
           </button>
         </div>
 
+        <p className="field__hint location-note" role="status">
+          {locationNote}
+        </p>
         {errors.location ? <FieldError id="error-location">{errors.location}</FieldError> : null}
         {outsideArea && !errors.location ? (
           <p className="field__error" role="alert">
@@ -899,7 +915,7 @@ export function ComposeDrawer() {
         <p className="eyebrow">Napomena</p>
         <p>
           {isFirebaseConfigured
-            ? 'Moderator pregleda prijavu i objavljuje je na javnoj mapi. Ako nešto treba ispraviti, dobićeš razlog. Posle objave, član zajednice može da je poveže sa akcijom čišćenja.'
+            ? 'Moderator pregleda prijavu i objavljuje je na javnoj mapi. Ako nešto treba ispraviti, dobićeš razlog. Posle objave, član zajednice može da je poveže sa akcijom čišćenja. Uz prijavu se javno prikazuje ime sa tvog Google naloga.'
             : 'Prijava se prikazuje na mapi. U pravoj bazi moderator je prvo pregleda, a član zajednice može da je poveže sa akcijom čišćenja.'}
         </p>
       </div>

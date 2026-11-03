@@ -13,6 +13,7 @@ import { MobileTabBar } from './components/MobileTabBar';
 import { ModerationPanel } from './components/moderation/ModerationPanel';
 import { MyReportsPanel } from './components/my/MyReportsPanel';
 import { ReportDetail } from './components/ReportDetail';
+import { ResultsAnnouncer } from './components/ResultsAnnouncer';
 import { Toasts } from './components/Toasts';
 import { AuthDialog } from './components/modals/AuthDialog';
 import { FlagDialog } from './components/modals/FlagDialog';
@@ -103,6 +104,7 @@ function AppShell() {
       <MobileTabBar />
       <FirstVisitGuide />
       <Toasts />
+      <ResultsAnnouncer />
       <ModalHost />
     </div>
   );

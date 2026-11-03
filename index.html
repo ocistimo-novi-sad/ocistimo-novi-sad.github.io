@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#F6F4EE" />
     <meta
       name="description"
-      content="Kuka i Motika. Zajednička mapa problema i akcija čišćenja u Novom Sadu. Prijavite zapušten prostor, pronađite akciju i uključite se."
+      content="Kuka i Motika. Zajednička mapa problema i akcija čišćenja u Novom Sadu. Prijavi zapušten prostor, pronađi akciju i uključi se."
     />
     <meta name="color-scheme" content="light" />
     <link rel="icon" type="image/svg+xml" href="./brand-mark.png" />
@@ -20,7 +20,12 @@
     <title>Kuka i Motika: mapa problema i akcija čišćenja</title>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Shown until the app starts, so a slow connection never shows a blank page. -->
+    <div id="root">
+      <p style="margin: 40vh auto 0; color: #1c221e; font: 15px/1.5 system-ui, sans-serif; text-align: center">
+        Kuka i Motika · Učitavanje mape…
+      </p>
+    </div>
     <noscript>
       <div
         style="
@@ -36,8 +41,8 @@
       >
         <strong>Kuka i Motika</strong>
         <p style="margin: 0.5rem 0 0">
-          Za prikaz interaktivne mape potreban je JavaScript. Uključite ga u pregledaču i
-          osvežite stranicu.
+          Za prikaz interaktivne mape potreban je JavaScript. Uključi ga u pregledaču i
+          osveži stranicu.
         </p>
       </div>
     </noscript>

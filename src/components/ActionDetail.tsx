@@ -293,7 +293,7 @@ export function ActionDetail() {
             </div>
           )}
           <p className="admin-box__hint">
-            Akcije menjaju samo administratori. Izmene su vidljive svim posetiocima.
+            Akcije menjaju moderatori. Izmene odmah vide svi.
           </p>
         </div>
       ) : null}

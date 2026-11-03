@@ -8,6 +8,7 @@ import { optimizedImageUrl } from '../../services/images';
 import type { Category, Report } from '../../types';
 import { clusterIcon, draftIcon, reportIcon, type CategoryCounts } from './map-icons';
 import { NamedMarker } from './NamedMarker';
+import { prefersReducedMotion } from '../../lib/motion';
 
 interface PointProps {
   reportId: string;
@@ -229,13 +230,16 @@ export function ReportMarkers({
                     event.target.closeTooltip();
                     return;
                   }
-                  map.flyTo([latitude, longitude], expansionZoom, { duration: 0.5 });
+                  map.flyTo([latitude, longitude], expansionZoom, {
+                    duration: 0.5,
+                    animate: !prefersReducedMotion(),
+                  });
                 },
               }}
             >
-              <Tooltip direction="top" offset={[0, -18]} className="ns-tooltip">
+              <Tooltip interactive direction="top" offset={[0, -18]} className="ns-tooltip">
                 {count} {plural(count, 'prijava', 'prijave', 'prijava')} u ovoj oblasti.{' '}
-                {viewport.zoom >= CLUSTER_MAX_ZOOM ? 'Klikni da ih raširiš.' : 'Klikni da zumiraš.'}
+                {viewport.zoom >= CLUSTER_MAX_ZOOM ? 'Izaberi da ih raširiš.' : 'Izaberi da uvećaš.'}
                 <br />
                 <span className="ns-tooltip__meta">{categoryBreakdown(properties)}</span>
               </Tooltip>
@@ -261,7 +265,7 @@ export function ReportMarkers({
               },
             }}
           >
-            <Tooltip direction="top" offset={[0, -18]} className="ns-tooltip ns-tooltip--rich">
+            <Tooltip interactive direction="top" offset={[0, -18]} className="ns-tooltip ns-tooltip--rich">
               <ReportTooltipContent report={report} />
             </Tooltip>
           </NamedMarker>
@@ -289,7 +293,7 @@ export function ReportMarkers({
                   },
                 }}
               >
-                <Tooltip direction="top" offset={[0, -18]} className="ns-tooltip ns-tooltip--rich">
+                <Tooltip interactive direction="top" offset={[0, -18]} className="ns-tooltip ns-tooltip--rich">
                   <ReportTooltipContent report={report} />
                 </Tooltip>
               </NamedMarker>
@@ -351,7 +355,7 @@ export function DraftMarkers({
               },
             }}
           >
-            <Tooltip direction="top" offset={[0, -18]} className="ns-tooltip">
+            <Tooltip interactive direction="top" offset={[0, -18]} className="ns-tooltip">
               <span className="ns-tooltip__label">{MODERATION_LABELS[report.moderation].label}</span>
               <br />
               <strong>{report.title}</strong>

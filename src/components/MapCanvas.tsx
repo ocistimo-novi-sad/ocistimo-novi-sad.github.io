@@ -8,7 +8,7 @@ import {
   useMap,
   useMapEvents,
 } from 'react-leaflet';
-import type { LeafletMouseEvent, Map as LeafletMap } from 'leaflet';
+import type { LeafletMouseEvent, Map as LeafletMap, TileLayer as LeafletTileLayer } from 'leaflet';
 import {
   ChevronDown,
   ChevronUp,
@@ -24,13 +24,14 @@ import {
   TriangleAlert,
   X,
 } from 'lucide-react';
-import { APP, CATEGORIES } from '../config';
+import { APP, CATEGORIES, REPORT_STATUSES } from '../config';
 import type { Category } from '../types';
 import { useApp } from '../state/app-context';
 import { useIsMobile } from '../hooks/useMediaQuery';
 import { formatCoordinates } from '../lib/format';
 import { isInServiceArea, roundCoordinate } from '../lib/geo';
 import { CategoryGlyph } from './ui/CategoryGlyph';
+import { StatusShape } from './ui/StatusShape';
 import { Spinner } from './ui/EmptyState';
 import { ActiveFilters, FiltersButton, SEARCH_PLACEHOLDER, SearchInput } from './FiltersBar';
 import { LayerSwitch } from './LayerSwitch';
@@ -39,6 +40,7 @@ import { ActionMarkers } from './map/ActionMarkers';
 import { tempIcon, userIcon } from './map/map-icons';
 import { NamedMarker } from './map/NamedMarker';
 import { drawerOffset } from './map/drawer-offset';
+import { prefersReducedMotion } from '../lib/motion';
 
 function MapBridge() {
   const map = useMap();
@@ -54,6 +56,20 @@ function MapBridge() {
     container.setAttribute('role', 'region');
     container.setAttribute('aria-label', 'Mapa');
     container.setAttribute('aria-describedby', 'map-keys');
+
+    // Escape closes an open marker tooltip first, before anything else (WCAG 1.4.13).
+    const onEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      let closed = false;
+      map.eachLayer((layer) => {
+        if (layer.getTooltip()?.isOpen()) {
+          layer.closeTooltip();
+          closed = true;
+        }
+      });
+      if (closed) event.stopPropagation();
+    };
+    document.addEventListener('keydown', onEscape, true);
     let frame = 0;
     const observer = new ResizeObserver(() => {
       window.cancelAnimationFrame(frame);
@@ -62,6 +78,7 @@ function MapBridge() {
     observer.observe(container);
 
     return () => {
+      document.removeEventListener('keydown', onEscape, true);
       observer.disconnect();
       window.cancelAnimationFrame(frame);
       if (mapRef.current === map) mapRef.current = null;
@@ -180,6 +197,9 @@ export function MapCanvas() {
   const [zoom, setZoom] = useState<number>(APP.initialZoom);
   const [pointer, setPointer] = useState<{ lat: number; lng: number } | null>(null);
   const [legendOpen, setLegendOpen] = useState(true);
+  // Tiles that failed in a row; a few mean the map can't load (offline, blocked).
+  const [tileErrors, setTileErrors] = useState(0);
+  const tileRef = useRef<LeafletTileLayer>(null);
   const pointerThrottle = useRef(0);
 
   const categoryCounts = useMemo(() => {
@@ -260,6 +280,21 @@ export function MapCanvas() {
         <div className="map-loading" role="status">
           <Spinner size={14} />
           <span>Učitavanje prijava…</span>
+        </div>
+      ) : null}
+      {tileErrors >= 4 ? (
+        <div className="map-error-banner" role="status">
+          <TriangleAlert size={14} aria-hidden="true" />
+          <span>Mapa se ne učitava. Proveri internet vezu. Prijave su i dalje u listi.</span>
+          <button
+            type="button"
+            onClick={() => {
+              setTileErrors(0);
+              tileRef.current?.redraw();
+            }}
+          >
+            Pokušaj ponovo
+          </button>
         </div>
       ) : null}
       {reportsError && reports.length > 0 ? (
@@ -344,7 +379,7 @@ export function MapCanvas() {
             mapRef.current?.flyTo(
               [APP.center.latitude, APP.center.longitude],
               APP.initialZoom,
-              { duration: 0.6 },
+              { duration: 0.6, animate: !prefersReducedMotion() },
             )
           }
           aria-label="Prikaži ceo Novi Sad"
@@ -374,9 +409,14 @@ export function MapCanvas() {
         worldCopyJump
       >
         <TileLayer
+          ref={tileRef}
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> saradnici'
           maxZoom={19}
+          eventHandlers={{
+            tileerror: () => setTileErrors((count) => count + 1),
+            tileload: () => setTileErrors(0),
+          }}
         />
         <MapBridge />
         <MapEvents
@@ -467,8 +507,8 @@ export function MapCanvas() {
           <div className="pick-banner__text">
             <strong>
               {composeLocation
-                ? 'Klikni na drugu tačku da pomeriš marker'
-                : 'Klikni na mapu da postaviš lokaciju'}
+                ? 'Izaberi drugu tačku da pomeriš marker'
+                : 'Izaberi tačku na mapi'}
             </strong>
             {composeLocation ? (
               <span>{formatCoordinates(composeLocation.latitude, composeLocation.longitude)}</span>
@@ -601,10 +641,17 @@ export function MapCanvas() {
                 Prikaži sve
               </button>
             ) : null}
-            <p className="map-legend__note">
-              Klikni kategoriju da je uključiš ili isključiš. Tačka u uglu markera označava
-              status prijave.
-            </p>
+            <p className="map-legend__note">Izaberi kategoriju da je uključiš ili isključiš.</p>
+            {/* The mark in the corner of a pin: its own shape for each status. */}
+            <p className="map-legend__subhead">Status</p>
+            <ul className="map-legend__statuses">
+              {REPORT_STATUSES.map((status) => (
+                <li key={status.id}>
+                  <StatusShape status={status.id} />
+                  {status.label}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       ) : null}
@@ -633,6 +680,13 @@ export function MapCanvas() {
               <>
                 <h2>Još nema akcija</h2>
                 <p>Moderatori i koordinatori zajednice organizuju akcije čišćenja.</p>
+                <button
+                  type="button"
+                  className="btn btn--quiet btn--sm"
+                  onClick={() => app.setLayer('reports')}
+                >
+                  Pogledaj prijave
+                </button>
               </>
             ) : actionQuery.trim() ? (
               <>

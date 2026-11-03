@@ -120,6 +120,9 @@ export interface AppContextValue {
   toasts: Toast[];
   notify: (tone: ToastTone, message: string) => void;
   dismissToast: (id: string) => void;
+  /** Toasts wait while the pointer or keyboard focus is on them. */
+  pauseToasts: () => void;
+  resumeToasts: () => void;
 
   addCreatedReport: (report: Report) => void;
   storeCreatedReport: (report: Report) => void;
