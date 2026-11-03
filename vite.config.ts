@@ -14,6 +14,19 @@ export default defineConfig(({ mode }) => {
       outDir: 'dist',
       assetsDir: 'assets',
       sourcemap: false,
+      // Libraries in their own files: they change rarely, so after a deploy the
+      // browser keeps them cached and downloads only the app's own code again.
+      rolldownOptions: {
+        output: {
+          codeSplitting: {
+            groups: [
+              { name: 'react', test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/ },
+              { name: 'map', test: /node_modules[\\/](leaflet|react-leaflet|@react-leaflet|supercluster|kdbush)[\\/]/ },
+              { name: 'firebase', test: /node_modules[\\/](firebase|@firebase|idb|tslib)[\\/]/ },
+            ],
+          },
+        },
+      },
     },
     server: {
       port: 5173,

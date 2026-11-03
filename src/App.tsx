@@ -1,7 +1,6 @@
-import { useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { ActionsPanel } from './components/ActionsPanel';
 import { ActionDetail } from './components/ActionDetail';
-import { AdminPanel } from './components/admin/AdminPanel';
 import { ComposeDrawer } from './components/ComposeDrawer';
 import { DiscoveryPanel } from './components/DiscoveryPanel';
 import { FiltersSheet } from './components/FiltersBar';
@@ -10,18 +9,40 @@ import { useIsMobile } from './hooks/useMediaQuery';
 import { Header } from './components/Header';
 import { MapCanvas } from './components/MapCanvas';
 import { MobileTabBar } from './components/MobileTabBar';
-import { ModerationPanel } from './components/moderation/ModerationPanel';
-import { MyReportsPanel } from './components/my/MyReportsPanel';
 import { ReportDetail } from './components/ReportDetail';
 import { ResultsAnnouncer } from './components/ResultsAnnouncer';
 import { Toasts } from './components/Toasts';
-import { AuthDialog } from './components/modals/AuthDialog';
-import { FlagDialog } from './components/modals/FlagDialog';
-import { InfoDialog } from './components/modals/InfoDialog';
-import { Lightbox } from './components/modals/Lightbox';
-import { ResolveDialog } from './components/modals/ResolveDialog';
 import { AppProvider } from './state/AppProvider';
 import { useApp } from './state/app-context';
+
+// Dialogs open only after a tap, and the admin and moderation panels only for
+// moderators, so their code loads then instead of with the first screen.
+const AdminPanel = lazy(() =>
+  import('./components/admin/AdminPanel').then((module) => ({ default: module.AdminPanel })),
+);
+const ModerationPanel = lazy(() =>
+  import('./components/moderation/ModerationPanel').then((module) => ({
+    default: module.ModerationPanel,
+  })),
+);
+const MyReportsPanel = lazy(() =>
+  import('./components/my/MyReportsPanel').then((module) => ({ default: module.MyReportsPanel })),
+);
+const AuthDialog = lazy(() =>
+  import('./components/modals/AuthDialog').then((module) => ({ default: module.AuthDialog })),
+);
+const FlagDialog = lazy(() =>
+  import('./components/modals/FlagDialog').then((module) => ({ default: module.FlagDialog })),
+);
+const InfoDialog = lazy(() =>
+  import('./components/modals/InfoDialog').then((module) => ({ default: module.InfoDialog })),
+);
+const Lightbox = lazy(() =>
+  import('./components/modals/Lightbox').then((module) => ({ default: module.Lightbox })),
+);
+const ResolveDialog = lazy(() =>
+  import('./components/modals/ResolveDialog').then((module) => ({ default: module.ResolveDialog })),
+);
 
 function ModalHost() {
   const { modal, closeModal } = useApp();
@@ -105,7 +126,9 @@ function AppShell() {
       <FirstVisitGuide />
       <Toasts />
       <ResultsAnnouncer />
-      <ModalHost />
+      <Suspense fallback={null}>
+        <ModalHost />
+      </Suspense>
     </div>
   );
 }

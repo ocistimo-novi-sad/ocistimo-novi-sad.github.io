@@ -1378,14 +1378,17 @@
   background: rgba(16, 22, 18, 0.62);
 }
 
+/* Moved with transform, not top and left, so the page does not count it as a
+   layout shift (CLS); the size changes only after a tap. */
 .guide__spot {
   position: fixed;
+  top: 0;
+  left: 0;
   border-radius: var(--radius-lg);
   box-shadow: 0 0 0 9999px rgba(16, 22, 18, 0.62);
   pointer-events: none;
   transition:
-    top var(--dur-3) var(--ease),
-    left var(--dur-3) var(--ease),
+    transform var(--dur-3) var(--ease),
     width var(--dur-3) var(--ease),
     height var(--dur-3) var(--ease);
 }

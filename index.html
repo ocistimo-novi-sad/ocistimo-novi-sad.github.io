@@ -9,8 +9,13 @@
       content="Kuka i Motika. Zajednička mapa problema i akcija čišćenja u Novom Sadu. Prijavi zapušten prostor, pronađi akciju i uključi se."
     />
     <meta name="color-scheme" content="light" />
-    <link rel="icon" type="image/svg+xml" href="./brand-mark.png" />
-    <link rel="alternate icon" type="image/png" href="./brand-mark.png" />
+    <link rel="icon" type="image/png" href="./brand-mark.png" />
+    <!-- The map tiles under the starting view (APP.center at zoom 13 in src/config.ts):
+         one of them is the largest thing on a phone's first screen, so it starts
+         loading before the app's script has run. Update them with the centre. -->
+    <link rel="preconnect" href="https://tile.openstreetmap.org" />
+    <link rel="preload" as="image" href="https://tile.openstreetmap.org/13/4547/2937.png" fetchpriority="high" />
+    <link rel="preload" as="image" href="https://tile.openstreetmap.org/13/4547/2938.png" fetchpriority="high" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -22,9 +27,12 @@
   <body>
     <!-- Shown until the app starts, so a slow connection never shows a blank page. -->
     <div id="root">
-      <p style="margin: 40vh auto 0; color: #1c221e; font: 15px/1.5 system-ui, sans-serif; text-align: center">
+      <!-- Fixed, so taking it away moves nothing on the page (no layout shift). -->
+      <div
+        style="position: fixed; inset: 0; display: grid; place-content: center; background: #f6f4ee; color: #1c221e; font: 600 15px/1.5 system-ui, sans-serif"
+      >
         Kuka i Motika · Učitavanje mape…
-      </p>
+      </div>
     </div>
     <noscript>
       <div

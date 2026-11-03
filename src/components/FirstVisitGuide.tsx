@@ -131,16 +131,16 @@ function GuideDialog({
     >
       {box ? (
         <div
+          key="spot"
           className="guide__spot"
           style={{
-            top: box.top - PAD,
-            left: box.left - PAD,
             width: box.width + PAD * 2,
             height: box.height + PAD * 2,
+            transform: `translate(${box.left - PAD}px, ${box.top - PAD}px)`,
           }}
         />
       ) : (
-        <div className="guide__dim" />
+        <div key="dim" className="guide__dim" />
       )}
       <div className="guide__bubble" style={bubbleStyle} key={step}>
         <p className="guide__step">
