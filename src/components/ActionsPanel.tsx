@@ -196,7 +196,7 @@ export function ActionsPanel() {
           <EmptyState
             icon={<TriangleAlert size={20} />}
             title="Akcije nisu učitane"
-            description={actionsError ?? 'Proverite internet vezu i pokušajte ponovo.'}
+            description={actionsError ?? 'Proveri internet vezu i pokušaj ponovo.'}
             action={
               <button
                 type="button"
@@ -213,7 +213,7 @@ export function ActionsPanel() {
           <EmptyState
             icon={<Search size={20} />}
             title="Nema akcija za ovu pretragu"
-            description="Pokušajte drugi naziv ili mesto okupljanja."
+            description="Pokušaj drugi naziv ili mesto okupljanja."
             action={
               <button
                 type="button"
@@ -232,7 +232,7 @@ export function ActionsPanel() {
             title={scope === 'upcoming' ? 'Nema planiranih akcija' : 'Još nema završenih akcija'}
             description={
               scope === 'upcoming'
-                ? 'Moderatori i koordinatori zajednice organizuju akcije čišćenja. Do tada možete pregledati prijave na mapi.'
+                ? 'Moderatori i koordinatori zajednice organizuju akcije čišćenja. Do tada možeš pregledati prijave na mapi.'
                 : 'Završene akcije se prikazuju ovde sa svim rešenim prijavama.'
             }
             action={

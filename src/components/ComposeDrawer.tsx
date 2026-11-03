@@ -207,34 +207,34 @@ export function ComposeDrawer() {
   const validate = (): FieldErrors => {
     const next: FieldErrors = {};
     if (!composeLocation) {
-      next.location = 'Izaberite lokaciju na mapi.';
+      next.location = 'Izaberi lokaciju na mapi.';
     } else if (!isInServiceArea(composeLocation)) {
       next.location = 'Lokacija mora biti u Novom Sadu.';
     }
 
     const trimmedTitle = title.trim();
-    if (!trimmedTitle) next.title = 'Unesite naslov prijave.';
+    if (!trimmedTitle) next.title = 'Unesi naslov prijave.';
     else if (trimmedTitle.length < TITLE_MIN) {
       next.title = `Naslov mora imati najmanje ${TITLE_MIN} znakova.`;
     }
 
-    if (!category) next.category = 'Izaberite kategoriju.';
+    if (!category) next.category = 'Izaberi kategoriju.';
 
     const trimmedDescription = description.trim();
-    if (!trimmedDescription) next.description = 'Opišite problem.';
+    if (!trimmedDescription) next.description = 'Opiši problem.';
     else if (trimmedDescription.length < DESC_MIN) {
       next.description = `Opis mora imati najmanje ${DESC_MIN} znakova.`;
     }
 
     if (communityCan.trim().length < COMMUNITY_MIN) {
       next.communityCan = communityCan.trim()
-        ? `Napišite bar ${COMMUNITY_MIN} znakova ili izaberite ponuđeno.`
-        : 'Napišite šta zajednica može sama ili izaberite ponuđeno.';
+        ? `Napiši bar ${COMMUNITY_MIN} znakova ili izaberi ponuđeno.`
+        : 'Napiši šta zajednica može sama ili izaberi ponuđeno.';
     }
     if (helpNeeded.trim().length < COMMUNITY_MIN) {
       next.helpNeeded = helpNeeded.trim()
-        ? `Napišite bar ${COMMUNITY_MIN} znakova ili izaberite ponuđeno.`
-        : 'Napišite za šta je potrebna pomoć ili izaberite ponuđeno.';
+        ? `Napiši bar ${COMMUNITY_MIN} znakova ili izaberi ponuđeno.`
+        : 'Napiši za šta je potrebna pomoć ili izaberi ponuđeno.';
     }
 
     if (photos.length > LIMITS.imagesMax) {
@@ -287,7 +287,7 @@ export function ComposeDrawer() {
     if (!composeLocation) return;
 
     if (isFirebaseConfigured && !auth.user) {
-      setSubmitError('Prijava je istekla. Prijavite se ponovo i pokušajte.');
+      setSubmitError('Prijava je istekla. Prijavi se ponovo i pokušaj.');
       return;
     }
 
@@ -299,7 +299,7 @@ export function ComposeDrawer() {
     if (upload.error !== undefined) {
       setSubmitting(false);
       setSubmitError(
-        `Prijava nije poslata jer fotografija nije otpremljena: ${upload.error} Pokušajte ponovo.`,
+        `Prijava nije poslata jer fotografija nije otpremljena: ${upload.error} Pokušaj ponovo.`,
       );
       return;
     }
@@ -343,7 +343,7 @@ export function ComposeDrawer() {
     } catch (error) {
       const base = toSerbianError(
         error,
-        'Prijava nije sačuvana. Proverite vezu i pokušajte ponovo.',
+        'Prijava nije sačuvana. Proveri vezu i pokušaj ponovo.',
       );
       setSubmitError(
         urls.length > 0
@@ -367,7 +367,7 @@ export function ComposeDrawer() {
 
   const useMyLocation = () => {
     if (!('geolocation' in navigator)) {
-      notify('error', 'Vaš pregledač ne podržava određivanje lokacije.');
+      notify('error', 'Tvoj pregledač ne podržava određivanje lokacije.');
       return;
     }
     if (userPosition) {
@@ -392,12 +392,12 @@ export function ComposeDrawer() {
         setCollapseSignal((value) => value + 1);
         flyTo(point, 17, { accountForDrawer: true });
         if (!isInServiceArea(point)) {
-          notify('error', 'Vaša lokacija je izvan Novog Sada.');
+          notify('error', 'Tvoja lokacija je izvan Novog Sada.');
         }
       },
       () => {
         setLocating(false);
-        notify('error', 'Lokaciju nije moguće odrediti. Izaberite tačku na mapi.');
+        notify('error', 'Lokaciju nije moguće odrediti. Izaberi tačku na mapi.');
       },
       { enableHighAccuracy: true, timeout: 12_000 },
     );
@@ -425,8 +425,8 @@ export function ComposeDrawer() {
           </span>
           <h2 className="compose-title">Hvala! Prijava je na pregledu.</h2>
           <p className="compose-sub">
-            Moderator će pregledati „{submitted.title}” i objaviti je na mapi. Do tada je vidite
-            samo vi i moderatori.
+            Moderator će pregledati „{submitted.title}” i objaviti je na mapi. Do tada je vidiš
+            samo ti i moderatori.
           </p>
           <ol className="submit-success__steps">
             <li className="is-done">
@@ -440,8 +440,8 @@ export function ComposeDrawer() {
             </li>
           </ol>
           <p className="submit-success__note">
-            Ako nešto treba ispraviti, moderator će napisati razlog. Videćete ga uz prijavu kada
-            se prijavite ovim nalogom.
+            Ako nešto treba ispraviti, moderator će napisati razlog. Videćeš ga uz prijavu kada
+            se prijavi ovim nalogom.
           </p>
         </div>
       </Drawer>
@@ -464,13 +464,13 @@ export function ComposeDrawer() {
 
   const footNote = editing
     ? isModeratorEdit
-      ? 'Izmena moderatora se odmah primenjuje i beleži uz vaš nalog.'
+      ? 'Izmena moderatora se odmah primenjuje i beleži uz tvoj nalog.'
       : editsPublished
-        ? 'Izmena se odmah vidi, a moderator će je pregledati. Ne unosite lične podatke.'
-        : 'Posle ispravke prijava ponovo ide na pregled. Ne unosite lične podatke.'
+        ? 'Izmena se odmah vidi, a moderator će je pregledati. Ne unosi lične podatke.'
+        : 'Posle ispravke prijava ponovo ide na pregled. Ne unosi lične podatke.'
     : isFirebaseConfigured
-      ? 'Moderator pregleda prijavu pre objave. Ne unosite lične podatke.'
-      : 'Ne unosite lične podatke. Demo režim: prijava se čuva samo u ovom pregledaču.';
+      ? 'Moderator pregleda prijavu pre objave. Ne unosi lične podatke.'
+      : 'Ne unosi lične podatke. Demo režim: prijava se čuva samo u ovom pregledaču.';
 
   const footer = (
     <div className="compose-foot">
@@ -527,18 +527,18 @@ export function ComposeDrawer() {
       </div>
 
       <h2 className="compose-title">
-        {editing ? 'Izmenite prijavu' : 'Prijavite problem na mapi'}
+        {editing ? 'Izmeni prijavu' : 'Prijavi problem na mapi'}
       </h2>
       <p className="compose-sub">
         {editing
-          ? 'Promenite ono što nije tačno ili nedostaje. Lokaciju pomerate klikom na mapu.'
-          : 'Izaberite tačnu lokaciju, opišite šta nedostaje i dodajte fotografiju ako je imate.'}
+          ? 'Promeni ono što nije tačno ili nedostaje. Lokaciju pomeraš klikom na mapu.'
+          : 'Izaberi tačnu lokaciju, opiši šta nedostaje i dodaj fotografiju ako je imaš.'}
       </p>
 
       {editing && isModeratorEdit ? (
         <div className="notice notice--info">
           <Info size={14} aria-hidden="true" />
-          <p>Menjate tuđu prijavu kao moderator. Izmena se odmah primenjuje, bez novog pregleda.</p>
+          <p>Menjaš tuđu prijavu kao moderator. Izmena se odmah primenjuje, bez novog pregleda.</p>
         </div>
       ) : null}
 
@@ -600,7 +600,7 @@ export function ComposeDrawer() {
             <span>
               {composeLocation
                 ? formatCoordinates(composeLocation.latitude, composeLocation.longitude)
-                : 'Kliknite na mapu da postavite marker.'}
+                : 'Klikni na mapu da postaviš marker.'}
             </span>
           </div>
           <button
@@ -769,14 +769,14 @@ export function ComposeDrawer() {
           <h3 id="compose-plan-label">Kako možemo da rešimo</h3>
         </div>
         <p className="form-section__intro">
-          Pojedinci prijavljuju, a zajednica zajedno rešava. Napišite šta komšije mogu same, a gde
+          Pojedinci prijavljuju, a zajednica zajedno rešava. Napiši šta komšije mogu same, a gde
           je potrebna pomoć sa strane.
         </p>
 
         <PlanField
           id="report-community"
           label="Šta zajednica može sama"
-          hint="Na primer rad, alat koji već imate ili termin kada možete da se okupite."
+          hint="Na primer rad, alat koji već imaš ili termin kada komšije mogu da se okupe."
           placeholder="Možemo da skupimo sitan otpad u džakove i očistimo stazu."
           presets={COMMUNITY_CAN_PRESETS}
           value={communityCan}
@@ -831,7 +831,7 @@ export function ComposeDrawer() {
 
             <p className="field__hint">
               Najviše {LIMITS.imagesMax} fotografije, JPG, PNG ili WebP. Fotografije sa telefona
-              možete dodati takve kakve jesu: aplikacija ih sama smanjuje i uklanja podatke o
+              možeš dodati takve kakve jesu: aplikacija ih sama smanjuje i uklanja podatke o
               lokaciji pre slanja.
             </p>
           </>
@@ -845,7 +845,7 @@ export function ComposeDrawer() {
 
         {photos.some((photo) => photo.error) ? (
           <p className="field__error" role="alert">
-            Neka fotografija nije otpremljena. Uklonite je ili pokušajte ponovo.
+            Neka fotografija nije otpremljena. Ukloni je ili pokušaj ponovo.
           </p>
         ) : null}
       </section>
@@ -854,7 +854,7 @@ export function ComposeDrawer() {
         <p className="eyebrow">Napomena</p>
         <p>
           {isFirebaseConfigured
-            ? 'Moderator pregleda prijavu i objavljuje je na javnoj mapi. Ako nešto treba ispraviti, dobićete razlog. Posle objave, član zajednice može da je poveže sa akcijom čišćenja.'
+            ? 'Moderator pregleda prijavu i objavljuje je na javnoj mapi. Ako nešto treba ispraviti, dobićeš razlog. Posle objave, član zajednice može da je poveže sa akcijom čišćenja.'
             : 'Prijava se prikazuje na mapi. U pravoj bazi moderator je prvo pregleda, a član zajednice može da je poveže sa akcijom čišćenja.'}
         </p>
       </div>

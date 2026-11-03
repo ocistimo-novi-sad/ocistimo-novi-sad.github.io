@@ -906,7 +906,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           'info',
           auth.user
             ? 'Ova prijava još nije javna.'
-            : 'Ova prijava još nije javna. Prijavite se ako ste njen autor.',
+            : 'Ova prijava još nije javna. Prijavi se ako si njen autor.',
         );
       });
   }, [applyReport, auth.ready, auth.user, knownReports, notify, reportsPhase, selectReport]);
@@ -924,7 +924,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     () =>
       new Promise<boolean>((resolve) => {
         if (!('geolocation' in navigator)) {
-          notify('error', 'Vaš pregledač ne podržava određivanje lokacije.');
+          notify('error', 'Tvoj pregledač ne podržava određivanje lokacije.');
           resolve(false);
           return;
         }
@@ -947,7 +947,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             if (error.code === error.PERMISSION_DENIED) {
               notify(
                 'error',
-                'Pristup lokaciji je odbijen. Možete ga uključiti u podešavanjima pregledača.',
+                'Pristup lokaciji je odbijen. Možeš ga uključiti u podešavanjima pregledača.',
               );
             } else {
               notify('error', 'Lokaciju trenutno nije moguće odrediti.');

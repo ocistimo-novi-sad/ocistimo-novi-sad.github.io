@@ -120,7 +120,7 @@ export function ActionDetail() {
             : action.status === 'cancelled'
               ? 'Akcija je otkazana.'
               : isPast
-                ? 'Predviđeni termin je prošao. Proverite sa organizatorom.'
+                ? 'Predviđeni termin je prošao. Proveri sa organizatorom.'
                 : 'Okupljanje je zakazano. Dolazak nije potrebno najavljivati osim ako organizator traži drugačije.'}
         </p>
       </div>
@@ -240,7 +240,7 @@ export function ActionDetail() {
           </ul>
         ) : (
           <p className="detail-prose detail-prose--muted">
-            Organizator nije naveo posebnu opremu. Dođite u udobnoj odeći i obući.
+            Organizator nije naveo posebnu opremu. Dođi u udobnoj odeći i obući.
           </p>
         )}
       </section>

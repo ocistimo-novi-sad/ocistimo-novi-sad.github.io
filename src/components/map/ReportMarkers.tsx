@@ -229,7 +229,7 @@ export function ReportMarkers({
             >
               <Tooltip direction="top" offset={[0, -18]} className="ns-tooltip">
                 {count} {plural(count, 'prijava', 'prijave', 'prijava')} u ovoj oblasti.{' '}
-                {viewport.zoom >= CLUSTER_MAX_ZOOM ? 'Kliknite da ih raširite.' : 'Kliknite da zumirate.'}
+                {viewport.zoom >= CLUSTER_MAX_ZOOM ? 'Klikni da ih raširiš.' : 'Klikni da zumiraš.'}
                 <br />
                 <span className="ns-tooltip__meta">{categoryBreakdown(properties)}</span>
               </Tooltip>
@@ -346,7 +346,7 @@ export function DraftMarkers({
               <br />
               <strong>{report.title}</strong>
               <br />
-              <span className="ns-tooltip__meta">Vidite je samo vi i moderatori.</span>
+              <span className="ns-tooltip__meta">Vidiš je samo ti i moderatori.</span>
             </Tooltip>
           </Marker>
         ))}

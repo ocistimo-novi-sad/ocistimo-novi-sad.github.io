@@ -298,7 +298,7 @@ export function MapCanvas() {
             }}
           >
             <Tooltip direction="top" offset={[0, -26]} className="ns-tooltip">
-              Nova prijava. Pomerite marker.
+              Nova prijava. Pomeri marker.
             </Tooltip>
           </Marker>
         ) : null}
@@ -394,13 +394,13 @@ export function MapCanvas() {
           <div className="pick-banner__text">
             <strong>
               {composeLocation
-                ? 'Kliknite na drugu tačku da pomerite marker'
-                : 'Kliknite na mapu da postavite lokaciju'}
+                ? 'Klikni na drugu tačku da pomeriš marker'
+                : 'Klikni na mapu da postaviš lokaciju'}
             </strong>
             {composeLocation ? (
               <span>{formatCoordinates(composeLocation.latitude, composeLocation.longitude)}</span>
             ) : (
-              <span>Možete i da prevučete marker radi preciznijeg položaja.</span>
+              <span>Možeš i da prevučeš marker radi preciznijeg položaja.</span>
             )}
           </div>
         </div>
@@ -420,7 +420,7 @@ export function MapCanvas() {
               <TriangleAlert size={18} aria-hidden="true" />
             </div>
             <h2>Prijave nisu učitane</h2>
-            <p>{reportsError ?? 'Proverite internet vezu i pokušajte ponovo.'}</p>
+            <p>{reportsError ?? 'Proveri internet vezu i pokušaj ponovo.'}</p>
             <button
               type="button"
               className="btn btn--primary btn--sm"
@@ -450,7 +450,7 @@ export function MapCanvas() {
             </div>
             <h2>Još nema prijava</h2>
             <p>
-              Mapa je prazna. Prijavite prvi problem u svom kvartu i pomozite komšijama da ga
+              Mapa je prazna. Prijavi prvi problem u svom kvartu i pomozi komšijama da ga
               pronađu.
             </p>
             <button type="button" className="btn btn--primary btn--sm" onClick={startCompose}>
@@ -525,7 +525,7 @@ export function MapCanvas() {
             </button>
           ) : null}
           <p className="map-legend__note">
-            Kliknite kategoriju da je uključite ili isključite. Tačka u uglu markera označava
+            Klikni kategoriju da je uključiš ili isključiš. Tačka u uglu markera označava
             status prijave.
           </p>
         </div>
@@ -569,7 +569,7 @@ export function MapCanvas() {
             ) : actionQuery.trim() ? (
               <>
                 <h2>Nema akcija za ovu pretragu</h2>
-                <p>Pokušajte drugi naziv ili mesto okupljanja.</p>
+                <p>Pokušaj drugi naziv ili mesto okupljanja.</p>
                 <button
                   type="button"
                   className="btn btn--quiet btn--sm"

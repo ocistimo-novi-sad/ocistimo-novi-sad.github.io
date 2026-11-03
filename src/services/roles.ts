@@ -80,7 +80,7 @@ export async function setModerator(user: UserProfile, enabled: boolean): Promise
   const db = requireDb();
   const admin = requireAuth().currentUser;
   if (!admin) {
-    throw new AppError('unauthenticated', 'Prijavite se kao administrator.');
+    throw new AppError('unauthenticated', 'Prijavi se kao administrator.');
   }
 
   const reference = doc(db, 'moderators', user.uid);

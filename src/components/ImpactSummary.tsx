@@ -28,7 +28,7 @@ export function ImpactSummary() {
     <section className="impact" aria-label="Napredak zajednice">
       <h2 className="impact__title">Zajedno čistimo {APP.city}.</h2>
       <p className="impact__sub">
-        Prijavite problem u kraju ili se pridružite sledećoj akciji čišćenja.
+        Prijavi problem u kraju ili se pridruži sledećoj akciji čišćenja.
       </p>
 
       {loading ? (
@@ -54,7 +54,7 @@ export function ImpactSummary() {
               type="button"
               className="impact-stat"
               onClick={() => setLayer('actions')}
-              title="Pogledajte predstojeće akcije"
+              title="Pogledaj predstojeće akcije"
             >
               <span className="impact-stat__value">{upcoming}</span>
               <span className="impact-stat__link">

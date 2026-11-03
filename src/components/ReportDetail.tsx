@@ -188,7 +188,7 @@ function EditReviewBox({ report }: { report: Report }) {
         </button>
       </div>
       <p className="admin-box__hint">
-        Razlike po poljima vidite u Moderaciji, na tabu „Izmene”.
+        Razlike po poljima vidiš u Moderaciji, na tabu „Izmene”.
       </p>
     </div>
   );
@@ -302,7 +302,7 @@ function AdminStatusBox({
         </button>
       </div>
       <p className="admin-box__hint">
-        Promena se beleži uz vaš nalog i vreme izmene. Status menjajte tek kada je proveren.
+        Promena se beleži uz tvoj nalog i vreme izmene. Status menjaj tek kada je proveren.
       </p>
     </div>
   );
@@ -355,7 +355,7 @@ export function ReportDetail() {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2200);
     } catch {
-      notify('error', 'Kopiranje nije uspelo. Označite koordinate ručno.');
+      notify('error', 'Kopiranje nije uspelo. Označi koordinate ručno.');
     }
   };
 
@@ -395,7 +395,7 @@ export function ReportDetail() {
       {isOwner ? (
         <div className="owner-bar">
           <span className="owner-bar__label">
-            <UserRound size={13} aria-hidden="true" /> Vaša prijava
+            <UserRound size={13} aria-hidden="true" /> Tvoja prijava
           </span>
           <div className="owner-bar__actions">
             {canReportFixed ? (
@@ -460,7 +460,7 @@ export function ReportDetail() {
           <Pencil size={14} aria-hidden="true" />
           <p>
             {isOwner
-              ? 'Vaša izmena je vidljiva svima. Moderator će je pregledati.'
+              ? 'Tvoja izmena je vidljiva svima. Moderator će je pregledati.'
               : 'Autor je izmenio objavljenu prijavu. Izmena čeka pregled u Moderaciji.'}
           </p>
         </div>
@@ -492,7 +492,7 @@ export function ReportDetail() {
           <Clock3 size={14} aria-hidden="true" />
           <p>
             {isOwner
-              ? 'Poslali ste dokaz sanacije. Moderator će ga pogledati i potvrditi.'
+              ? 'Dokaz sanacije je poslat. Moderator će ga pogledati i potvrditi.'
               : 'Prijavljena sanacija, čeka potvrdu moderatora.'}
           </p>
         </div>

@@ -32,8 +32,8 @@ export function InfoDialog() {
           Moderatori zajednice zatim organizuju akcije čišćenja, a svako može da im se pridruži.
         </p>
         <p>
-          Pišite na <a href="mailto:kontakt@kukaimotika.rs">kontakt@kukaimotika.rs</a> da prijavite
-          koordinatora vaše zajednice.
+          Piši na <a href="mailto:kontakt@kukaimotika.rs">kontakt@kukaimotika.rs</a> da prijaviš
+          koordinatora tvoje zajednice.
         </p>
       </div>
 

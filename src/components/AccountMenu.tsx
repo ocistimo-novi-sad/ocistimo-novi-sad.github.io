@@ -153,8 +153,8 @@ export function AccountMenu() {
               setOpen(false);
               void auth
                 .signOut()
-                .then(() => notify('info', 'Odjavljeni ste.'))
-                .catch(() => notify('error', 'Odjava nije uspela. Pokušajte ponovo.'));
+                .then(() => notify('info', 'Odjava je uspela.'))
+                .catch(() => notify('error', 'Odjava nije uspela. Pokušaj ponovo.'));
             }}
           >
             <LogOut size={15} aria-hidden="true" />

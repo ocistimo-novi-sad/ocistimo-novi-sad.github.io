@@ -137,7 +137,7 @@ export function ReportList() {
       <EmptyState
         icon={<TriangleAlert size={20} />}
         title="Prijave nisu učitane"
-        description={reportsError ?? 'Proverite internet vezu i pokušajte ponovo.'}
+        description={reportsError ?? 'Proveri internet vezu i pokušaj ponovo.'}
         action={
           <button
             type="button"
@@ -156,7 +156,7 @@ export function ReportList() {
       <EmptyState
         icon={<Inbox size={20} />}
         title="Još nema prijava"
-        description="Prijavite prvi problem u svom kvartu. Prijava je javna i pomaže komšijama da je pronađu."
+        description="Prijavi prvi problem u svom kvartu. Prijava je javna i pomaže komšijama da je pronađu."
         action={
           <button type="button" className="btn btn--primary btn--sm" onClick={startCompose}>
             <Plus size={14} aria-hidden="true" /> Prijavi problem
@@ -171,7 +171,7 @@ export function ReportList() {
       <EmptyState
         icon={<SearchX size={20} />}
         title="Nema rezultata"
-        description="Nijedna prijava ne odgovara pretrazi i filterima. Pokušajte sa drugim pojmom ili očistite filtere."
+        description="Nijedna prijava ne odgovara pretrazi i filterima. Pokušaj sa drugim pojmom ili očisti filtere."
         action={
           <button type="button" className="btn btn--quiet btn--sm" onClick={resetFilters}>
             Očisti filtere
