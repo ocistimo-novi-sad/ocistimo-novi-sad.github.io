@@ -8,6 +8,11 @@ import { useApp, type MobileTab } from '../state/app-context';
  * Mobile navigation: map or list (what they show is the layer switch), with
  * the report button in the middle. Moderators and admins also get
  * "Nova akcija" from it.
+ *
+ * Apple and Material keep a tab bar for places and put the main action in a
+ * floating button above it. The team chose this shape in #39/PR #50: "Prijavi"
+ * is the one thing a first visitor should find, so it sits where the thumb
+ * already is, between the two views.
  */
 export function MobileTabBar() {
   const {
@@ -47,8 +52,16 @@ export function MobileTabBar() {
 
   // Map and list slide like two sides of one screen where the browser supports it.
   const switchTab = (tab: MobileTab) => {
-    if (tab === mobileTab) return;
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // A second tap on Lista goes back to the top of the list.
+    if (tab === mobileTab) {
+      if (tab === 'list') {
+        document
+          .querySelector('.discovery .panel__scroll')
+          ?.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+      }
+      return;
+    }
     if (!('startViewTransition' in document) || reduceMotion) {
       setMobileTab(tab);
       return;

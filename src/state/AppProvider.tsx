@@ -57,6 +57,7 @@ import type {
   SortMode,
 } from '../types';
 import { drawerOffset } from '../components/map/drawer-offset';
+import type { Snap } from '../components/Drawer';
 
 type PendingIntent = { kind: 'create' } | { kind: 'flag'; reportId: string };
 
@@ -119,8 +120,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     load: loadActions,
   } = useActions();
 
-  const [layer, setLayerState] = useState<Layer>('reports');
-  const [mobileTab, setMobileTabState] = useState<MobileTab>('map');
+  // A reload or a shared link keeps the layer and, on a phone, the list view.
+  const [layer, setLayerState] = useState<Layer>(() =>
+    new URLSearchParams(window.location.search).get('sloj') === 'akcije' ? 'actions' : 'reports',
+  );
+  const [mobileTab, setMobileTabState] = useState<MobileTab>(() =>
+    new URLSearchParams(window.location.search).get('prikaz') === 'lista' ? 'list' : 'map',
+  );
   const [actionScope, setActionScope] = useState<ActionScope>('upcoming');
   const [actionQuery, setActionQuery] = useState('');
   const [actionsNearest, setActionsNearestState] = useState(false);
@@ -152,6 +158,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const deepLinkRef = useRef<string | null>(
     new URLSearchParams(window.location.search).get('prijava'),
   );
+  const actionLinkRef = useRef<string | null>(
+    new URLSearchParams(window.location.search).get('akcija'),
+  );
+  // Moves the phone sheet, e.g. down to "peek" for "Prikaži na mapi".
+  const [sheetRequest, setSheetRequest] = useState<{ snap: Snap; id: number }>();
+  // The report form says here whether it has text that closing would lose.
+  const composeGuardRef = useRef<(() => boolean) | null>(null);
+
+  // Where the open panel was opened from, so closing it goes back there: the
+  // list tab, the layer, or the action a report was opened from.
+  const returnTo = useRef<{ tab: MobileTab; layer: Layer; actionId: string | null } | null>(null);
+  const placeRef = useRef({
+    mobileTab,
+    layer,
+    selectedReportId,
+    selectedActionId,
+    composeOpen,
+  });
+  placeRef.current = { mobileTab, layer, selectedReportId, selectedActionId, composeOpen };
+  const rememberPlace = useCallback(() => {
+    const place = placeRef.current;
+    if (place.selectedReportId || place.selectedActionId || place.composeOpen) return;
+    returnTo.current = { tab: place.mobileTab, layer: place.layer, actionId: null };
+  }, []);
 
   useEffect(() => {
     const timers = toastTimers.current;
@@ -363,6 +393,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const selectReport = useCallback(
     (report: Report, options?: { fly?: boolean }) => {
+      const place = placeRef.current;
+      if (place.selectedActionId && !place.selectedReportId) {
+        returnTo.current = {
+          tab: returnTo.current?.tab ?? place.mobileTab,
+          layer: returnTo.current?.layer ?? place.layer,
+          actionId: place.selectedActionId,
+        };
+      } else {
+        rememberPlace();
+      }
       setSelectedReportId(report.id);
       setSelectedActionId(null);
       // On mobile this makes the map the surface behind the detail sheet, and
@@ -371,11 +411,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setMobileTabState('map');
       if (options?.fly !== false) flyTo(report, APP.focusZoom, { accountForDrawer: true });
     },
-    [flyTo],
+    [flyTo, rememberPlace],
   );
 
   const selectAction = useCallback(
     (action: CleanupAction, options?: { fly?: boolean }) => {
+      rememberPlace();
       setSelectedActionId(action.id);
       setSelectedReportId(null);
       setLayerState('actions');
@@ -383,12 +424,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setMobileTabState('map');
       if (options?.fly !== false) flyTo(action, APP.focusZoom, { accountForDrawer: true });
     },
-    [flyTo],
+    [flyTo, rememberPlace],
   );
 
+  /** Closes the panel where it is, e.g. after a tap on the map. */
   const clearSelection = useCallback(() => {
+    returnTo.current = null;
     setSelectedReportId(null);
     setSelectedActionId(null);
+  }, []);
+
+  /** Closes the panel (X, Escape, Back) and goes back to where it was opened. */
+  const closeSelection = useCallback(() => {
+    const back = returnTo.current;
+    setSelectedReportId(null);
+    if (back?.actionId) {
+      setSelectedActionId(back.actionId);
+      setLayerState('actions');
+      returnTo.current = { ...back, actionId: null };
+      return;
+    }
+    setSelectedActionId(null);
+    returnTo.current = null;
+    if (back) {
+      setMobileTabState(back.tab);
+      setLayerState(back.layer);
+    }
   }, []);
 
   /**
@@ -397,18 +458,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
    */
   const showReportOnMap = useCallback(
     (report: Report) => {
-      if (window.innerWidth > 900) {
-        flyTo(report, APP.focusZoom, { accountForDrawer: true });
-        return;
+      // On a phone the sheet goes down to "peek" and stays open above the pin.
+      if (window.innerWidth <= 900) {
+        setSheetRequest((value) => ({ snap: 'peek', id: (value?.id ?? 0) + 1 }));
       }
-
-      clearSelection();
-      window.requestAnimationFrame(() => flyTo(report, APP.focusZoom));
+      flyTo(report, APP.focusZoom, { accountForDrawer: true });
     },
-    [clearSelection, flyTo],
+    [flyTo],
   );
 
   const openCompose = useCallback(() => {
+    rememberPlace();
     setSelectedReportId(null);
     setSelectedActionId(null);
     setComposeOpen(true);
@@ -416,7 +476,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setComposeLocationState(null);
     setLayerState('reports');
     setMobileTabState('map');
-  }, []);
+  }, [rememberPlace]);
 
   const startCompose = useCallback(() => {
     if (composeOpen) return;
@@ -432,10 +492,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setComposeOpen(false);
     setComposeEditing(null);
     setComposeLocationState(null);
+    const back = returnTo.current;
+    returnTo.current = null;
+    if (back) {
+      setMobileTabState(back.tab);
+      setLayerState(back.layer);
+    }
   }, []);
 
   /** Opens the report form prefilled with an existing report. */
   const editReport = useCallback((report: Report) => {
+    rememberPlace();
     setSelectedReportId(null);
     setSelectedActionId(null);
     setModal(null);
@@ -444,7 +511,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setComposeOpen(true);
     setLayerState('reports');
     setMobileTabState('map');
-  }, []);
+  }, [rememberPlace]);
 
   const setComposeLocation = useCallback((coordinates: Coordinates) => {
     setComposeLocationState(coordinates);
@@ -913,14 +980,153 @@ export function AppProvider({ children }: { children: ReactNode }) {
       });
   }, [applyReport, auth.ready, auth.user, knownReports, notify, reportsPhase, selectReport]);
 
-  // Keep the address bar pointing at the open report so it can be shared.
+  // Deep link to an action (?akcija=<id>), once the actions are loaded.
   useEffect(() => {
-    if (deepLinkRef.current) return;
+    const actionId = actionLinkRef.current;
+    if (!actionId || actionsPhase === 'loading') return;
+    actionLinkRef.current = null;
+    const found = actions.find((action) => action.id === actionId);
+    if (found) selectAction(found);
+    else notify('info', 'Akcija nije pronađena. Možda je otkazana ili obrisana.');
+  }, [actions, actionsPhase, notify, selectAction]);
+
+  // --- Browser history -----------------------------------------------------
+  // Opening a panel or a dialog adds a history entry, so Back closes it (and
+  // Forward opens it again) instead of leaving the site. Each entry remembers
+  // its place in `historyStack`; the address names what is open, so it can be
+  // shared and survives a reload.
+  const panelKey = [
+    composeOpen
+      ? `nova:${composeEditing?.id ?? ''}`
+      : selectedReportId
+        ? `prijava:${selectedReportId}`
+        : selectedActionId
+          ? `akcija:${selectedActionId}`
+          : '',
+    modal ? `dijalog:${modal.kind}` : '',
+  ]
+    .filter(Boolean)
+    .join('|');
+  const historyStack = useRef<string[]>(['']);
+  const historyPos = useRef(0);
+  // Set while history.go() runs for a panel closed with X, Escape or a tap.
+  const historyGoing = useRef(false);
+
+  const pageUrl = useMemo(() => {
     const url = new URL(window.location.href);
+    for (const name of ['prijava', 'akcija', 'sloj', 'prikaz']) url.searchParams.delete(name);
     if (selectedReportId) url.searchParams.set('prijava', selectedReportId);
-    else url.searchParams.delete('prijava');
-    if (url.href !== window.location.href) window.history.replaceState(null, '', url);
-  }, [selectedReportId]);
+    else if (selectedActionId) url.searchParams.set('akcija', selectedActionId);
+    else if (layer === 'actions') url.searchParams.set('sloj', 'akcije');
+    if (mobileTab === 'list') url.searchParams.set('prikaz', 'lista');
+    return url.href;
+  }, [layer, mobileTab, selectedActionId, selectedReportId]);
+  const latestHistory = useRef({ panelKey, pageUrl });
+  latestHistory.current = { panelKey, pageUrl };
+
+  useEffect(() => {
+    if (deepLinkRef.current || actionLinkRef.current || historyGoing.current) return;
+    const stack = historyStack.current;
+    const pos = historyPos.current;
+    const current = stack[pos] ?? '';
+    if (panelKey === current) {
+      if (pageUrl !== window.location.href) {
+        window.history.replaceState({ kim: panelKey, pos }, '', pageUrl);
+      }
+      return;
+    }
+    const depth = (key: string) => (key ? key.split('|').length : 0);
+    // Closed: go back to the entry that shows what is still open.
+    if (depth(panelKey) < depth(current)) {
+      const target = stack.lastIndexOf(panelKey, pos - 1);
+      if (target >= 0) {
+        historyGoing.current = true;
+        window.history.go(target - pos);
+        return;
+      }
+    }
+    // Opened on top of what was there, or a report opened from its action.
+    if (
+      depth(panelKey) > depth(current) ||
+      (current.startsWith('akcija:') && panelKey.startsWith('prijava:'))
+    ) {
+      stack.length = pos + 1;
+      stack.push(panelKey);
+      historyPos.current = pos + 1;
+      window.history.pushState({ kim: panelKey, pos: pos + 1 }, '', pageUrl);
+      return;
+    }
+    stack[pos] = panelKey;
+    window.history.replaceState({ kim: panelKey, pos }, '', pageUrl);
+  }, [pageUrl, panelKey]);
+
+  // Back and Forward: show what the entry stands for.
+  const applyHistory = useRef<(key: string) => void>(() => {});
+  applyHistory.current = (key: string) => {
+    const parts = key ? key.split('|') : [];
+    const panel = parts.find((part) => !part.startsWith('dijalog:')) ?? '';
+    const dialog = parts.find((part) => part.startsWith('dijalog:')) ?? '';
+    // A dialog's contents can't be rebuilt from the address, so only closing is replayed.
+    if (!dialog && modal) {
+      pendingIntentRef.current = null;
+      setModal(null);
+    }
+    const openPanel = latestHistory.current.panelKey.split('|')[0];
+    if (panel === (openPanel.startsWith('dijalog:') ? '' : openPanel)) return;
+    if (composeOpen) {
+      // A form with text stays open and asks first; its entry comes back.
+      if (composeGuardRef.current?.()) {
+        const pos = historyPos.current + 1;
+        historyStack.current.length = pos;
+        historyStack.current.push(latestHistory.current.panelKey);
+        historyPos.current = pos;
+        window.history.pushState(
+          { kim: latestHistory.current.panelKey, pos },
+          '',
+          latestHistory.current.pageUrl,
+        );
+        return;
+      }
+      cancelCompose();
+    }
+    if (!panel) {
+      closeSelection();
+      return;
+    }
+    const id = panel.slice(panel.indexOf(':') + 1);
+    if (panel.startsWith('prijava:')) {
+      const report = knownReports.find((item) => item.id === id);
+      if (report) selectReport(report);
+      else closeSelection();
+    } else if (panel.startsWith('akcija:')) {
+      const action = actions.find((item) => item.id === id);
+      if (action) selectAction(action);
+      else closeSelection();
+    } else if (panel === 'nova:') {
+      openCompose();
+    }
+  };
+
+  useEffect(() => {
+    const onPopState = (event: PopStateEvent) => {
+      const state = event.state as { kim?: string; pos?: number } | null;
+      const pos = state?.pos ?? 0;
+      const key = state?.kim ?? '';
+      historyPos.current = pos;
+      historyStack.current[pos] = key;
+      if (historyGoing.current) {
+        // Our own go() after a close: the app already shows the right thing.
+        historyGoing.current = false;
+        const latest = latestHistory.current;
+        historyStack.current[pos] = latest.panelKey;
+        window.history.replaceState({ kim: latest.panelKey, pos }, '', latest.pageUrl);
+        return;
+      }
+      applyHistory.current(key);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   // The map's "my location" button flies there; sorting by distance only needs
   // the position, so it passes fly: false and the map stays where it is.
@@ -1029,7 +1235,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       showReportOnMap,
       selectAction,
       clearSelection,
-      closeSelection: clearSelection,
+      closeSelection,
+      sheetRequest,
+      composeGuardRef,
       layer,
       setLayer,
       mobileTab,
@@ -1109,6 +1317,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       showReportOnMap,
       selectAction,
       clearSelection,
+      closeSelection,
+      sheetRequest,
       layer,
       setLayer,
       mobileTab,

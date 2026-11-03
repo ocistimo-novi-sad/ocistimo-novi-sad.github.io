@@ -276,6 +276,7 @@ export function MapCanvas() {
 
   return (
     <div className={`map-shell${composeOpen ? ' is-picking' : ''}`}>
+      <h2 className="visually-hidden">{layer === 'actions' ? 'Mapa akcija' : 'Mapa prijava'}</h2>
       {/* The bars come before the map in the page, so Tab reaches them before
           the markers (WCAG 2.4.3). They float above it, so nothing moves on screen. */}
       {isMobile && !composeOpen ? (

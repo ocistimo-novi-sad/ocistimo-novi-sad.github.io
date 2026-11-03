@@ -1,8 +1,10 @@
+import { useEffect } from 'react';
 import { ActionsPanel } from './components/ActionsPanel';
 import { ActionDetail } from './components/ActionDetail';
 import { AdminPanel } from './components/admin/AdminPanel';
 import { ComposeDrawer } from './components/ComposeDrawer';
 import { DiscoveryPanel } from './components/DiscoveryPanel';
+import { FiltersSheet } from './components/FiltersBar';
 import { FirstVisitGuide } from './components/FirstVisitGuide';
 import { useIsMobile } from './hooks/useMediaQuery';
 import { Header } from './components/Header';
@@ -39,6 +41,8 @@ function ModalHost() {
       return <MyReportsPanel />;
     case 'resolve':
       return <ResolveDialog reportId={modal.reportId} />;
+    case 'filters':
+      return <FiltersSheet onClose={closeModal} />;
     case 'lightbox':
       return (
         <Lightbox
@@ -57,6 +61,19 @@ function AppShell() {
     useApp();
   const isMobile = useIsMobile();
   const drawerOpen = composeOpen || Boolean(selectedReport) || Boolean(selectedAction);
+
+  // The tab title names what is open, the specific part first (WCAG 2.4.2).
+  useEffect(() => {
+    document.title = composeOpen
+      ? `${composeEditing ? 'Izmena prijave' : 'Nova prijava'} · Kuka i Motika`
+      : selectedReport
+        ? `${selectedReport.title} · Prijava · Kuka i Motika`
+        : selectedAction
+          ? `${selectedAction.title} · Akcija čišćenja · Kuka i Motika`
+          : layer === 'actions'
+            ? 'Akcije čišćenja · Kuka i Motika'
+            : 'Kuka i Motika: mapa problema i akcija čišćenja';
+  }, [composeOpen, composeEditing, selectedReport, selectedAction, layer]);
 
   return (
     <div className={`app${drawerOpen ? ' has-drawer' : ''}`}>

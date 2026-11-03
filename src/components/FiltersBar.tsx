@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type Ref } from 'react';
+import { useEffect, useRef, type Ref } from 'react';
 import { ArrowUpDown, ChevronDown, SlidersHorizontal, Search, X } from 'lucide-react';
 import {
   CATEGORIES,
@@ -201,7 +201,7 @@ function ActionFilterOptions() {
   );
 }
 
-function FiltersSheet({ onClose }: { onClose: () => void }) {
+export function FiltersSheet({ onClose }: { onClose: () => void }) {
   const { layer, filteredReports, filteredActions, updateFilters, setActionScope } = useApp();
   const isActions = layer === 'actions';
   const count = isActions ? filteredActions.length : filteredReports.length;
@@ -249,8 +249,7 @@ function FiltersSheet({ onClose }: { onClose: () => void }) {
 
 /** Opens the filters of the current layer; the badge counts what is narrowed. */
 export function FiltersButton() {
-  const { layer, filters, actionScope } = useApp();
-  const [open, setOpen] = useState(false);
+  const { layer, filters, actionScope, openModal } = useApp();
 
   const count =
     layer === 'actions'
@@ -264,14 +263,13 @@ export function FiltersButton() {
       <button
         type="button"
         className={`filters-btn${count > 0 ? ' is-active' : ''}`}
-        onClick={() => setOpen(true)}
+        onClick={() => openModal({ kind: 'filters' })}
         aria-haspopup="dialog"
       >
         <SlidersHorizontal size={14} aria-hidden="true" />
         <span>Filteri</span>
         {count > 0 ? <span className="filters-btn__count">{count}</span> : null}
       </button>
-      {open ? <FiltersSheet onClose={() => setOpen(false)} /> : null}
     </>
   );
 }

@@ -152,6 +152,9 @@ export function ActionsPanel() {
       </div>
 
       <div className="panel__scroll">
+        <h2 className="visually-hidden">
+          {scope === 'upcoming' ? 'Predstojeće akcije' : 'Završene akcije'}
+        </h2>
         <div className="panel__list-head">
           <NearMeButton active={actionsNearest} onToggle={setActionsNearest} />
           <span className="panel__list-tools">

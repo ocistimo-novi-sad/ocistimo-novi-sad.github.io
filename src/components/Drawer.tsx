@@ -66,8 +66,12 @@ export function Drawer({
   // A drag ends with a click on the handle in some browsers; that click must not toggle.
   const suppressClick = useRef(false);
 
+  // Only requests made while this panel is open; an older one is not replayed.
+  const seenRequest = useRef(snapRequest?.id);
   useEffect(() => {
-    if (snapRequest) setSnap(snapRequest.snap);
+    if (!snapRequest || snapRequest.id === seenRequest.current) return;
+    seenRequest.current = snapRequest.id;
+    setSnap(snapRequest.snap);
   }, [snapRequest]);
 
   // Focus moves into the panel when it opens and back when it closes (WAI-ARIA

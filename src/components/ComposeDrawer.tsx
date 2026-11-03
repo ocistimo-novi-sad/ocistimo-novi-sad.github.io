@@ -147,6 +147,7 @@ export function ComposeDrawer() {
   const {
     composeLocation,
     composeEditing: editing,
+    composeGuardRef,
     setComposeLocation,
     cancelCompose,
     addCreatedReport,
@@ -210,6 +211,18 @@ export function ComposeDrawer() {
     photos.length !== initial.imageUrls.length ||
     photos.some((photo, index) => photo.url !== initial.imageUrls[index]) ||
     locationMoved;
+
+  // Back (browser or phone) asks the same question as "Otkaži" when the form has text.
+  useEffect(() => {
+    composeGuardRef.current = () => {
+      if (submitting || submitted || !dirty) return false;
+      setConfirmClose(true);
+      return true;
+    };
+    return () => {
+      composeGuardRef.current = null;
+    };
+  });
 
   // Wording for the three ways this drawer is used.
   const isModeratorEdit = Boolean(editing && auth.isModerator);

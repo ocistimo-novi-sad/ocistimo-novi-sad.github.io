@@ -87,6 +87,7 @@ export function DiscoveryPanel() {
           </span>
         </div>
 
+        <h2 className="visually-hidden">Lista prijava</h2>
         <ReportList />
         <LoadMoreButton />
 

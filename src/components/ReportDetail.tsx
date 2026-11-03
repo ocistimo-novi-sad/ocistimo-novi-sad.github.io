@@ -36,6 +36,7 @@ import { DeleteReportButton } from './ui/DeleteReportButton';
 import { ModerationBadge } from './ui/ModerationBadge';
 import { ReportPlan } from './ui/ReportPlan';
 import { ReportProgress } from './ui/ReportProgress';
+import { ShareButton } from './ui/ShareButton';
 import { StatusBadge } from './ui/StatusBadge';
 import { RejectForm } from './moderation/RejectForm';
 import type { Report, ReportStatus } from '../types';
@@ -320,6 +321,7 @@ export function ReportDetail() {
     openModal,
     selectAction,
     showReportOnMap,
+    sheetRequest,
     notify,
   } = useApp();
 
@@ -374,6 +376,7 @@ export function ReportDetail() {
     <Drawer
       label={`Prijava: ${report.title}`}
       onClose={closeSelection}
+      snapRequest={sheetRequest}
       footer={
         <div className="detail-foot">
           {published ? (
@@ -388,7 +391,11 @@ export function ReportDetail() {
           ) : (
             <span className="detail-foot__hint">Nije javno</span>
           )}
-          <span className="detail-foot__hint">Prijava zajednice</span>
+          {published ? (
+            <ShareButton title={report.title} />
+          ) : (
+            <span className="detail-foot__hint">Prijava zajednice</span>
+          )}
         </div>
       }
     >

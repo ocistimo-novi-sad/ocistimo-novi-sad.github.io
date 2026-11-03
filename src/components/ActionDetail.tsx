@@ -5,7 +5,6 @@ import {
   Check,
   Clock,
   ExternalLink,
-  HandHeart,
   MapPin,
   Pencil,
   ShieldCheck,
@@ -23,6 +22,7 @@ import { PhotoGallery } from './PhotoGallery';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { SectionLabel, Spinner } from './ui/EmptyState';
 import { ActionStatusBadge } from './ui/ActionStatusBadge';
+import { ShareButton } from './ui/ShareButton';
 import { StatusBadge } from './ui/StatusBadge';
 
 export function ActionDetail() {
@@ -67,10 +67,7 @@ export function ActionDetail() {
       className="drawer--action"
       footer={
         <div className="detail-foot">
-          <span className="link-btn link-btn--muted">
-            <HandHeart size={13} aria-hidden="true" />
-            Akcija zajednice
-          </span>
+          <ShareButton title={action.title} />
           <span className="detail-foot__hint">
             {actionReports.length}{' '}
             {plural(

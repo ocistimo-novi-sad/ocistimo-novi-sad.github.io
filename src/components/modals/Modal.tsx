@@ -52,7 +52,7 @@ export function Modal({
         ref={panelRef}
         tabIndex={-1}
       >
-        <header className="modal__head">
+        <div className="modal__head">
           <div>
             <h2 id={titleId}>{title}</h2>
             {description ? <p id={descriptionId}>{description}</p> : null}
@@ -60,9 +60,9 @@ export function Modal({
           <button type="button" className="modal__close" onClick={onClose} aria-label="Zatvori">
             <X size={16} aria-hidden="true" />
           </button>
-        </header>
+        </div>
         <div className="modal__body">{children}</div>
-        {footer ? <footer className="modal__foot">{footer}</footer> : null}
+        {footer ? <div className="modal__foot">{footer}</div> : null}
       </div>
     </div>,
     document.body,

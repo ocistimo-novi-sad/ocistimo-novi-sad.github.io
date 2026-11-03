@@ -49,7 +49,9 @@ export function Header() {
         <AccountMenu />
       </div>
 
-      <span className="visually-hidden">{APP.tagline}</span>
+      <h1 className="visually-hidden">
+        {APP.name}: {APP.tagline}
+      </h1>
     </header>
   );
 }
