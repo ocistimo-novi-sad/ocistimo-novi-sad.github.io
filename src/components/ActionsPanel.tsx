@@ -235,7 +235,7 @@ export function ActionsPanel() {
             title={scope === 'upcoming' ? 'Nema planiranih akcija' : 'Još nema završenih akcija'}
             description={
               scope === 'upcoming'
-                ? 'Kada se za istu lokaciju prikupi dovoljno prijava, administracija objavljuje akciju čišćenja. Do tada možete pregledati prijave na mapi.'
+                ? 'Moderatori i koordinatori zajednice organizuju akcije čišćenja. Do tada možete pregledati prijave na mapi.'
                 : 'Završene akcije se prikazuju ovde sa svim rešenim prijavama.'
             }
             action={

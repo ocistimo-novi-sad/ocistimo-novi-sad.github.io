@@ -914,3 +914,9 @@
   }
 }
 
+
+/* The card ignores taps so the map stays draggable; its buttons still work. */
+.map-state__card .btn {
+  margin-top: 10px;
+  pointer-events: auto;
+}

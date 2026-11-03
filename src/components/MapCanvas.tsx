@@ -32,7 +32,7 @@ import { formatCoordinates } from '../lib/format';
 import { isInServiceArea, roundCoordinate } from '../lib/geo';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { Spinner } from './ui/EmptyState';
-import { FiltersButton, SEARCH_PLACEHOLDER, SearchInput } from './FiltersBar';
+import { ActiveFilters, FiltersButton, SEARCH_PLACEHOLDER, SearchInput } from './FiltersBar';
 import { LayerSwitch } from './LayerSwitch';
 import { DraftMarkers, ReportMarkers } from './map/ReportMarkers';
 import { ActionMarkers } from './map/ActionMarkers';
@@ -105,6 +105,8 @@ export function MapCanvas() {
     myUnpublishedReports,
     actions,
     filteredActions,
+    actionScope,
+    setActionScope,
     actionQuery,
     setActionQuery,
     layer,
@@ -323,6 +325,7 @@ export function MapCanvas() {
             )}
             <FiltersButton />
           </div>
+          <ActiveFilters />
         </div>
       ) : null}
 
@@ -552,17 +555,54 @@ export function MapCanvas() {
         </div>
       ) : null}
 
-      {layer === 'actions' && actions.length === 0 && app.actionsPhase === 'ready' ? (
+      {layer === 'actions' && visibleActions.length === 0 && app.actionsPhase === 'ready' ? (
         <div className="map-state">
           <div className="map-state__card">
             <div className="map-state__icon">
               <Info size={18} aria-hidden="true" />
             </div>
-            <h2>Još nema akcija</h2>
-            <p>
-              Akcije čišćenja objavljuje administracija kada se prikupi dovoljno prijava za
-              istu lokaciju.
-            </p>
+            {actions.length === 0 ? (
+              <>
+                <h2>Još nema akcija</h2>
+                <p>Moderatori i koordinatori zajednice organizuju akcije čišćenja.</p>
+              </>
+            ) : actionQuery.trim() ? (
+              <>
+                <h2>Nema akcija za ovu pretragu</h2>
+                <p>Pokušajte drugi naziv ili mesto okupljanja.</p>
+                <button
+                  type="button"
+                  className="btn btn--quiet btn--sm"
+                  onClick={() => setActionQuery('')}
+                >
+                  Obriši pretragu
+                </button>
+              </>
+            ) : actionScope === 'upcoming' ? (
+              <>
+                <h2>Nema predstojećih akcija</h2>
+                <p>Moderatori i koordinatori zajednice organizuju akcije čišćenja.</p>
+                <button
+                  type="button"
+                  className="btn btn--quiet btn--sm"
+                  onClick={() => setActionScope('past')}
+                >
+                  Pogledaj završene
+                </button>
+              </>
+            ) : (
+              <>
+                <h2>Još nema završenih akcija</h2>
+                <p>Kad se akcija završi, ovde se vidi sa svim rešenim prijavama.</p>
+                <button
+                  type="button"
+                  className="btn btn--quiet btn--sm"
+                  onClick={() => setActionScope('upcoming')}
+                >
+                  Pogledaj predstojeće
+                </button>
+              </>
+            )}
           </div>
         </div>
       ) : null}
