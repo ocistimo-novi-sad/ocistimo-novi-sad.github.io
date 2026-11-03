@@ -157,6 +157,7 @@
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     box-shadow: 0 -20px 44px -28px rgba(20, 28, 22, 0.55);
     animation: sheet-in 0.2s var(--ease);
+    transition: height var(--dur-3) var(--ease);
   }
 
   .drawer.is-expanded {
@@ -171,6 +172,11 @@
     height: 92vh;
   }
 
+  /* Lowest position: the title and the first lines, with most of the map visible. */
+  .drawer.is-peek {
+    height: min(34vh, 250px);
+  }
+
   .drawer__handle {
     position: absolute;
     top: 0;
@@ -181,8 +187,10 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    height: 24px;
+    height: 28px;
     color: var(--muted-2);
+    cursor: grab;
+    touch-action: none;
   }
 
   .drawer__grip {

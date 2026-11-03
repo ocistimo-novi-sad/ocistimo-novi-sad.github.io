@@ -561,10 +561,12 @@
   background: var(--muted);
 }
 
+/* A newly selected report hops once, so it is easy to find on a busy map. */
 .pin.is-selected {
   width: 38px;
   height: 38px;
   border-width: 3px;
+  animation: pin-hop 0.52s var(--ease-spring);
   box-shadow:
     0 0 0 3px rgba(255, 255, 255, 0.6),
     0 4px 12px -2px rgba(20, 28, 22, 0.45);
@@ -609,6 +611,19 @@
   opacity: 0;
   pointer-events: none;
   animation: pin-pulse 1.8s var(--ease) infinite;
+}
+
+/* Uses `translate`, which stays separate from the `scale` used on hover. */
+@keyframes pin-hop {
+  0%,
+  70%,
+  100% {
+    translate: 0 0;
+  }
+
+  35% {
+    translate: 0 -10px;
+  }
 }
 
 @keyframes pin-pulse {
