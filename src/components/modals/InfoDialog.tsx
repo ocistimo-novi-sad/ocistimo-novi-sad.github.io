@@ -75,11 +75,7 @@ export function InfoDialog() {
 
       <div className="info-block">
         <h4>Podaci i privatnost</h4>
-        <p>
-          Prijave su javne. Uz prijavu se prikazuje ime iz naloga, ali ne i mejl adresa. Koordinate
-          su numeričke i javne. Pravila pristupa u Firestore-u sprečavaju obične korisnike da menjaju
-          statuse ili objavljuju zvanične akcije.
-        </p>
+        <p>Prijave su javne. Uz prijavu se prikazuje ime iz naloga, ali ne i mejl adresa.</p>
       </div>
 
       <p className="info-links">
