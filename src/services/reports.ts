@@ -64,12 +64,16 @@ const MODERATION_VALUES: ModerationState[] = ['pending', 'approved', 'rejected']
 
 const STATUS_VALUES: ReportStatus[] = [
   'new',
-  'verified',
   'planned',
   'in_progress',
   'resolved',
   'not_suitable',
 ];
+
+/** Statuses that are no longer offered in the UI but may still be stored. */
+const LEGACY_STATUSES: Record<string, ReportStatus> = {
+  verified: 'new',
+};
 
 export interface ReportsPage {
   reports: Report[];
@@ -139,7 +143,7 @@ export function mapReport(id: string, data: DocumentData): Report | null {
 
   const status = STATUS_VALUES.includes(data.status as ReportStatus)
     ? (data.status as ReportStatus)
-    : 'new';
+    : (LEGACY_STATUSES[data.status as string] ?? 'new');
   // Reports created before pre-moderation have no state and were public.
   const moderation = MODERATION_VALUES.includes(data.moderation as ModerationState)
     ? (data.moderation as ModerationState)

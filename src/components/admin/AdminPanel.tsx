@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pencil, Plus, ShieldAlert, ShieldCheck, X } from 'lucide-react';
+import { Pencil, Plus, ShieldAlert, ShieldCheck, Trash2, X } from 'lucide-react';
 import { ACTION_STATUS_MAP } from '../../config';
 import { formatDate, formatTime, plural } from '../../lib/format';
 import { toSerbianError } from '../../services/errors';
@@ -19,6 +19,8 @@ export function AdminPanel() {
     actions,
     reports,
     reloadActions,
+    deleteAction,
+    reloadReports,
     notify,
   } = useApp();
 
@@ -26,8 +28,11 @@ export function AdminPanel() {
   const [tab, setTab] = useState<'actions' | 'users'>('actions');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<CleanupAction | null>(null);
-  const [confirmId, setConfirmId] = useState<string | null>(null);
-  const [cancelling, setCancelling] = useState(false);
+  const [confirming, setConfirming] = useState<{
+    id: string;
+    kind: 'cancel' | 'delete';
+  } | null>(null);
+  const [busy, setBusy] = useState(false);
   const prefilled = useRef(false);
 
   useEffect(() => {
@@ -60,16 +65,28 @@ export function AdminPanel() {
   }
 
   const cancelAction = async (actionId: string) => {
-    setCancelling(true);
+    setBusy(true);
     try {
       await updateActionStatus(actionId, 'cancelled');
       await reloadActions();
       notify('success', 'Akcija je otkazana.');
-      setConfirmId(null);
+      setConfirming(null);
     } catch (error) {
       notify('error', toSerbianError(error, 'Akciju nije moguće otkazati.'));
     } finally {
-      setCancelling(false);
+      setBusy(false);
+    }
+  };
+
+  const removeAction = async (action: CleanupAction) => {
+    setBusy(true);
+    try {
+      await deleteAction(action);
+      setConfirming(null);
+    } catch {
+      // The provider already surfaced the error.
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -95,7 +112,9 @@ export function AdminPanel() {
           onSaved={() => {
             setFormOpen(false);
             setEditing(null);
+            // Saving an action also rewrites the status of its linked reports.
             void reloadActions();
+            void reloadReports();
           }}
         />
       </Modal>
@@ -182,46 +201,69 @@ export function AdminPanel() {
                   </div>
 
                   <div className="admin-action-row__actions">
-                    <button
-                      type="button"
-                      className="btn btn--quiet btn--sm"
-                      onClick={() => {
-                        setEditing(action);
-                        setFormOpen(true);
-                      }}
-                    >
-                      <Pencil size={12} aria-hidden="true" /> Uredi
-                    </button>
-
-                    {confirmId === action.id ? (
+                    {confirming?.id === action.id ? (
                       <>
+                        {confirming.kind === 'delete' ? (
+                          <span className="delete-confirm__text">Trajno obrisati?</span>
+                        ) : null}
                         <button
                           type="button"
                           className="btn btn--danger btn--sm"
-                          onClick={() => void cancelAction(action.id)}
-                          aria-disabled={cancelling || undefined}
+                          onClick={() =>
+                            void (confirming.kind === 'delete'
+                              ? removeAction(action)
+                              : cancelAction(action.id))
+                          }
+                          aria-disabled={busy || undefined}
                         >
-                          {cancelling ? <Spinner size={12} /> : <X size={12} aria-hidden="true" />}
-                          Potvrdi
+                          {busy ? (
+                            <Spinner size={12} />
+                          ) : confirming.kind === 'delete' ? (
+                            <Trash2 size={12} aria-hidden="true" />
+                          ) : (
+                            <X size={12} aria-hidden="true" />
+                          )}
+                          {confirming.kind === 'delete' ? 'Obriši' : 'Potvrdi'}
                         </button>
                         <button
                           type="button"
                           className="btn btn--quiet btn--sm"
-                          onClick={() => setConfirmId(null)}
-                          aria-disabled={cancelling || undefined}
+                          onClick={() => setConfirming(null)}
+                          aria-disabled={busy || undefined}
                         >
                           Ne
                         </button>
                       </>
-                    ) : action.status !== 'cancelled' && action.status !== 'completed' ? (
-                      <button
-                        type="button"
-                        className="btn btn--quiet btn--sm"
-                        onClick={() => setConfirmId(action.id)}
-                      >
-                        Otkaži
-                      </button>
-                    ) : null}
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          className="btn btn--quiet btn--sm"
+                          onClick={() => {
+                            setEditing(action);
+                            setFormOpen(true);
+                          }}
+                        >
+                          <Pencil size={12} aria-hidden="true" /> Uredi
+                        </button>
+                        {action.status !== 'cancelled' && action.status !== 'completed' ? (
+                          <button
+                            type="button"
+                            className="btn btn--quiet btn--sm"
+                            onClick={() => setConfirming({ id: action.id, kind: 'cancel' })}
+                          >
+                            Otkaži
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          className="btn btn--quiet btn--sm"
+                          onClick={() => setConfirming({ id: action.id, kind: 'delete' })}
+                        >
+                          <Trash2 size={12} aria-hidden="true" /> Obriši
+                        </button>
+                      </>
+                    )}
                   </div>
                 </li>
               ))}

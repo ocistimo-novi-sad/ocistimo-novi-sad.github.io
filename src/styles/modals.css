@@ -517,6 +517,7 @@
 .admin-action-row__actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
   gap: 4px;
 }

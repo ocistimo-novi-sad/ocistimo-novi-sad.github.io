@@ -54,6 +54,8 @@ export interface AppContextValue {
   actionsPhase: DataPhase;
   actionsError: string | null;
   reloadActions: () => Promise<void>;
+  /** Admins: deletes the action and its photos; throws so the button can reset. */
+  deleteAction: (action: CleanupAction) => Promise<void>;
   /** Actions matching the search, split by period; the map and the list share them. */
   upcomingActions: CleanupAction[];
   pastActions: CleanupAction[];
