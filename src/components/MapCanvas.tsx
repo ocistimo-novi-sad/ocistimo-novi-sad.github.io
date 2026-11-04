@@ -37,6 +37,7 @@ import { LayerSwitch } from './LayerSwitch';
 import { DraftMarkers, ReportMarkers } from './map/ReportMarkers';
 import { ActionMarkers } from './map/ActionMarkers';
 import { tempIcon, userIcon } from './map/map-icons';
+import { NamedMarker } from './map/NamedMarker';
 
 function MapBridge() {
   const map = useMap();
@@ -281,8 +282,9 @@ export function MapCanvas() {
         )}
 
         {composeLocation ? (
-          <Marker
+          <NamedMarker
             position={[composeLocation.latitude, composeLocation.longitude]}
+            label="Mesto nove prijave. Prevuci ga da ga pomeriš."
             icon={tempIcon()}
             draggable
             autoPan
@@ -300,7 +302,7 @@ export function MapCanvas() {
             <Tooltip direction="top" offset={[0, -26]} className="ns-tooltip">
               Nova prijava. Pomeri marker.
             </Tooltip>
-          </Marker>
+          </NamedMarker>
         ) : null}
       </MapContainer>
 
