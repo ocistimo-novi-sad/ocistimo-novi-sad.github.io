@@ -225,7 +225,7 @@ export async function updateActionStatus(
 export async function deleteActionRecord(actionId: string): Promise<void> {
   const db = requireDb();
   if (!requireAuth().currentUser) {
-    throw new AppError('unauthenticated', 'Prijavite se kao administrator.');
+    throw new AppError('unauthenticated', 'Prijavi se kao moderator ili administrator.');
   }
 
   await deleteDoc(doc(db, 'actions', actionId));

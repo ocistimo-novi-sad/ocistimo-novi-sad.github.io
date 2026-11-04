@@ -261,7 +261,10 @@ export function ActionsPanel() {
       </div>
 
       <div className="panel__foot">
-        <span>Akcije objavljuje administracija na osnovu prijava iz zajednice.</span>
+        <span>
+          Akcije objavljuju moderatori (koordinatori zajednice) i administratori na osnovu
+          prijava iz zajednice.
+        </span>
       </div>
     </section>
   );

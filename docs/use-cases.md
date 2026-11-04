@@ -43,8 +43,8 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 |---|---|---|
 | **Posetilac** | Bilo ko ko otvori sajt, bez prijave | Nije potrebno ništa |
 | **Član zajednice** | Korisnik prijavljen Google nalogom | Klikom na „Prijava“ i izborom Google naloga. Registracija ne postoji. |
-| **Moderator** | Član koji pregleda i uređuje prijave i pravi akcije čišćenja (koordinator zajednice) | Dodeljuje ga administrator u aplikaciji (Administracija → Korisnici i uloge) |
-| **Administrator** | Moderator koji uz to briše akcije i upravlja ulogama | Dodeljuje ga samo vlasnik projekta, van aplikacije. Iz aplikacije se ne može dodeliti ni oduzeti. |
+| **Moderator** | Član koji pregleda i uređuje prijave i pravi, uređuje i briše akcije čišćenja (koordinator zajednice) | Dodeljuje ga administrator u aplikaciji (Administracija → Korisnici i uloge) |
+| **Administrator** | Moderator koji uz to upravlja ulogama | Dodeljuje ga samo vlasnik projekta, van aplikacije. Iz aplikacije se ne može dodeliti ni oduzeti. |
 
 ### 2.1 Šta koja uloga može
 
@@ -63,7 +63,7 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 | Promena statusa prijave | — | — | ✓ | ✓ |
 | Izmena i brisanje bilo čije prijave | — | — | ✓ | ✓ |
 | Obrada označenog (spornog) sadržaja | — | — | ✓ | ✓ |
-| Kreiranje, uređivanje, otkazivanje i brisanje akcija čišćenja | — | — | — | ✓ |
+| Kreiranje, uređivanje, otkazivanje i brisanje akcija čišćenja | — | — | ✓ | ✓ |
 | Spisak korisnika, dodela i oduzimanje uloge moderatora | — | — | — | ✓ |
 
 ### 2.2 Važne napomene o ulogama
@@ -426,7 +426,7 @@ Moderator ima sve što i član zajednice, plus stavku **Moderacija** u meniju na
 
 ## 9. Slučajevi korišćenja — administrator
 
-Administrator ima sva prava moderatora, plus tab „Korisnici i uloge“ u stavci **Administracija** u meniju naloga. Kreiranje, uređivanje i otkazivanje akcija (UC-21 do UC-23) mogu i moderatori: njima se ista stavka zove „Akcije čišćenja“, a dugme za upravljanje akcijama vide u prikazu Akcije.
+Administrator ima sva prava moderatora, plus tab „Korisnici i uloge“ u stavci **Administracija** u meniju naloga. Kreiranje, uređivanje, otkazivanje i brisanje akcija (UC-21 do UC-24) mogu i moderatori: njima se ista stavka zove „Akcije čišćenja“, a dugme za upravljanje akcijama vide u prikazu Akcije.
 
 ### UC-21 Kreiranje akcije čišćenja
 
@@ -546,7 +546,7 @@ Svaka poruka ima tekstualnu i HTML verziju i završava se rečenicom: „Ovu por
 | Akcija pređe u „U toku“ ili „Završeno“ | — |
 | Prijava je uklonjena iz akcije | — |
 | Akcija bez povezanih prijava je otkazana | Nema kome da se pošalje |
-| Administrator obriše akciju | Autori povezanih prijava nisu obavešteni; za najavu odustajanja služi otkazivanje (E-11) |
+| Moderator ili administrator obriše akciju | Autori povezanih prijava nisu obavešteni; za najavu odustajanja služi otkazivanje (E-11) |
 | Administrator dodeli ili oduzme ulogu moderatora | Osoba nije obaveštena e-poštom |
 | Korisnik se prvi put prijavi u aplikaciju | Nema poruke dobrodošlice |
 
