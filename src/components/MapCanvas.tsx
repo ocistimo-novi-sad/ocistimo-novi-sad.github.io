@@ -675,6 +675,8 @@ export function MapCanvas() {
                 </li>
               ))}
             </ul>
+            {/* Green also marks the "Nalepnice" category and actions, so say what it means here. */}
+            <p className="map-legend__note">Kad je prijava rešena, ceo marker postaje zelen.</p>
           </div>
         </div>
       ) : null}
