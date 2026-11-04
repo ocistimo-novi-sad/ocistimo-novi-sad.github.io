@@ -1,0 +1,34 @@
+name: Main samo sa staginga
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  # The ruleset for main requires this check by its job name.
+  samo-sa-staginga:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check source branch
+        if: github.head_ref != 'staging' || github.event.pull_request.head.repo.full_name != github.repository
+        env:
+          SOURCE: ${{ github.event.pull_request.head.label }}
+        run: |
+          echo "::error::U main se spaja samo grana staging (ovaj PR je iz $SOURCE). Promeni ciljnu granu na staging."
+          exit 1
+
+      # The label keeps the staging → main PR itself out of the release notes (.github/release.yml).
+      - name: Label as release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          gh label create objava --color 5319e7 --description "Spajanje staging → main" --force
+          gh pr edit "$PR" --add-label objava
