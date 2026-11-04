@@ -11,6 +11,7 @@ import { APP, CATEGORY_MAP, DEFAULT_FILTERS, STATUS_MAP } from '../config';
 import { useAuth } from '../hooks/useAuth';
 import { useReports } from '../hooks/useReports';
 import { useActions } from '../hooks/useActions';
+import { isUpcomingAction } from '../lib/counts';
 import { isWithinBounds } from '../lib/geo';
 import { distanceInMeters } from '../lib/geo';
 import { toSerbianError } from '../services/errors';
@@ -45,14 +46,16 @@ import {
   type ToastTone,
 } from './app-context';
 import type {
+  ActionScope,
   Category,
   CleanupAction,
   Coordinates,
   Filters,
+  Layer,
   Report,
   ReportContent,
   ReportStatus,
-  View,
+  SortMode,
 } from '../types';
 
 type PendingIntent = { kind: 'create' } | { kind: 'flag'; reportId: string };
@@ -116,8 +119,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     load: loadActions,
   } = useActions();
 
-  const [view, setViewState] = useState<View>('map');
+  const [layer, setLayerState] = useState<Layer>('reports');
   const [mobileTab, setMobileTabState] = useState<MobileTab>('map');
+  const [actionScope, setActionScope] = useState<ActionScope>('upcoming');
+  const [actionQuery, setActionQuery] = useState('');
+  const [actionsNearest, setActionsNearestState] = useState(false);
   const [filters, setFilters] = useState<Filters>(() => ({
     ...DEFAULT_FILTERS,
     categories: [],
@@ -281,6 +287,44 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return list;
   }, [reports, filters, userPosition]);
 
+  // "Upcoming" depends on the clock, so it is recomputed every few minutes; an
+  // app left open moves an action that started hours ago to the past.
+  const [clock, setClock] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setClock(Date.now()), 5 * 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const { upcomingActions, pastActions } = useMemo(() => {
+    // The same "upcoming" rule as every count (src/lib/counts.ts).
+    const now = clock;
+    const query = fold(actionQuery.trim());
+    const isUpcoming = (action: CleanupAction) => isUpcomingAction(action, now);
+    const matching = query
+      ? actions.filter((action) =>
+          fold(
+            [action.title, action.description, action.meetingPoint, action.organizerName].join(
+              ' ',
+            ),
+          ).includes(query),
+        )
+      : actions;
+    const byDistance =
+      actionsNearest && userPosition
+        ? (a: CleanupAction, b: CleanupAction) =>
+            distanceInMeters(userPosition, a) - distanceInMeters(userPosition, b)
+        : null;
+    return {
+      upcomingActions: matching
+        .filter(isUpcoming)
+        .sort(byDistance ?? ((a, b) => a.date.getTime() - b.date.getTime())),
+      pastActions: matching
+        .filter((action) => !isUpcoming(action))
+        .sort(byDistance ?? ((a, b) => b.date.getTime() - a.date.getTime())),
+    };
+  }, [actions, actionQuery, actionsNearest, userPosition, clock]);
+  const filteredActions = actionScope === 'upcoming' ? upcomingActions : pastActions;
+
   const updateFilters = useCallback((patch: Partial<Filters>) => {
     setFilters((current) => {
       const next: Filters = { ...current, ...patch };
@@ -312,18 +356,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const setView = useCallback((next: View) => {
-    setViewState(next);
-    setMobileTabState(next === 'actions' ? 'actions' : 'map');
-    if (next === 'actions') {
-      setSelectedReportId(null);
-    }
+  // Switching layers keeps map-or-list as it is and drops the selection
+  // that belongs to the other layer.
+  const setLayer = useCallback((next: Layer) => {
+    setLayerState(next);
+    if (next === 'actions') setSelectedReportId(null);
+    else setSelectedActionId(null);
   }, []);
 
   const setMobileTab = useCallback((tab: MobileTab) => {
     setMobileTabState(tab);
-    setViewState(tab === 'actions' ? 'actions' : 'map');
-    if (tab === 'actions') setSelectedReportId(null);
   }, []);
 
   const selectReport = useCallback(
@@ -332,7 +374,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setSelectedActionId(null);
       // On mobile this makes the map the surface behind the detail sheet, and
       // it also makes sure report markers (not action markers) are rendered.
-      setViewState('map');
+      setLayerState('reports');
       setMobileTabState('map');
       if (options?.fly !== false) flyTo(report, APP.focusZoom, { accountForDrawer: true });
     },
@@ -343,7 +385,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     (action: CleanupAction, options?: { fly?: boolean }) => {
       setSelectedActionId(action.id);
       setSelectedReportId(null);
-      setViewState('actions');
+      setLayerState('actions');
       // Keep the map behind the mobile sheet so the meeting point is visible.
       setMobileTabState('map');
       if (options?.fly !== false) flyTo(action, APP.focusZoom, { accountForDrawer: true });
@@ -379,7 +421,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setComposeOpen(true);
     setComposeEditing(null);
     setComposeLocationState(null);
-    setViewState('map');
+    setLayerState('reports');
     setMobileTabState('map');
   }, []);
 
@@ -407,7 +449,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setComposeEditing(report);
     setComposeLocationState({ latitude: report.latitude, longitude: report.longitude });
     setComposeOpen(true);
-    setViewState('map');
+    setLayerState('reports');
     setMobileTabState('map');
   }, []);
 
@@ -455,7 +497,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setComposeLocationState(null);
       setSelectedReportId(report.id);
       setSelectedActionId(null);
-      setViewState('map');
+      setLayerState('reports');
       setMobileTabState('map');
       flyTo(report, APP.focusZoom, { accountForDrawer: true });
     },
@@ -676,7 +718,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setComposeLocationState(null);
       setSelectedReportId(next.id);
       setSelectedActionId(null);
-      setViewState('map');
+      setLayerState('reports');
       setMobileTabState('map');
       notify('success', message);
     },
@@ -894,7 +936,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           'info',
           auth.user
             ? 'Ova prijava još nije javna.'
-            : 'Ova prijava još nije javna. Prijavite se ako ste njen autor.',
+            : 'Ova prijava još nije javna. Prijavi se ako si njen autor.',
         );
       });
   }, [applyReport, auth.ready, auth.user, knownReports, notify, reportsPhase, selectReport]);
@@ -908,35 +950,75 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (url.href !== window.location.href) window.history.replaceState(null, '', url);
   }, [selectedReportId]);
 
-  const locateUser = useCallback(() => {
-    if (!('geolocation' in navigator)) {
-      notify('error', 'Vaš pregledač ne podržava određivanje lokacije.');
-      return;
-    }
-
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocating(false);
-        const coordinates = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-        };
-        setUserPosition(coordinates);
-        flyTo(coordinates, 15);
-      },
-      (error) => {
-        setLocating(false);
-        if (error.code === error.PERMISSION_DENIED) {
-          notify('error', 'Pristup lokaciji je odbijen. Možete ga uključiti u podešavanjima pregledača.');
-        } else {
-          notify('error', 'Lokaciju trenutno nije moguće odrediti.');
+  // The map's "my location" button flies there; sorting by distance only needs
+  // the position, so it passes fly: false and the map stays where it is.
+  const locateUser = useCallback(
+    ({ fly = true }: { fly?: boolean } = {}) =>
+      new Promise<boolean>((resolve) => {
+        if (!('geolocation' in navigator)) {
+          notify('error', 'Tvoj pregledač ne podržava određivanje lokacije.');
+          resolve(false);
+          return;
         }
-      },
-      { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
-    );
-  }, [flyTo, notify]);
+
+        setLocating(true);
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setLocating(false);
+            const coordinates = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
+            };
+            setUserPosition(coordinates);
+            if (fly) flyTo(coordinates, 15);
+            resolve(true);
+          },
+          (error) => {
+            setLocating(false);
+            if (error.code === error.PERMISSION_DENIED) {
+              notify(
+                'error',
+                'Pristup lokaciji je odbijen. Možeš ga uključiti u podešavanjima pregledača.',
+              );
+            } else {
+              notify('error', 'Lokaciju trenutno nije moguće odrediti.');
+            }
+            resolve(false);
+          },
+          { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
+        );
+      }),
+    [flyTo, notify],
+  );
+
+  // "Nearest" without a known position asks for it; if that fails the order
+  // goes back, so the list never claims "nearest" while it is not. A sort the
+  // user picked while waiting for the position is kept.
+  const setSort = useCallback(
+    (sort: SortMode) => {
+      updateFilters({ sort });
+      if (sort !== 'nearest' || userPosition) return;
+      void locateUser({ fly: false }).then((found) => {
+        if (found) return;
+        setFilters((current) =>
+          current.sort === 'nearest' ? { ...current, sort: DEFAULT_FILTERS.sort } : current,
+        );
+      });
+    },
+    [locateUser, updateFilters, userPosition],
+  );
+
+  const setActionsNearest = useCallback(
+    (on: boolean) => {
+      setActionsNearestState(on);
+      if (!on || userPosition) return;
+      void locateUser({ fly: false }).then((found) => {
+        if (!found) setActionsNearestState(false);
+      });
+    },
+    [locateUser, userPosition],
+  );
 
   const value: AppContextValue = useMemo(
     () => ({
@@ -954,8 +1036,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       actionsError,
       reloadActions,
       deleteAction,
+      upcomingActions,
+      pastActions,
+      filteredActions,
+      actionScope,
+      setActionScope,
+      actionQuery,
+      setActionQuery,
+      actionsNearest,
+      setActionsNearest,
       filters,
       updateFilters,
+      setSort,
       toggleCategory,
       resetFilters,
       selectedReport,
@@ -967,8 +1059,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       selectAction,
       clearSelection,
       closeSelection: clearSelection,
-      view,
-      setView,
+      layer,
+      setLayer,
       mobileTab,
       setMobileTab,
       composeOpen,
@@ -1027,8 +1119,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       actionsError,
       reloadActions,
       deleteAction,
+      upcomingActions,
+      pastActions,
+      filteredActions,
+      actionScope,
+      actionQuery,
+      actionsNearest,
+      setActionsNearest,
       filters,
       updateFilters,
+      setSort,
       toggleCategory,
       resetFilters,
       selectedReport,
@@ -1039,8 +1139,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       showReportOnMap,
       selectAction,
       clearSelection,
-      view,
-      setView,
+      layer,
+      setLayer,
       mobileTab,
       setMobileTab,
       composeOpen,

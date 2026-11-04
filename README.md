@@ -96,6 +96,8 @@ Aplikacija sadrži poseban prikaz za akcije čišćenja, podeljen na **predstoje
 
 Povezivanje više prijava sa jednom akcijom olakšava planiranje rada na nekoliko problema u istom delu grada.
 
+Status akcije se automatski prenosi na sve povezane prijave: **Planirano → Akcija planirana**, **U toku → Akcija u toku**, **Završeno → Rešeno**. Otkazivanje akcije ne menja status prijava.
+
 ## Kategorije problema
 
 Prijave su grupisane prema vrsti problema:
@@ -113,10 +115,9 @@ Prijave su grupisane prema vrsti problema:
 
 ### Prijave
 
-- **Nova** — prijava je poslata i čeka pregled.
-- **Proverena** — problem je potvrđen na terenu.
-- **Planirana akcija** — prijava je uključena u planirano čišćenje.
-- **U toku** — radovi ili akcija su počeli.
+- **Nova prijava** — prijava je objavljena i još nema plan akcije.
+- **Akcija planirana** — prijava je uključena u planirano čišćenje.
+- **Akcija u toku** — radovi ili akcija su počeli.
 - **Rešeno** — problem je uklonjen.
 - **Nije za akciju** — problem nije pogodan za volontersko čišćenje i potrebna je druga vrsta intervencije.
 
@@ -137,6 +138,8 @@ Administratori u panelu „Administracija“ mogu da:
 - menjaju statuse prijava;
 - pregledaju označen sadržaj i odbace ga ili zatvore kao rešen;
 - kreiraju, uređuju i otkazuju akcije čišćenja i povezuju ih sa prijavama.
+
+Akcije čišćenja mogu da kreiraju, uređuju i otkazuju i moderatori (koordinatori zajednica). Njima se isti panel u meniju naloga zove „Akcije čišćenja“ i nema deo „Korisnici i uloge“.
 
 Time se smanjuje mogućnost da neprimeren sadržaj ili netačne prijave ostanu bez reakcije. Ova pravila nisu samo u interfejsu — sprovode ih Firestore Security Rules (vidi [Bezbednost i pravila pristupa](#bezbednost-i-pravila-pristupa)).
 

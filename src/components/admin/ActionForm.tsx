@@ -114,10 +114,10 @@ export function ActionForm({
     }
     const date = new Date(dateValue);
     if (!dateValue || Number.isNaN(date.getTime())) {
-      next.date = 'Izaberite datum i vreme akcije.';
+      next.date = 'Izaberi datum i vreme akcije.';
     }
     if (!meetingPoint.trim()) {
-      next.meetingPoint = 'Unesite mesto okupljanja.';
+      next.meetingPoint = 'Unesi mesto okupljanja.';
     }
     if (
       !coordinatesValid ||
@@ -129,7 +129,7 @@ export function ActionForm({
       next.coordinates = 'Koordinate moraju biti unutar područja Novog Sada.';
     }
     if (!organizerName.trim()) {
-      next.organizer = 'Unesite naziv organizatora.';
+      next.organizer = 'Unesi naziv organizatora.';
     }
     const supplies = suppliesText
       .split('\n')
@@ -165,7 +165,7 @@ export function ActionForm({
       setSubmitError(
         `Akcija nije sačuvana jer fotografija nije otpremljena: ${
           coverUpload.error ?? resultsUpload?.error ?? ''
-        } Pokušajte ponovo.`,
+        } Pokušaj ponovo.`,
       );
       setSaving(false);
       return;
@@ -204,7 +204,7 @@ export function ActionForm({
       }
       onSaved();
     } catch (error) {
-      setSubmitError(toSerbianError(error, 'Akcija nije sačuvana. Pokušajte ponovo.'));
+      setSubmitError(toSerbianError(error, 'Akcija nije sačuvana. Pokušaj ponovo.'));
     } finally {
       setSaving(false);
     }
@@ -275,7 +275,7 @@ export function ActionForm({
                 </option>
               ))}
             </select>
-            <p className="field__hint">Status menjajte kada se termin potvrdi ili akcija završi.</p>
+            <p className="field__hint">Status menjaj kada se termin potvrdi ili akcija završi.</p>
           </div>
         </div>
 
@@ -325,7 +325,7 @@ export function ActionForm({
                 </div>
               ) : (
                 <p className="field__hint">
-                  Fotografije sa akcije možete dodati kada status promenite u „Završeno”.
+                  Fotografije sa akcije možeš dodati kada status promeniš u „Završeno”.
                 </p>
               )}
 
@@ -420,7 +420,7 @@ export function ActionForm({
         <div className="admin-form__section">
           <p className="eyebrow">Povezane prijave</p>
           <p className="admin-form__hint">
-            Izaberite prijave koje ova akcija rešava. Veza je vidljiva na obe strane.
+            Izaberi prijave koje ova akcija rešava. Veza je vidljiva na obe strane.
           </p>
           {reports.length === 0 ? (
             <p className="field__hint">Nema učitanih prijava za povezivanje.</p>

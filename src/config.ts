@@ -82,39 +82,33 @@ export interface StatusMeta {
 export const REPORT_STATUSES: StatusMeta[] = [
   {
     id: 'new',
-    label: 'Nova',
+    label: 'Nova prijava',
     description: 'Objavljena, još bez plana akcije.',
     weight: 1,
   },
   {
-    id: 'verified',
-    label: 'Proverena',
-    description: 'Problem je potvrđen na terenu.',
+    id: 'planned',
+    label: 'Akcija planirana',
+    description: 'Prijava je uključena u planirano čišćenje.',
     weight: 2,
   },
   {
-    id: 'planned',
-    label: 'Planirana akcija',
-    description: 'Prijava je uključena u planirano čišćenje.',
-    weight: 3,
-  },
-  {
     id: 'in_progress',
-    label: 'U toku',
+    label: 'Akcija u toku',
     description: 'Radovi ili akcija su počeli.',
-    weight: 4,
+    weight: 3,
   },
   {
     id: 'resolved',
     label: 'Rešeno',
     description: 'Problem je uklonjen.',
-    weight: 5,
+    weight: 4,
   },
   {
     id: 'not_suitable',
     label: 'Nije za akciju',
     description: 'Problem nije pogodan za volontersko čišćenje.',
-    weight: 6,
+    weight: 5,
   },
 ];
 
@@ -132,6 +126,18 @@ export const ACTION_STATUSES: { id: ActionStatus; label: string }[] = [
 export const ACTION_STATUS_MAP: Record<ActionStatus, string> = Object.fromEntries(
   ACTION_STATUSES.map((status) => [status.id, status.label]),
 ) as Record<ActionStatus, string>;
+
+/**
+ * Report status applied to every report linked to an action when the action is
+ * saved. Reports have no "completed" status, so a completed action resolves
+ * its reports. Cancelling an action leaves the report statuses unchanged.
+ */
+export const ACTION_REPORT_STATUS: Record<ActionStatus, ReportStatus | null> = {
+  planned: 'planned',
+  in_progress: 'in_progress',
+  completed: 'resolved',
+  cancelled: null,
+};
 
 export const SORT_OPTIONS: { id: SortMode; label: string }[] = [
   { id: 'newest', label: 'Najnovije' },
@@ -157,7 +163,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
 export const MODERATION_LABELS: Record<ModerationState, { label: string; description: string }> = {
   pending: {
     label: 'Na pregledu',
-    description: 'Moderator još nije pregledao prijavu. Vidite je samo vi i moderatori.',
+    description: 'Moderator još nije pregledao prijavu. Vidiš je samo ti i moderatori.',
   },
   approved: { label: 'Objavljena', description: 'Prijava je javna i vidljiva na mapi.' },
   rejected: {
@@ -176,7 +182,7 @@ export const COMMUNITY_CAN_PRESETS = [
 
 export const HELP_NEEDED_PRESETS = [
   'Odvoz krupnog otpada',
-  'Alat i materijal (džakovi, rukavice, boja)',
+  'Alat i materijal (džakovi, rukavice, boja, merdevine)',
   'Nadležna služba ili JKP',
   'Više volontera',
 ];

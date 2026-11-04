@@ -32,6 +32,8 @@ import { formatCoordinates } from '../lib/format';
 import { isInServiceArea, roundCoordinate } from '../lib/geo';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { Spinner } from './ui/EmptyState';
+import { ActiveFilters, FiltersButton, SEARCH_PLACEHOLDER, SearchInput } from './FiltersBar';
+import { LayerSwitch } from './LayerSwitch';
 import { DraftMarkers, ReportMarkers } from './map/ReportMarkers';
 import { ActionMarkers } from './map/ActionMarkers';
 import { tempIcon, userIcon } from './map/map-icons';
@@ -102,7 +104,12 @@ export function MapCanvas() {
     reports,
     myUnpublishedReports,
     actions,
-    view,
+    filteredActions,
+    actionScope,
+    setActionScope,
+    actionQuery,
+    setActionQuery,
+    layer,
     reportsPhase,
     reportsError,
     filters,
@@ -119,7 +126,6 @@ export function MapCanvas() {
     composeLocation,
     setComposeLocation,
     startCompose,
-    setMobileTab,
     mapRef,
     notify,
     userPosition,
@@ -191,11 +197,11 @@ export function MapCanvas() {
     updateFilters({ viewportOnly: true, bounds });
   };
 
-  const activeFilterCount =
-    filters.categories.length +
-    filters.statuses.length +
-    (filters.query.trim() ? 1 : 0) +
-    (filters.viewportOnly ? 1 : 0);
+  // The open action keeps its pin even when the search or period hides it.
+  const visibleActions =
+    selectedAction && !filteredActions.includes(selectedAction)
+      ? [...filteredActions, selectedAction]
+      : filteredActions;
 
   const noReports = reportsPhase === 'ready' && reports.length === 0;
   const noResults =
@@ -242,7 +248,7 @@ export function MapCanvas() {
           </>
         ) : null}
 
-        {view === 'map' ? (
+        {layer === 'reports' ? (
           <>
             <DraftMarkers
               reports={myUnpublishedReports}
@@ -267,7 +273,7 @@ export function MapCanvas() {
               />
             ) : null}
             <ActionMarkers
-              actions={actions}
+              actions={visibleActions}
               selectedActionId={selectedAction?.id ?? null}
               onSelect={(action) => selectAction(action)}
             />
@@ -292,29 +298,38 @@ export function MapCanvas() {
             }}
           >
             <Tooltip direction="top" offset={[0, -26]} className="ns-tooltip">
-              Nova prijava. Pomerite marker.
+              Nova prijava. Pomeri marker.
             </Tooltip>
           </Marker>
         ) : null}
       </MapContainer>
 
-      {isMobile && view === 'map' && !composeOpen ? (
+      {isMobile && !composeOpen ? (
         <div className="map-mobile-bar">
-          <button
-            type="button"
-            className="map-mobile-search"
-            onClick={() => setMobileTab('reports')}
-          >
-            <Search size={15} aria-hidden="true" />
-            <span>Pretraži prijave</span>
-            {activeFilterCount > 0 ? (
-              <span className="map-mobile-search__count">{activeFilterCount}</span>
-            ) : null}
-          </button>
+          <LayerSwitch />
+          <div className="filters__row">
+            {layer === 'reports' ? (
+              <SearchInput
+                value={filters.query}
+                onChange={(query) => updateFilters({ query })}
+                placeholder={SEARCH_PLACEHOLDER.reports}
+                label="Pretraga prijava"
+              />
+            ) : (
+              <SearchInput
+                value={actionQuery}
+                onChange={setActionQuery}
+                placeholder={SEARCH_PLACEHOLDER.actions}
+                label="Pretraga akcija"
+              />
+            )}
+            <FiltersButton />
+          </div>
+          <ActiveFilters />
         </div>
       ) : null}
 
-      {!isMobile && view === 'map' && !composeOpen ? (
+      {!isMobile && layer === 'reports' && !composeOpen ? (
         <div className="map-area-toggle">
           <button
             type="button"
@@ -363,7 +378,7 @@ export function MapCanvas() {
         </button>
         <button
           type="button"
-          onClick={locateUser}
+          onClick={() => void locateUser()}
           aria-label="Moja lokacija"
           title="Moja lokacija"
           aria-busy={locating}
@@ -379,13 +394,13 @@ export function MapCanvas() {
           <div className="pick-banner__text">
             <strong>
               {composeLocation
-                ? 'Kliknite na drugu tačku da pomerite marker'
-                : 'Kliknite na mapu da postavite lokaciju'}
+                ? 'Klikni na drugu tačku da pomeriš marker'
+                : 'Klikni na mapu da postaviš lokaciju'}
             </strong>
             {composeLocation ? (
               <span>{formatCoordinates(composeLocation.latitude, composeLocation.longitude)}</span>
             ) : (
-              <span>Možete i da prevučete marker radi preciznijeg položaja.</span>
+              <span>Možeš i da prevučeš marker radi preciznijeg položaja.</span>
             )}
           </div>
         </div>
@@ -405,7 +420,7 @@ export function MapCanvas() {
               <TriangleAlert size={18} aria-hidden="true" />
             </div>
             <h2>Prijave nisu učitane</h2>
-            <p>{reportsError ?? 'Proverite internet vezu i pokušajte ponovo.'}</p>
+            <p>{reportsError ?? 'Proveri internet vezu i pokušaj ponovo.'}</p>
             <button
               type="button"
               className="btn btn--primary btn--sm"
@@ -427,7 +442,7 @@ export function MapCanvas() {
         </div>
       ) : null}
 
-      {noReports && view === 'map' ? (
+      {noReports && layer === 'reports' ? (
         <div className="map-state">
           <div className="map-state__card">
             <div className="map-state__icon">
@@ -435,7 +450,7 @@ export function MapCanvas() {
             </div>
             <h2>Još nema prijava</h2>
             <p>
-              Mapa je prazna. Prijavite prvi problem u svom kvartu i pomozite komšijama da ga
+              Mapa je prazna. Prijavi prvi problem u svom kvartu i pomozi komšijama da ga
               pronađu.
             </p>
             <button type="button" className="btn btn--primary btn--sm" onClick={startCompose}>
@@ -445,7 +460,7 @@ export function MapCanvas() {
         </div>
       ) : null}
 
-      {noResults && view === 'map' ? (
+      {noResults && layer === 'reports' ? (
         <div className="map-state">
           <div className="map-state__card">
             <div className="map-state__icon">
@@ -460,7 +475,7 @@ export function MapCanvas() {
         </div>
       ) : null}
 
-      {!isMobile && legendOpen && view === 'map' ? (
+      {!isMobile && legendOpen && layer === 'reports' ? (
         <div className="map-legend">
           <div className="map-legend__head">
             <span className="eyebrow">Legenda</span>
@@ -510,13 +525,13 @@ export function MapCanvas() {
             </button>
           ) : null}
           <p className="map-legend__note">
-            Kliknite kategoriju da je uključite ili isključite. Tačka u uglu markera označava
+            Klikni kategoriju da je uključiš ili isključiš. Tačka u uglu markera označava
             status prijave.
           </p>
         </div>
       ) : null}
 
-      {!isMobile && !legendOpen && view === 'map' ? (
+      {!isMobile && !legendOpen && layer === 'reports' ? (
         <button
           type="button"
           className="map-legend-open"
@@ -540,22 +555,59 @@ export function MapCanvas() {
         </div>
       ) : null}
 
-      {view === 'actions' && actions.length === 0 && app.actionsPhase === 'ready' ? (
+      {layer === 'actions' && visibleActions.length === 0 && app.actionsPhase === 'ready' ? (
         <div className="map-state">
           <div className="map-state__card">
             <div className="map-state__icon">
               <Info size={18} aria-hidden="true" />
             </div>
-            <h2>Još nema akcija</h2>
-            <p>
-              Akcije čišćenja objavljuje administracija kada se prikupi dovoljno prijava za
-              istu lokaciju.
-            </p>
+            {actions.length === 0 ? (
+              <>
+                <h2>Još nema akcija</h2>
+                <p>Moderatori i koordinatori zajednice organizuju akcije čišćenja.</p>
+              </>
+            ) : actionQuery.trim() ? (
+              <>
+                <h2>Nema akcija za ovu pretragu</h2>
+                <p>Pokušaj drugi naziv ili mesto okupljanja.</p>
+                <button
+                  type="button"
+                  className="btn btn--quiet btn--sm"
+                  onClick={() => setActionQuery('')}
+                >
+                  Obriši pretragu
+                </button>
+              </>
+            ) : actionScope === 'upcoming' ? (
+              <>
+                <h2>Nema predstojećih akcija</h2>
+                <p>Moderatori i koordinatori zajednice organizuju akcije čišćenja.</p>
+                <button
+                  type="button"
+                  className="btn btn--quiet btn--sm"
+                  onClick={() => setActionScope('past')}
+                >
+                  Pogledaj završene
+                </button>
+              </>
+            ) : (
+              <>
+                <h2>Još nema završenih akcija</h2>
+                <p>Kad se akcija završi, ovde se vidi sa svim rešenim prijavama.</p>
+                <button
+                  type="button"
+                  className="btn btn--quiet btn--sm"
+                  onClick={() => setActionScope('upcoming')}
+                >
+                  Pogledaj predstojeće
+                </button>
+              </>
+            )}
           </div>
         </div>
       ) : null}
 
-      {view === 'actions' && app.actionsError && actions.length === 0 ? (
+      {layer === 'actions' && app.actionsError && actions.length === 0 ? (
         <div className="map-state">
           <div className="map-state__card">
             <div className="map-state__icon is-alert">

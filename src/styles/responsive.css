@@ -4,10 +4,6 @@
   :root {
     --panel-w: 344px;
   }
-
-  .app-nav {
-    margin-left: 0;
-  }
 }
 
 @media (max-width: 1024px) {
@@ -17,14 +13,6 @@
 
   .app-header {
     gap: 12px;
-  }
-
-  .nav-link {
-    padding: 0 9px;
-  }
-
-  .brand__city {
-    display: none;
   }
 }
 
@@ -45,14 +33,6 @@
     gap: 6px;
   }
 
-  .app-nav {
-    display: none;
-  }
-
-  .mobile-only {
-    display: inline-flex !important;
-  }
-
   .brand__text {
     gap: 0;
   }
@@ -62,27 +42,14 @@
     letter-spacing: 0.1em;
   }
 
-  /* The nav is hidden on mobile, so there is room for the city line again */
   .brand__city {
-    display: block;
     margin-top: 3px;
     font-size: 7.5px;
   }
 
+  /* The tab bar carries the report button on mobile. */
   .btn--report {
-    width: auto;
-    height: 36px;
-    gap: 5px;
-    padding: 0 10px;
-  }
-
-  .btn--report .btn__text {
     display: none;
-  }
-
-  .btn--report .btn__text-short {
-    display: inline;
-    font-size: 12px;
   }
 
   .app-header__actions .btn--icon {
@@ -151,11 +118,6 @@
     left: 10px;
   }
 
-  .map-mobile-search {
-    height: 38px;
-    font-size: 12.5px;
-  }
-
   .map-area-toggle,
   .map-readout,
   .map-legend,
@@ -195,6 +157,7 @@
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     box-shadow: 0 -20px 44px -28px rgba(20, 28, 22, 0.55);
     animation: sheet-in 0.2s var(--ease);
+    transition: height var(--dur-3) var(--ease);
   }
 
   .drawer.is-expanded {
@@ -209,6 +172,11 @@
     height: 92vh;
   }
 
+  /* Lowest position: the title and the first lines, with most of the map visible. */
+  .drawer.is-peek {
+    height: min(34vh, 250px);
+  }
+
   .drawer__handle {
     position: absolute;
     top: 0;
@@ -219,8 +187,10 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    height: 24px;
+    height: 28px;
     color: var(--muted-2);
+    cursor: grab;
+    touch-action: none;
   }
 
   .drawer__grip {
@@ -304,13 +274,11 @@
     font-size: 12px;
   }
 
-  .filter-btn,
   .select-field {
     height: 32px;
     font-size: 12px;
   }
 
-  .filter-btn,
   .select-field select {
     font-size: 12px;
   }
@@ -573,20 +541,6 @@
     font-size: 20px;
   }
 
-  .status-row__label {
-    width: 92px;
-  }
-
-  .status-row {
-    flex-wrap: wrap;
-  }
-
-  .status-row__value {
-    margin-left: 0;
-    padding-left: 22px;
-    text-align: left;
-  }
-
   .category-grid {
     grid-template-columns: 1fr;
   }
@@ -639,15 +593,6 @@
 }
 
 @media (max-width: 380px) {
-  .btn--report {
-    width: 36px;
-    padding: 0;
-  }
-
-  .btn--report .btn__text-short {
-    display: none;
-  }
-
   .brand__name {
     letter-spacing: 0.09em;
   }

@@ -3,14 +3,16 @@ import type { Map as LeafletMap } from 'leaflet';
 import type { useAuth } from '../hooks/useAuth';
 import type { DataPhase } from '../hooks/useReports';
 import type {
+  ActionScope,
   Category,
   CleanupAction,
   Coordinates,
   Filters,
+  Layer,
   Report,
   ReportContent,
   ReportStatus,
-  View,
+  SortMode,
 } from '../types';
 
 export type ToastTone = 'success' | 'error' | 'info';
@@ -32,7 +34,7 @@ export type ModalState =
   | { kind: 'lightbox'; images: string[]; index: number }
   | null;
 
-export type MobileTab = 'map' | 'reports' | 'actions';
+export type MobileTab = 'map' | 'list';
 
 export interface AppContextValue {
   auth: ReturnType<typeof useAuth>;
@@ -52,9 +54,23 @@ export interface AppContextValue {
   reloadActions: () => Promise<void>;
   /** Admins: deletes the action and its photos; throws so the button can reset. */
   deleteAction: (action: CleanupAction) => Promise<void>;
+  /** Actions matching the search, split by period; the map and the list share them. */
+  upcomingActions: CleanupAction[];
+  pastActions: CleanupAction[];
+  /** The period the list and the map show. */
+  filteredActions: CleanupAction[];
+  actionScope: ActionScope;
+  setActionScope: (scope: ActionScope) => void;
+  actionQuery: string;
+  setActionQuery: (query: string) => void;
+  /** Upcoming and past actions ordered by distance from the user. */
+  actionsNearest: boolean;
+  setActionsNearest: (on: boolean) => void;
 
   filters: Filters;
   updateFilters: (patch: Partial<Filters>) => void;
+  /** Like updateFilters({ sort }), but "nearest" first asks for the user's location. */
+  setSort: (sort: SortMode) => void;
   toggleCategory: (category: Category) => void;
   resetFilters: () => void;
 
@@ -68,8 +84,8 @@ export interface AppContextValue {
   clearSelection: () => void;
   closeSelection: () => void;
 
-  view: View;
-  setView: (view: View) => void;
+  layer: Layer;
+  setLayer: (layer: Layer) => void;
   mobileTab: MobileTab;
   setMobileTab: (tab: MobileTab) => void;
 
@@ -132,7 +148,8 @@ export interface AppContextValue {
   ) => void;
   userPosition: (Coordinates & { accuracy: number }) | null;
   locating: boolean;
-  locateUser: () => void;
+  /** Resolves to false when the location could not be read (the user is told why). */
+  locateUser: (options?: { fly?: boolean }) => Promise<boolean>;
 }
 
 export const AppContext = createContext<AppContextValue | null>(null);

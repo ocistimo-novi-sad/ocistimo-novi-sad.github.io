@@ -28,7 +28,7 @@ Osnovni tok:
 1. Građanin prijavi problem na mapi, sa opisom i fotografijama.
 2. Moderator pregleda prijavu i objavi je, ili je odbije uz razlog.
 3. Objavljena prijava je vidljiva svima na mapi.
-4. Administrator organizuje akciju čišćenja i poveže je sa prijavama.
+4. Moderator (koordinator zajednice) ili administrator organizuje akciju čišćenja i poveže je sa prijavama.
 5. Kada je problem rešen, autor pošalje fotografiju „posle“, a moderator potvrdi da je rešeno.
 
 Kroz ceo tok aplikacija šalje kratka obaveštenja e-poštom onima kojih se promena tiče.
@@ -43,8 +43,8 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 |---|---|---|
 | **Posetilac** | Bilo ko ko otvori sajt, bez prijave | Nije potrebno ništa |
 | **Član zajednice** | Korisnik prijavljen Google nalogom | Klikom na „Prijava“ i izborom Google naloga. Registracija ne postoji. |
-| **Moderator** | Član koji pregleda i uređuje prijave | Dodeljuje ga administrator u aplikaciji (Administracija → Korisnici i uloge) |
-| **Administrator** | Moderator koji uz to upravlja akcijama i ulogama | Dodeljuje ga samo vlasnik projekta, van aplikacije. Iz aplikacije se ne može dodeliti ni oduzeti. |
+| **Moderator** | Član koji pregleda i uređuje prijave i pravi akcije čišćenja (koordinator zajednice) | Dodeljuje ga administrator u aplikaciji (Administracija → Korisnici i uloge) |
+| **Administrator** | Moderator koji uz to briše akcije i upravlja ulogama | Dodeljuje ga samo vlasnik projekta, van aplikacije. Iz aplikacije se ne može dodeliti ni oduzeti. |
 
 ### 2.1 Šta koja uloga može
 
@@ -82,11 +82,9 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 
 | Element | Šta radi |
 |---|---|
-| **Mapa** | Prikaz mape sa prijavama i liste prijava |
-| **Akcije** | Prikaz akcija čišćenja (predstojeće i završene) |
-| **O projektu** | Kratko objašnjenje projekta, kako se koristi i napomena o privatnosti |
+| **O projektu** (ikonica ⓘ) | Kratko objašnjenje projekta, kako se koristi i napomena o privatnosti |
 | **Demo** (oznaka) | Vidi se samo u demo režimu; otvara objašnjenje |
-| **Prijavi problem** | Otvara formu za novu prijavu (traži prijavu nalogom ako korisnik nije prijavljen) |
+| **Prijavi problem** | Samo na računaru. Otvara formu za novu prijavu (traži prijavu nalogom ako korisnik nije prijavljen). Na telefonu je ovo dugme u donjoj traci. |
 | **Prijava** / avatar | Neprijavljenom: dugme „Prijava“. Prijavljenom: avatar koji otvara meni naloga |
 
 ### 3.2 Meni naloga (klik na avatar)
@@ -96,20 +94,21 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 | Ime, e-pošta, oznaka uloge | Svi prijavljeni (oznaka samo za moderatora/administratora) | — |
 | **Moje prijave** | Svi prijavljeni | Lista sopstvenih prijava i njihovog stanja. Crveni broj = prijave koje treba ispraviti. |
 | **Moderacija** | Moderator, administrator | Redovi za pregled: Nove prijave, Izmene, Sanacije, Označen sadržaj. Broj = ukupno stavki koje čekaju. |
-| **Administracija** | Administrator | Akcije čišćenja; Korisnici i uloge |
+| **Administracija** (moderatoru: „Akcije čišćenja“) | Moderator, administrator | Akcije čišćenja; Korisnici i uloge (samo administrator) |
 | **Odjava** | Svi prijavljeni | Odjava sa naloga |
 
 Na avataru se pojavljuje **crvena tačka** kada nešto čeka korisnika: odbijena prijava ili odbijen dokaz sanacije koji treba ispraviti, a za moderatore i stavke u redovima moderacije.
 
 ### 3.3 Glavni ekran
 
-- **Mapa** — oznake prijava (boja i ikonica po kategoriji), grupisanje oznaka kada ih je mnogo na jednom mestu, legenda sa brojem prijava po kategoriji (može da uključi/isključi kategoriju), kontrole za zumiranje, „Prikaži ceo Novi Sad“ i „Moja lokacija“.
-- **Lista prijava** (levo na računaru, tab „Prijave“ na telefonu) — sažetak napretka (ukupno, rešeno, udeo rešenih, predstojeće akcije), pretraga, filteri, sortiranje i lista.
+- **Prijave | Akcije** — prekidač na vrhu liste (i na mapi na telefonu) bira šta mapa i lista prikazuju: prijave ili akcije čišćenja. Isti izbor važi za mapu i za listu.
+- **Mapa** — za prijave: oznake prijava (boja i ikonica po kategoriji), grupisanje oznaka kada ih je mnogo na jednom mestu, legenda sa brojem prijava po kategoriji (može da uključi/isključi kategoriju), kontrole za zumiranje, „Prikaži ceo Novi Sad“ i „Moja lokacija“. Za akcije: oznake mesta okupljanja; izabrana akcija prikazuje i svoje povezane prijave.
+- **Lista** (levo na računaru, tab „Lista“ na telefonu) — za akcije: Predstojeće i Završene. Za prijave: sažetak napretka (ukupno, rešeno, udeo rešenih, predstojeće akcije), pretraga, filteri, sortiranje i lista.
 - **Panel sa detaljima** (desno na računaru, donji list na telefonu) — detalji prijave, detalji akcije ili forma za prijavu.
 
 ### 3.4 Mobilni telefon
 
-Na dnu ekrana je traka sa tri taba: **Mapa**, **Prijave**, **Akcije**. Detalji i forme se otvaraju kao list koji se izvlači odozdo.
+Na dnu ekrana je traka: **Mapa**, **＋ Prijavi** (u sredini), **Lista**. Mapa i Lista prikazuju ono što je izabrano prekidačem **Prijave | Akcije**. „＋ Prijavi“ otvara formu za novu prijavu; administratoru nudi izbor „Prijavi problem“ ili „Nova akcija“. Detalji i forme se otvaraju kao list koji se izvlači odozdo.
 
 ---
 
@@ -140,18 +139,17 @@ stateDiagram-v2
 
 ### 4.2 Status (samo za objavljene prijave)
 
-Status opisuje stanje problema na terenu. Menja ga moderator ručno; jedini automatski prelaz je u „Rešeno“ kada moderator potvrdi dokaz sanacije ili klikne „Označi kao rešeno“.
+Status opisuje stanje problema na terenu. Menja ga moderator ručno; automatski se menja i kada moderator potvrdi dokaz sanacije ili klikne „Označi kao rešeno“, kao i kada se promeni status akcije kojoj je prijava povezana (vidi napomenu ispod).
 
 | Status | Značenje |
 |---|---|
-| **Nova** | Objavljena, još bez plana akcije |
-| **Proverena** | Problem je potvrđen na terenu |
-| **Planirana akcija** | Prijava je uključena u planirano čišćenje |
-| **U toku** | Radovi ili akcija su počeli |
+| **Nova prijava** | Objavljena, još bez plana akcije |
+| **Akcija planirana** | Prijava je uključena u planirano čišćenje |
+| **Akcija u toku** | Radovi ili akcija su počeli |
 | **Rešeno** | Problem je uklonjen |
 | **Nije za akciju** | Problem nije pogodan za volontersko čišćenje |
 
-> Povezivanje prijave sa akcijom **ne menja** status prijave automatski. Moderator status menja posebno.
+> Status akcije se automatski prenosi na sve povezane prijave: „Planirano“ → „Akcija planirana“, „U toku“ → „Akcija u toku“, „Završeno“ → „Rešeno“. Otkazivanje akcije ne menja status prijava.
 
 ### 4.3 Izmena objavljene prijave
 
@@ -191,7 +189,7 @@ Kada je prijava rešena uz dokaz, u detaljima se prikazuje poređenje **„Pre i
 
 Akcija sa statusom „Planirano“ ili „U toku“ prelazi u „Završene“ i kada prođe više od 4 sata od zakazanog vremena, čak i ako joj administrator nije promenio status.
 
-Akcije menja samo administrator; status može da postavi na bilo koju vrednost u formi za uređivanje.
+Akcije menjaju moderatori i administratori; status može da se postavi na bilo koju vrednost u formi za uređivanje.
 
 ---
 
@@ -212,13 +210,14 @@ Akcije menja samo administrator; status može da postavi na bilo koju vrednost u
 ### UC-02 Pretraga, filtriranje i sortiranje
 
 - **Akter:** svako
-- **Gde:** lista prijava
+- **Gde:** lista prijava; na telefonu i iznad mape. Pretraga i filteri važe istovremeno za mapu i za listu.
 - **Tok:**
   1. Unos teksta u pretragu (prečica `/`). Traži se po naslovu, opisu, adresi, kategoriji i statusu, bez obzira na kvačice (č, ć, š, ž, đ).
-  2. Filter po jednoj ili više kategorija i statusa.
-  3. Sortiranje: najnovije, najstarije, najbliže (zahteva „Moja lokacija“), po statusu.
-  4. „Samo ova oblast“ na mapi (ili ikonica u filterima) ograničava listu na trenutno vidljivi deo mape.
-  5. „Očisti“ uklanja sve filtere.
+  2. Kategorije su čipovi ispod pretrage (na telefonu jedan red koji se prevlači vodoravno).
+  3. Dugme **Filteri** (broj = koliko je filtera uključeno) otvara panel sa kategorijama, statusima, sortiranjem (najnovije, najstarije, najbliže, po statusu) i opcijom „Samo prijave na vidljivom delu mape“. „Očisti“ u panelu uklanja te filtere, a pretraga ostaje.
+  4. Na računaru, „Samo ova oblast“ na mapi radi isto što i opcija u panelu.
+  5. „Očisti“ pored broja rezultata u listi uklanja sve, uključujući i pretragu.
+  6. **Blizu mene** (iznad liste) ređa prijave od najbliže i na karticama prikazuje udaljenost; isto radi izbor „Najbliže“ u sortiranju. Ako lokacija još nije poznata, aplikacija je traži i približava mapu. Ako pristup lokaciji nije dozvoljen ili ne uspe, prikazuje se poruka i redosled se vraća na „Najnovije“. Ponovni klik („Najbliže prvo ✕“) vraća „Najnovije“.
 
 ### UC-03 Detalji prijave i deljenje
 
@@ -231,11 +230,12 @@ Akcije menja samo administrator; status može da postavi na bilo koju vrednost u
 ### UC-04 Pregled akcija čišćenja
 
 - **Akter:** svako
-- **Gde:** Akcije (zaglavlje ili tab na telefonu)
+- **Gde:** prekidač **Prijave | Akcije** → Akcije (lista i mapa)
 - **Tok:**
-  1. Lista je podeljena na **Predstojeće** i **Završene**.
-  2. Klik na akciju otvara detalje i prikazuje mesto okupljanja na mapi.
-  3. Detalji: naslovna fotografija, datum i vreme, opis, mesto okupljanja, organizator i napomena, šta poneti, povezane prijave (klik vodi na prijavu), a za završene i fotografije sa akcije.
+  1. Lista je podeljena na **Predstojeće** i **Završene**. Mapa prikazuje isti period kao lista (na telefonu se bira u panelu **Filteri**).
+  2. Pretraga po nazivu, opisu, mestu okupljanja i organizatoru sužava i listu i mapu. **Blizu mene** ređa akcije po udaljenosti mesta okupljanja (umesto po datumu), uz isto ponašanje kao kod prijava (UC-02).
+  3. Klik na akciju otvara detalje i prikazuje mesto okupljanja na mapi.
+  4. Detalji: naslovna fotografija, datum i vreme, opis, mesto okupljanja, organizator i napomena, šta poneti, povezane prijave (klik vodi na prijavu), a za završene i fotografije sa akcije.
 
 ### UC-05 Prijava Google nalogom
 
@@ -255,7 +255,7 @@ Akcije menja samo administrator; status može da postavi na bilo koju vrednost u
 ### UC-06 Slanje nove prijave
 
 - **Akter:** prijavljen korisnik
-- **Gde:** „Prijavi problem“ u zaglavlju; „Nova prijava“ u praznoj listi „Moje prijave“
+- **Gde:** „Prijavi problem“ u zaglavlju (računar) ili „＋ Prijavi“ u donjoj traci (telefon); „Nova prijava“ u praznoj listi „Moje prijave“
 - **Preduslov:** korisnik je prijavljen (inače se prvo traži prijava, UC-05)
 - **Tok:**
   1. **Lokacija:** korisnik klikne na mapu ili koristi svoju lokaciju. Tačka mora biti u Novom Sadu.
@@ -352,7 +352,7 @@ Moderator ima sve što i član zajednice, plus stavku **Moderacija** u meniju na
 - **Gde:** Moderacija → **Nove prijave** (najstarije prvo); ili detalji neobjavljene prijave → okvir „Moderacija“; ili link iz e-pošte
 - **Tok — odobravanje:**
   1. Moderator pregleda prijavu (fotografije, opis, lokacija, „Otvori na mapi“).
-  2. „Odobri i objavi“ → prijava odmah postaje javna, sa statusom „Nova“.
+  2. „Odobri i objavi“ → prijava odmah postaje javna, sa statusom „Nova prijava“.
   3. **E-pošta:** autoru **„Prijava je objavljena“** (E-6).
 - **Tok — odbijanje:**
   1. „Odbij…“ → upis razloga (najmanje 10 znakova) ili izbor čestog razloga:
@@ -401,7 +401,7 @@ Moderator ima sve što i član zajednice, plus stavku **Moderacija** u meniju na
 ### UC-18 Promena statusa prijave
 
 - **Gde:** detalji objavljene prijave → okvir „Moderacija“ → izbor statusa → „Sačuvaj“
-- **Tok:** moderator bira bilo koji od šest statusa (npr. „Proverena“, „Planirana akcija“, „Nije za akciju“).
+- **Tok:** moderator bira bilo koji od pet statusa (npr. „Akcija planirana“, „Akcija u toku“, „Nije za akciju“).
 - **E-pošta:** autoru **„Promenjen status prijave“** sa novim statusom i njegovim značenjem (E-12). Važi za svaki status, uključujući „Rešeno“ izabrano iz liste. Kada prijava postane rešena preko UC-16 ili UC-17, autor umesto toga dobija E-8, ne obe poruke.
 
 ### UC-19 Izmena i brisanje bilo koje prijave
@@ -426,24 +426,24 @@ Moderator ima sve što i član zajednice, plus stavku **Moderacija** u meniju na
 
 ## 9. Slučajevi korišćenja — administrator
 
-Administrator ima sva prava moderatora, plus stavku **Administracija** u meniju naloga (tabovi „Akcije čišćenja“ i „Korisnici i uloge“) i dugme za upravljanje akcijama u prikazu Akcije.
+Administrator ima sva prava moderatora, plus tab „Korisnici i uloge“ u stavci **Administracija** u meniju naloga. Kreiranje, uređivanje i otkazivanje akcija (UC-21 do UC-23) mogu i moderatori: njima se ista stavka zove „Akcije čišćenja“, a dugme za upravljanje akcijama vide u prikazu Akcije.
 
 ### UC-21 Kreiranje akcije čišćenja
 
-- **Gde:** Administracija → Akcije čišćenja → „Nova akcija“; ili prikaz Akcije → dugme za administraciju
+- **Gde:** Administracija → Akcije čišćenja → „Nova akcija“; ili prikaz Akcije → dugme za administraciju; ili na telefonu „＋ Prijavi“ → „Nova akcija“
 - **Tok:**
   1. **Osnovno:** naziv, opis i plan rada, status (podrazumevano „Planirano“).
   2. **Fotografije:** naslovna slika (opciono); fotografije sa akcije (do 6) tek kada je status „Završeno“.
   3. **Termin i mesto:** datum i vreme (podrazumevano za nedelju dana u 10:00), mesto okupljanja, tačka na mapi (mora biti u Novom Sadu).
-  4. **Povezane prijave:** izbor do 50 objavljenih prijava koje akcija rešava.
+  4. **Povezane prijave:** izbor do 50 objavljenih prijava koje akcija rešava. Sve izabrane prijave dobijaju status akcije.
   5. **Oprema i organizator:** šta poneti (jedna stavka po redu, do 20), naziv organizatora, napomena za učesnike (opciono).
   6. „Objavi akciju“ → akcija je odmah javna.
-- **E-pošta:** ako je status **„Planirano“** i povezane su prijave → autorima tih prijava **„Akcija čišćenja za vašu prijavu“** (E-10). Ako je akcija napravljena odmah kao „U toku“ ili „Završeno“, poruka se ne šalje.
+- **E-pošta:** ako je status **„Planirano“** i povezane su prijave → autorima tih prijava **„Akcija čišćenja za vašu prijavu“** (E-10). Ako je akcija napravljena odmah kao „U toku“ ili „Završeno“, poruka se ne šalje. Promena statusa povezanih prijava šalje autorima i E-12.
 
 ### UC-22 Uređivanje akcije
 
 - **Gde:** Administracija → Akcije čišćenja → „Uredi“; ili detalji akcije → „Uredi akciju“
-- **Tok:** ista forma kao UC-21. Najčešće izmene: dodavanje prijava, pomeranje termina, promena statusa u „U toku“ / „Završeno“, dodavanje fotografija sa akcije.
+- **Tok:** ista forma kao UC-21. Najčešće izmene: dodavanje prijava, pomeranje termina, promena statusa u „U toku“ / „Završeno“, dodavanje fotografija sa akcije. Sve povezane prijave dobijaju novi status akcije.
 - **E-pošta** se šalje samo dok je akcija „Planirano“:
 
   | Izmena | Poruka | Ko je dobija |
@@ -458,6 +458,8 @@ Administrator ima sva prava moderatora, plus stavku **Administracija** u meniju 
   | Promena naziva, opisa, opreme, organizatora, fotografija ili samo tačke na mapi | — | Niko |
   | Uklanjanje prijave iz akcije | — | Niko |
   | Status promenjen u „U toku“ ili „Završeno“ | — | Niko |
+
+  Nezavisno od akcionih poruka, svaka promena statusa povezane prijave šalje autoru E-12.
 
   Ako se status u formi promeni u „Otkazano“, važi UC-23.
 
@@ -504,7 +506,7 @@ Naslov svake poruke se završava sa „ – Kuka i Motika“.
 | **E-9** | Dokaz sanacije je odbijen | Moderator (UC-16) | Autor prijave | Dokaz sanacije nije prihvaćen | Naslov, razlog, uputstvo da se pošalje novi dokaz | Otvori prijavu |
 | **E-10** | Prijava je uključena u planiranu akciju | Administrator (UC-21, UC-22) | Autori prijava koje su upravo povezane (vidi tabelu u UC-22) | Akcija čišćenja za vašu prijavu | Naziv akcije, kada (pun datum i vreme), mesto okupljanja, poziv da se pridruže | Otvori Kuka i Motika (početna strana) |
 | **E-11** | Akcija je otkazana | Administrator (UC-23) | Autori svih prijava povezanih sa akcijom | Akcija je otkazana | Naziv akcije i za kada je bila zakazana | Otvori Kuka i Motika (početna strana) |
-| **E-12** | Moderator je promenio status objavljene prijave | Moderator (UC-18) | Autor prijave | Promenjen status prijave | Naslov, novi status i njegovo značenje (npr. „Proverena — Problem je potvrđen na terenu.“) | Otvori prijavu |
+| **E-12** | Moderator je promenio status objavljene prijave | Moderator (UC-18) | Autor prijave | Promenjen status prijave | Naslov, novi status i njegovo značenje (npr. „Akcija planirana — Prijava je uključena u planirano čišćenje.“) | Otvori prijavu |
 | **E-13** | Moderator je vratio prethodnu verziju izmenjene prijave | Moderator (UC-15) | Autor prijave | Izmena prijave nije prihvaćena | Naslov; izmena se može ponovo napraviti iz detalja prijave | Otvori prijavu |
 | **E-14** | Planiranoj akciji je promenjen datum, vreme ili mesto okupljanja | Administrator (UC-22) | Autori prijava koje su već bile povezane sa akcijom | Promenjen termin ili mesto akcije | Naziv akcije, novi datum i vreme, mesto okupljanja | Otvori Kuka i Motika (početna strana) |
 
@@ -565,7 +567,7 @@ sequenceDiagram
     App-->>M: E-2 Ispravljena prijava čeka pregled
     M->>App: Odobrava
     App-->>A: E-6 Prijava je objavljena
-    M->>App: Menja status u „Proverena“
+    M->>App: Menja status u „Akcija planirana“
     App-->>A: E-12 Promenjen status prijave
     Adm->>App: Pravi planiranu akciju sa ovom prijavom
     App-->>A: E-10 Akcija čišćenja za vašu prijavu

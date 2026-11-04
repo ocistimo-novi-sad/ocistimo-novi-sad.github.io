@@ -78,7 +78,7 @@ export function addDemoReport(input: NewReportInput, imageUrls: string[]): Repor
     helpNeeded: input.helpNeeded,
     // Demo mode has no moderators, so a demo report is published at once.
     moderation: 'approved',
-    createdByName: input.createdByName || 'Vi (demo)',
+    createdByName: input.createdByName || 'Ti (demo)',
     createdAt: new Date(),
     createdBy: 'demo-local',
     imageUrls,
@@ -90,7 +90,7 @@ export function addDemoReport(input: NewReportInput, imageUrls: string[]): Repor
   if (!writeStorage(stored)) {
     throw new AppError(
       'demo/storage',
-      'Demo prijava nije sačuvana jer pregledač blokira lokalno skladište. Dozvolite čuvanje podataka za ovaj sajt ili povežite Firebase.',
+      'Demo prijava nije sačuvana jer pregledač blokira lokalno skladište. Dozvoli čuvanje podataka za ovaj sajt ili poveži Firebase.',
     );
   }
   return report;

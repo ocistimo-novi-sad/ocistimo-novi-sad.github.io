@@ -135,10 +135,6 @@ fieldset {
   border: 0;
 }
 
-.mobile-only {
-  display: none !important;
-}
-
 .spinner {
   animation: spin 0.8s linear infinite;
 }
@@ -211,24 +207,25 @@ fieldset {
   outline-color: var(--ink);
 }
 
-/* Bright call to action: the one thing we want every visitor to do. */
+/* The one thing we want every visitor to do. Same green as every other main
+   button, so there is only one "main button" color in the app. */
 .btn--accent {
-  background: var(--leaf-2);
-  border-color: var(--leaf-2);
-  color: #fff;
+  background: var(--forest);
+  border-color: var(--forest);
+  color: #f6f5ef;
   font-weight: 600;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.18) inset, var(--shadow-1);
+  box-shadow: var(--shadow-1);
 }
 
 .btn--accent:hover:not(:disabled) {
-  background: var(--leaf-3);
-  border-color: var(--leaf-3);
-  box-shadow: 0 8px 20px -10px rgba(47, 128, 73, 0.75);
+  background: var(--forest-2);
+  border-color: var(--forest-2);
+  box-shadow: var(--shadow-2);
   transform: translateY(-1px);
 }
 
 .btn--accent:active:not(:disabled) {
-  background: var(--leaf-3);
+  background: #143024;
   box-shadow: none;
   transform: none;
 }
@@ -275,10 +272,6 @@ fieldset {
 
 .btn--report {
   padding: 0 13px 0 11px;
-}
-
-.btn__text-short {
-  display: none;
 }
 
 .link-btn {
@@ -707,25 +700,7 @@ fieldset {
   background: var(--surface-2);
 }
 
-/* --- Popover ------------------------------------------------------------- */
-
-.popover {
-  position: relative;
-}
-
-.popover__panel {
-  position: absolute;
-  top: calc(100% + 5px);
-  left: 0;
-  z-index: 700;
-  width: 210px;
-  padding: 5px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  box-shadow: var(--shadow-3);
-  animation: pop-in 0.14s var(--ease);
-}
+/* --- Pop-in animation and option rows (filters sheet) -------------------- */
 
 @keyframes pop-in {
   from {
@@ -736,15 +711,6 @@ fieldset {
     opacity: 1;
     transform: none;
   }
-}
-
-.popover__title {
-  padding: 6px 7px 5px;
-  color: var(--muted-2);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 
 .popover__row {
@@ -775,13 +741,6 @@ label.popover__row:hover {
   height: 13px;
   margin: 0;
   accent-color: var(--forest);
-}
-
-.popover__check {
-  width: 13px;
-  color: var(--forest);
-  font-size: 11px;
-  text-align: center;
 }
 
 /* --- States -------------------------------------------------------------- */
@@ -943,5 +902,65 @@ label.popover__row:hover {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Mapa and Lista slide like two sides of one screen (View Transitions API).
+   The header and the tab bar have their own names, so they stay in place. */
+.app-header {
+  view-transition-name: app-header;
+}
+
+.tabbar {
+  view-transition-name: tabbar;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--dur-3);
+  animation-timing-function: var(--ease);
+}
+
+:root[data-slide='left']::view-transition-old(root) {
+  animation-name: slide-out-left;
+}
+
+:root[data-slide='left']::view-transition-new(root) {
+  animation-name: slide-in-right;
+}
+
+:root[data-slide='right']::view-transition-old(root) {
+  animation-name: slide-out-right;
+}
+
+:root[data-slide='right']::view-transition-new(root) {
+  animation-name: slide-in-left;
+}
+
+@keyframes slide-out-left {
+  to {
+    opacity: 0;
+    transform: translateX(-24%);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(24%);
+  }
+}
+
+@keyframes slide-out-right {
+  to {
+    opacity: 0;
+    transform: translateX(24%);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-24%);
   }
 }
