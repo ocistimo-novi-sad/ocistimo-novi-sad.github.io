@@ -616,13 +616,14 @@ export function ComposeDrawer() {
         <div className="location-actions">
           <button
             type="button"
-            className="btn btn--quiet btn--sm"
+            className="link-btn"
             onClick={useMyLocation}
             disabled={locating}
           >
             {locating ? <Spinner size={13} /> : <Navigation size={13} aria-hidden="true" />}
             {locating ? 'Traženje lokacije…' : 'Koristi moju lokaciju'}
           </button>
+          <span className="location-actions__hint">Tačka se postavlja klikom na mapu.</span>
         </div>
 
         {errors.location ? (
