@@ -17,7 +17,7 @@ import { InfoDialog } from './components/modals/InfoDialog';
 import { Lightbox } from './components/modals/Lightbox';
 import { ResolveDialog } from './components/modals/ResolveDialog';
 import { AppProvider } from './state/AppProvider';
-import { useApp } from './state/app-context';
+// import { useApp } from './state/app-context';
 
 function ModalHost() {
   const { modal, closeModal } = useApp();
