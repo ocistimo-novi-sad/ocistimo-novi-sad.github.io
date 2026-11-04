@@ -20,6 +20,8 @@ flowchart LR
 
 PR se ne spaja dok ga bar jedna osoba ne pregleda i ne odobri (**Approve**).
 
+Čim se otvori PR, issue-u za koji je otvoren dodaje se labela `ready-for-review`.
+
 ### 2. Odobren PR se spaja u `staging`
 
 Ciljna grana svakog PR-a je `staging`, ne `main`.
@@ -54,6 +56,7 @@ Uvodimo Release Notes: spisak tiketa koji su ušli u svaku objavu. Tako i mi i s
 
 - [ ] PR je otvoren ka grani `staging`.
 - [ ] U opisu PR-a piše tiket („Closes #…“ ili „Ispravka za #…“).
+- [ ] Issue ima labelu `ready-for-review`.
 - [ ] PR ima labelu (`enhancement`, `bug`, …) zbog Release Notes.
 - [ ] Ima bar jedno odobrenje pre spajanja.
 - [ ] Posle objave na staging, tester je potvrdio da radi.
