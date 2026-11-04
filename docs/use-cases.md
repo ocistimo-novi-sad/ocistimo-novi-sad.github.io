@@ -63,7 +63,7 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 | Promena statusa prijave | — | — | ✓ | ✓ |
 | Izmena i brisanje bilo čije prijave | — | — | ✓ | ✓ |
 | Obrada označenog (spornog) sadržaja | — | — | ✓ | ✓ |
-| Kreiranje, uređivanje i otkazivanje akcija čišćenja | — | — | — | ✓ |
+| Kreiranje, uređivanje, otkazivanje i brisanje akcija čišćenja | — | — | — | ✓ |
 | Spisak korisnika, dodela i oduzimanje uloge moderatora | — | — | — | ✓ |
 
 ### 2.2 Važne napomene o ulogama
@@ -469,7 +469,13 @@ Administrator ima sva prava moderatora, plus tab „Korisnici i uloge“ u stavc
 - **Tok:** akcija prelazi u „Otkazano“ i seli se u „Završene“. Povezane prijave ostaju nepromenjene.
 - **E-pošta:** autorima **svih** povezanih prijava **„Akcija je otkazana“** (E-11). Ako akcija nema povezanih prijava, poruka se ne šalje.
 
-### UC-24 Upravljanje korisnicima i ulogama
+### UC-24 Brisanje akcije
+
+- **Gde:** Administracija → Akcije čišćenja → „Obriši“ → „Trajno obrisati?“ → „Obriši“; ili detalji akcije → okvir „Upravljanje akcijom“ → „Obriši akciju“ → „Potvrdi brisanje“
+- **Tok:** akcija se trajno uklanja sa mape i iz liste akcija, zajedno sa naslovnom slikom i fotografijama sa akcije. Povezane prijave ostaju nepromenjene. Brisanje se ne može poništiti; ako akcija samo neće biti održana, bolje je otkazati je (UC-23).
+- **E-pošta:** brisanje **ne šalje** poruku, ni autorima povezanih prijava.
+
+### UC-25 Upravljanje korisnicima i ulogama
 
 - **Gde:** Administracija → **Korisnici i uloge**
 - **Tok:**
@@ -540,6 +546,7 @@ Svaka poruka ima tekstualnu i HTML verziju i završava se rečenicom: „Ovu por
 | Akcija pređe u „U toku“ ili „Završeno“ | — |
 | Prijava je uklonjena iz akcije | — |
 | Akcija bez povezanih prijava je otkazana | Nema kome da se pošalje |
+| Administrator obriše akciju | Autori povezanih prijava nisu obavešteni; za najavu odustajanja služi otkazivanje (E-11) |
 | Administrator dodeli ili oduzme ulogu moderatora | Osoba nije obaveštena e-poštom |
 | Korisnik se prvi put prijavi u aplikaciju | Nema poruke dobrodošlice |
 

@@ -1,5 +1,6 @@
 import {
   collection,
+  deleteDoc,
   deleteField,
   doc,
   getDoc,
@@ -218,4 +219,14 @@ export async function updateActionStatus(
   }
 
   await batch.commit();
+}
+
+/** Removes the action for good. Linked reports stay as they are. */
+export async function deleteActionRecord(actionId: string): Promise<void> {
+  const db = requireDb();
+  if (!requireAuth().currentUser) {
+    throw new AppError('unauthenticated', 'Prijavite se kao administrator.');
+  }
+
+  await deleteDoc(doc(db, 'actions', actionId));
 }
