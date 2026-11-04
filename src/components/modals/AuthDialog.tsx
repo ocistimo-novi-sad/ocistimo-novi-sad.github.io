@@ -57,7 +57,7 @@ export function AuthDialog({
     intent === 'create'
       ? 'Prijava problema je vezana za nalog kako bi zajednica mogla da odgovori na pitanja i spreči zloupotrebu.'
       : intent === 'flag'
-        ? 'Prijava neprikladnog sadržaja je vezana za nalog kako bi administratori mogli da provere slučaj.'
+        ? 'Prijava neprikladnog sadržaja je vezana za nalog kako bi moderatori mogli da provere slučaj.'
         : 'Prijavi se da objavljuješ prijave i prijaviš neprikladan sadržaj.';
 
   return (
@@ -99,7 +99,7 @@ export function AuthDialog({
           type="button"
           className="btn btn--google"
           onClick={() => void signIn()}
-          disabled={busy || !auth.configured}
+          aria-disabled={busy || !auth.configured || undefined}
         >
           {busy ? <Spinner size={16} /> : <GoogleMark />}
           {busy ? 'Prijavljivanje…' : 'Nastavi sa Google'}

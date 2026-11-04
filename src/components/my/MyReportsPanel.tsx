@@ -156,7 +156,7 @@ export function MyReportsPanel() {
               setLoading(true);
               void reloadMyReports().finally(() => setLoading(false));
             }}
-            disabled={loading}
+            aria-disabled={loading || undefined}
           >
             {loading ? <Spinner size={12} /> : <RefreshCw size={12} aria-hidden="true" />} Osveži
           </button>

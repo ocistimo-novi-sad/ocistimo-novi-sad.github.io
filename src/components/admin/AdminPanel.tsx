@@ -214,7 +214,7 @@ export function AdminPanel() {
                               ? removeAction(action)
                               : cancelAction(action.id))
                           }
-                          disabled={busy}
+                          aria-disabled={busy || undefined}
                         >
                           {busy ? (
                             <Spinner size={12} />
@@ -229,7 +229,7 @@ export function AdminPanel() {
                           type="button"
                           className="btn btn--quiet btn--sm"
                           onClick={() => setConfirming(null)}
-                          disabled={busy}
+                          aria-disabled={busy || undefined}
                         >
                           Ne
                         </button>

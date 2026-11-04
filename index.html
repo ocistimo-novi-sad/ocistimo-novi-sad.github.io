@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#F6F4EE" />
     <meta
       name="description"
-      content="Kuka i Motika. Zajednička mapa problema i akcija čišćenja u Novom Sadu. Prijavite zapušten prostor, pronađite akciju i uključite se."
+      content="Kuka i Motika. Zajednička mapa problema i akcija čišćenja u Novom Sadu. Prijavi zapušten prostor, pronađi akciju i uključi se."
     />
     <meta name="color-scheme" content="light" />
     <link rel="icon" type="image/png" href="./brand-mark.png" />
@@ -16,16 +16,30 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <!-- The map tiles under the starting view (APP.center at zoom 13 in src/config.ts):
+         one of them is the largest thing on a phone's first screen, so it starts
+         loading before the app's script has run. Update them with the centre. -->
+    <link rel="preconnect" href="https://tile.openstreetmap.org" />
+    <link rel="preload" as="image" href="https://tile.openstreetmap.org/13/4547/2937.png" fetchpriority="high" />
+    <link rel="preload" as="image" href="https://tile.openstreetmap.org/13/4547/2938.png" fetchpriority="high" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400..700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <title>Kuka i Motika: mapa problema i akcija čišćenja</title>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Shown until the app starts, so a slow connection never shows a blank page. -->
+    <div id="root">
+      <!-- Fixed, so taking it away moves nothing on the page (no layout shift). -->
+      <div
+        style="position: fixed; inset: 0; display: grid; place-content: center; background: #f6f4ee; color: #1c221e; font: 600 15px/1.5 system-ui, sans-serif"
+      >
+        Kuka i Motika · Učitavanje mape…
+      </div>
+    </div>
     <noscript>
       <div
         style="
@@ -41,8 +55,8 @@
       >
         <strong>Kuka i Motika</strong>
         <p style="margin: 0.5rem 0 0">
-          Za prikaz interaktivne mape potreban je JavaScript. Uključite ga u pregledaču i
-          osvežite stranicu.
+          Za prikaz interaktivne mape potreban je JavaScript. Uključi ga u pregledaču i
+          osveži stranicu.
         </p>
       </div>
     </noscript>

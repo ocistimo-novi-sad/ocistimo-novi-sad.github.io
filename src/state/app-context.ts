@@ -1,7 +1,8 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, type RefObject } from 'react';
 import type { Map as LeafletMap } from 'leaflet';
 import type { useAuth } from '../hooks/useAuth';
 import type { DataPhase } from '../hooks/useReports';
+import type { Snap } from '../components/Drawer';
 import type {
   ActionScope,
   Category,
@@ -32,6 +33,7 @@ export type ModalState =
   | { kind: 'my-reports' }
   | { kind: 'resolve'; reportId: string }
   | { kind: 'lightbox'; images: string[]; index: number }
+  | { kind: 'filters' }
   | null;
 
 export type MobileTab = 'map' | 'list';
@@ -83,6 +85,10 @@ export interface AppContextValue {
   selectAction: (action: CleanupAction, options?: { fly?: boolean }) => void;
   clearSelection: () => void;
   closeSelection: () => void;
+  /** Moves the phone sheet of the open panel, e.g. down for "Prikaži na mapi". */
+  sheetRequest: { snap: Snap; id: number } | undefined;
+  /** The report form sets this; it returns true when it asked before closing. */
+  composeGuardRef: RefObject<(() => boolean) | null>;
 
   layer: Layer;
   setLayer: (layer: Layer) => void;
@@ -116,6 +122,9 @@ export interface AppContextValue {
   toasts: Toast[];
   notify: (tone: ToastTone, message: string) => void;
   dismissToast: (id: string) => void;
+  /** Toasts wait while the pointer or keyboard focus is on them. */
+  pauseToasts: () => void;
+  resumeToasts: () => void;
 
   addCreatedReport: (report: Report) => void;
   storeCreatedReport: (report: Report) => void;

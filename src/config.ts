@@ -17,6 +17,7 @@ export const APP = {
   wordmark: 'KUKA I MOTIKA',
   city: 'Novi Sad',
   tagline: 'Mapa problema i akcija čišćenja u Novom Sadu',
+  // index.html preloads the map tiles under this view; update them together.
   center: { latitude: 45.2671, longitude: 19.8335 } satisfies Coordinates,
   initialZoom: 13,
   focusZoom: 16,
@@ -63,9 +64,6 @@ export const CATEGORIES: CategoryMeta[] = [
     hint: 'Drugi vidljivi problemi u javnom prostoru',
   },
 ];
-
-/** Category preselected when a new report is opened. */
-export const DEFAULT_CATEGORY: Category = 'unwanted_graffiti';
 
 export const CATEGORY_MAP: Record<Category, CategoryMeta> = Object.fromEntries(
   CATEGORIES.map((category) => [category.id, category]),

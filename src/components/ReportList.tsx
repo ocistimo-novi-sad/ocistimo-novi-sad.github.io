@@ -17,6 +17,7 @@ import type { Report } from '../types';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { EmptyState, Spinner } from './ui/EmptyState';
 import { StatusDot } from './ui/StatusBadge';
+import { prefersReducedMotion } from '../lib/motion';
 
 function shortPlace(report: Report): string {
   if (!report.address) return 'Novi Sad';
@@ -125,7 +126,10 @@ export function ReportList() {
   useEffect(() => {
     if (!selectedReport) return;
     const element = document.getElementById(`report-card-${selectedReport.id}`);
-    element?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    element?.scrollIntoView({
+      block: 'nearest',
+      behavior: prefersReducedMotion() ? 'auto' : 'smooth',
+    });
   }, [selectedReport]);
 
   if (reportsPhase === 'loading' && reports.length === 0) {
@@ -202,7 +206,7 @@ export function LoadMoreButton() {
         type="button"
         className="btn btn--quiet btn--sm"
         onClick={() => void loadMoreReports()}
-        disabled={loadingMoreReports}
+        aria-disabled={loadingMoreReports || undefined}
       >
         {loadingMoreReports ? <Spinner size={14} /> : null}
         {loadingMoreReports ? 'Učitavanje…' : 'Učitaj još prijava'}

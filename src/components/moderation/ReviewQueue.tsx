@@ -213,7 +213,7 @@ export function ReviewQueue() {
               type="button"
               className="link-btn"
               onClick={() => void load()}
-              disabled={loading}
+              aria-disabled={loading || undefined}
             >
               <RefreshCw size={12} aria-hidden="true" /> Osveži
             </button>
@@ -359,7 +359,7 @@ export function ReviewQueue() {
                     type="button"
                     className="btn btn--quiet btn--sm"
                     onClick={() => editReport(active)}
-                    disabled={busy}
+                    aria-disabled={busy || undefined}
                   >
                     <Pencil size={12} aria-hidden="true" /> Izmeni
                   </button>
@@ -368,7 +368,7 @@ export function ReviewQueue() {
                   type="button"
                   className="btn btn--quiet"
                   onClick={() => setRejecting(true)}
-                  disabled={busy}
+                  aria-disabled={busy || undefined}
                 >
                   <X size={14} aria-hidden="true" /> Odbij…
                 </button>
@@ -376,7 +376,7 @@ export function ReviewQueue() {
                   type="button"
                   className="btn btn--primary"
                   onClick={() => void approve()}
-                  disabled={busy}
+                  aria-disabled={busy || undefined}
                 >
                   {busy ? <Spinner size={14} /> : <Check size={14} aria-hidden="true" />}
                   Odobri i objavi

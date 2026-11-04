@@ -1,5 +1,6 @@
-import { useEffect, useLayoutEffect, useState, type CSSProperties } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { useIsMobile } from '../hooks/useMediaQuery';
+import { useModalFocus } from '../hooks/useModalFocus';
 import { useApp } from '../state/app-context';
 
 const STORAGE_KEY = 'kim-guide-done';
@@ -10,15 +11,15 @@ export const GUIDE_EVENT = 'kim:guide';
 const STEPS = [
   {
     target: 'create',
-    text: 'Vidiš problem u kraju? Ovde ga prijaviš: tačka na mapi, par reči i fotografija ako je imaš.',
+    text: 'Vidiš problem u kraju? Dugme „Prijavi“ u sredini donje trake otvara formu: tačka na mapi, par reči i fotografija ako je imaš.',
   },
   {
     target: 'layer',
-    text: 'Prijave su problemi koje su ljudi primetili. Akcije su okupljanja za čišćenje. Ovde biraš šta mapa prikazuje.',
+    text: 'Prijave su problemi koje su ljudi primetili. Akcije su okupljanja za čišćenje. „Prijave“ i „Akcije“ na vrhu biraju šta mapa prikazuje.',
   },
   {
     target: 'list',
-    text: 'Ista mesta možeš da pregledaš i kao spisak, sa pretragom i filterima.',
+    text: 'Dugme „Lista“ prikazuje ista mesta kao spisak, sa pretragom i filterima.',
   },
 ];
 
@@ -84,6 +85,30 @@ export function FirstVisitGuide() {
     markGuideSeen();
     setStep(null);
   };
+
+  return <GuideDialog step={step} box={box} onNext={() => setStep(step + 1)} onFinish={finish} />;
+}
+
+/** The dimmed screen and the bubble. Keyboard focus stays inside while it is open. */
+function GuideDialog({
+  step,
+  box,
+  onNext,
+  onFinish,
+}: {
+  step: number;
+  box: DOMRect | null;
+  onNext: () => void;
+  onFinish: () => void;
+}) {
+  const dialog = useRef<HTMLDivElement>(null);
+  const primary = useRef<HTMLButtonElement>(null);
+  // Escape skips the guide. On a first visit nothing had focus before, so it
+  // goes to the report button, the first thing the guide points at.
+  useModalFocus(dialog, onFinish, {
+    initialFocus: () => primary.current,
+    fallbackFocus: () => findTarget('create'),
+  });
   const last = step === STEPS.length - 1;
 
   // The bubble goes on the side of the highlighted element with more room.
@@ -96,33 +121,44 @@ export function FirstVisitGuide() {
   }
 
   return (
-    <div className="guide" role="dialog" aria-modal="true" aria-label="Kratak vodič">
+    <div
+      ref={dialog}
+      className="guide"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Kratak vodič"
+      aria-describedby="guide-text"
+    >
       {box ? (
         <div
+          key="spot"
           className="guide__spot"
           style={{
-            top: box.top - PAD,
-            left: box.left - PAD,
             width: box.width + PAD * 2,
             height: box.height + PAD * 2,
+            transform: `translate(${box.left - PAD}px, ${box.top - PAD}px)`,
           }}
         />
       ) : (
-        <div className="guide__dim" />
+        <div key="dim" className="guide__dim" />
       )}
       <div className="guide__bubble" style={bubbleStyle} key={step}>
         <p className="guide__step">
           Korak {step + 1} od {STEPS.length}
         </p>
-        <p className="guide__text">{STEPS[step].text}</p>
+        <p className="guide__text" id="guide-text">
+          {STEPS[step].text}
+        </p>
         <div className="guide__row">
-          <button type="button" className="btn btn--quiet btn--sm" onClick={finish}>
+          <button type="button" className="btn btn--quiet btn--sm" onClick={onFinish}>
             Preskoči
           </button>
           <button
+            ref={primary}
             type="button"
             className="btn btn--primary btn--sm"
-            onClick={() => (last ? finish() : setStep(step + 1))}
+            aria-describedby="guide-text"
+            onClick={() => (last ? onFinish() : onNext())}
             autoFocus
           >
             {last ? 'Gotovo' : 'Dalje'}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Check,
   Clock3,
@@ -12,13 +12,12 @@ import {
   APP,
   CATEGORIES,
   COMMUNITY_CAN_PRESETS,
-  DEFAULT_CATEGORY,
   HELP_NEEDED_PRESETS,
   LIMITS,
 } from '../config';
 import { addDemoReport } from '../demo/store';
 import { formatCoordinates } from '../lib/format';
-import { isInServiceArea } from '../lib/geo';
+import { isInServiceArea, roundCoordinate } from '../lib/geo';
 import { toSerbianError } from '../services/errors';
 import { isFirebaseConfigured } from '../services/firebase';
 import { usePhotoUploads } from '../hooks/usePhotoUploads';
@@ -26,14 +25,19 @@ import { imagesEnabled } from '../services/images';
 import { createReportRecord } from '../services/reports';
 import { useApp } from '../state/app-context';
 import type { Category, NewReportInput, Report } from '../types';
-import { Drawer } from './Drawer';
+import { Drawer, type Snap } from './Drawer';
+import { drawerOffset } from './map/drawer-offset';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { ConfirmSheet } from './ui/ConfirmSheet';
+import { CharCount } from './ui/CharCount';
+import { ErrorSummary, FieldError } from './ui/FormErrors';
 import { Spinner } from './ui/EmptyState';
 import { PhotoPicker } from './ui/PhotoPicker';
+import { prefersReducedMotion } from '../lib/motion';
 
 type FieldKey =
   | 'location'
+  | 'address'
   | 'title'
   | 'category'
   | 'description'
@@ -41,6 +45,28 @@ type FieldKey =
   | 'helpNeeded'
   | 'photos';
 type FieldErrors = Partial<Record<FieldKey, string>>;
+
+/** Fields in the order of the form, and what gets focus for each error. */
+const FIELD_ORDER: FieldKey[] = [
+  'location',
+  'address',
+  'title',
+  'category',
+  'description',
+  'communityCan',
+  'helpNeeded',
+  'photos',
+];
+const FIELD_TARGET: Record<FieldKey, string> = {
+  location: 'compose-map-button',
+  address: 'report-address',
+  title: 'report-title',
+  category: 'category-first',
+  description: 'report-description',
+  communityCan: 'report-community',
+  helpNeeded: 'report-help',
+  photos: 'compose-photo-button',
+};
 
 const TITLE_MIN = LIMITS.titleMin;
 const TITLE_MAX = LIMITS.titleMax;
@@ -82,9 +108,7 @@ function PlanField({
     <div className={`field${error ? ' has-error' : ''}`}>
       <div className="field__top">
         <label htmlFor={id}>{label}</label>
-        <span className="field__counter">
-          {value.length}/{COMMUNITY_MAX}
-        </span>
+        <CharCount value={value} max={COMMUNITY_MAX} />
       </div>
       <div className="preset-row" role="group" aria-label={`Brzi izbor: ${label}`}>
         {presets.map((preset) => {
@@ -95,7 +119,7 @@ function PlanField({
               type="button"
               className={`preset-chip${used ? ' is-used' : ''}`}
               onClick={() => onChange(appendPreset(value, preset))}
-              disabled={disabled || used}
+              aria-disabled={disabled || used || undefined}
             >
               {used ? <Check size={11} aria-hidden="true" /> : <Plus size={11} aria-hidden="true" />}
               {preset}
@@ -107,21 +131,16 @@ function PlanField({
         id={id}
         rows={3}
         value={value}
-        maxLength={COMMUNITY_MAX}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
         aria-invalid={Boolean(error)}
-        aria-describedby={error ? `error-${id}` : `hint-${id}`}
+        aria-describedby={error ? `hint-${id} error-${id}` : `hint-${id}`}
         disabled={disabled}
       />
       <p className="field__hint" id={`hint-${id}`}>
         {hint}
       </p>
-      {error ? (
-        <p className="field__error" id={`error-${id}`} role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? <FieldError id={`error-${id}`}>{error}</FieldError> : null}
     </div>
   );
 }
@@ -130,6 +149,7 @@ export function ComposeDrawer() {
   const {
     composeLocation,
     composeEditing: editing,
+    composeGuardRef,
     setComposeLocation,
     cancelCompose,
     addCreatedReport,
@@ -146,7 +166,9 @@ export function ComposeDrawer() {
   // read once per report.
   const [initial] = useState(() => ({
     title: editing?.title ?? '',
-    category: editing?.category ?? DEFAULT_CATEGORY,
+    // No category is chosen in advance, so a hurried report is not filed under
+    // the first one by mistake (GOV.UK: do not pre-select answers).
+    category: editing?.category ?? null,
     description: editing?.description ?? '',
     communityCan: editing?.communityCan ?? '',
     helpNeeded: editing?.helpNeeded ?? '',
@@ -165,11 +187,20 @@ export function ComposeDrawer() {
     initialUrls: initial.imageUrls,
   });
   const [errors, setErrors] = useState<FieldErrors>({});
+  // The summary shows after the first try to send, and takes focus on each failed try.
+  const [failedSends, setFailedSends] = useState(0);
+  const summaryRef = useRef<HTMLDivElement>(null);
+  const alertRef = useRef<HTMLDivElement>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
   const [locating, setLocating] = useState(false);
-  const [collapseSignal, setCollapseSignal] = useState(0);
+  // Why "Koristi moju lokaciju" did not work; stays until a point is chosen.
+  const [locationNote, setLocationNote] = useState<string | null>(null);
+  // "Izaberi" lowers the sheet as far as it goes, so most of the map is free;
+  // a failed send brings it back up to show the errors.
+  const [snapRequest, setSnapRequest] = useState<{ snap: Snap; id: number }>();
+  const requestSnap = (snap: Snap) => setSnapRequest((value) => ({ snap, id: (value?.id ?? 0) + 1 }));
 
   const outsideArea = composeLocation !== null && !isInServiceArea(composeLocation);
   const locationMoved = editing
@@ -186,6 +217,18 @@ export function ComposeDrawer() {
     photos.length !== initial.imageUrls.length ||
     photos.some((photo, index) => photo.url !== initial.imageUrls[index]) ||
     locationMoved;
+
+  // Back (browser or phone) asks the same question as "Otkaži" when the form has text.
+  useEffect(() => {
+    composeGuardRef.current = () => {
+      if (submitting || submitted || !dirty) return false;
+      setConfirmClose(true);
+      return true;
+    };
+    return () => {
+      composeGuardRef.current = null;
+    };
+  });
 
   // Wording for the three ways this drawer is used.
   const isModeratorEdit = Boolean(editing && auth.isModerator);
@@ -212,10 +255,16 @@ export function ComposeDrawer() {
       next.location = 'Lokacija mora biti u Novom Sadu.';
     }
 
+    if (address.trim().length > LIMITS.addressMax) {
+      next.address = `Adresa može imati najviše ${LIMITS.addressMax} znakova. Skrati je.`;
+    }
+
     const trimmedTitle = title.trim();
     if (!trimmedTitle) next.title = 'Unesi naslov prijave.';
     else if (trimmedTitle.length < TITLE_MIN) {
       next.title = `Naslov mora imati najmanje ${TITLE_MIN} znakova.`;
+    } else if (trimmedTitle.length > TITLE_MAX) {
+      next.title = `Naslov može imati najviše ${TITLE_MAX} znakova. Skrati ga.`;
     }
 
     if (!category) next.category = 'Izaberi kategoriju.';
@@ -224,17 +273,23 @@ export function ComposeDrawer() {
     if (!trimmedDescription) next.description = 'Opiši problem.';
     else if (trimmedDescription.length < DESC_MIN) {
       next.description = `Opis mora imati najmanje ${DESC_MIN} znakova.`;
+    } else if (trimmedDescription.length > DESC_MAX) {
+      next.description = `Opis može imati najviše ${DESC_MAX} znakova. Skrati ga.`;
     }
 
     if (communityCan.trim().length < COMMUNITY_MIN) {
       next.communityCan = communityCan.trim()
         ? `Napiši bar ${COMMUNITY_MIN} znakova ili izaberi ponuđeno.`
         : 'Napiši šta zajednica može sama ili izaberi ponuđeno.';
+    } else if (communityCan.trim().length > COMMUNITY_MAX) {
+      next.communityCan = `Ovde može najviše ${COMMUNITY_MAX} znakova. Skrati tekst.`;
     }
     if (helpNeeded.trim().length < COMMUNITY_MIN) {
       next.helpNeeded = helpNeeded.trim()
         ? `Napiši bar ${COMMUNITY_MIN} znakova ili izaberi ponuđeno.`
         : 'Napiši za šta je potrebna pomoć ili izaberi ponuđeno.';
+    } else if (helpNeeded.trim().length > COMMUNITY_MAX) {
+      next.helpNeeded = `Ovde može najviše ${COMMUNITY_MAX} znakova. Skrati tekst.`;
     }
 
     if (photos.length > LIMITS.imagesMax) {
@@ -244,28 +299,29 @@ export function ComposeDrawer() {
     return next;
   };
 
-  const focusFirstError = (next: FieldErrors) => {
-    const order: FieldKey[] = [
-      'location',
-      'title',
-      'category',
-      'description',
-      'communityCan',
-      'helpNeeded',
-      'photos',
-    ];
-    const first = order.find((key) => next[key]);
-    const ids: Record<FieldKey, string> = {
-      location: 'compose-map-button',
-      title: 'report-title',
-      category: 'category-first',
-      description: 'report-description',
-      communityCan: 'report-community',
-      helpNeeded: 'report-help',
-      photos: 'compose-photo-button',
-    };
-    if (first) document.getElementById(ids[first])?.focus();
-  };
+  useEffect(() => {
+    if (failedSends > 0) summaryRef.current?.focus();
+  }, [failedSends]);
+
+  // A point on the map answers the location question.
+  useEffect(() => {
+    if (!composeLocation) return;
+    setErrors((prev) => (prev.location ? { ...prev, location: undefined } : prev));
+    setLocationNote(null);
+  }, [composeLocation]);
+
+  // A server error gets focus too, so it is read out and Tab goes on from it.
+  useEffect(() => {
+    if (submitError) alertRef.current?.focus();
+  }, [submitError]);
+
+  const summaryErrors =
+    failedSends > 0
+      ? FIELD_ORDER.flatMap((key) => {
+          const message = errors[key];
+          return message ? [{ id: FIELD_TARGET[key], message }] : [];
+        })
+      : [];
 
   const addFiles = (fileList: FileList | null) => {
     const error = addPhotoFiles(fileList);
@@ -278,16 +334,24 @@ export function ComposeDrawer() {
   };
 
   const submit = async () => {
+    if (submitting) return;
     const nextErrors = validate();
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
-      focusFirstError(nextErrors);
+      setFailedSends((value) => value + 1);
+      requestSnap('normal');
       return;
     }
     if (!composeLocation) return;
 
     if (isFirebaseConfigured && !auth.user) {
       setSubmitError('Prijava je istekla. Prijavi se ponovo i pokušaj.');
+      return;
+    }
+    if (isFirebaseConfigured && !navigator.onLine) {
+      setSubmitError(
+        'Nema internet veze. Prijava još nije poslata, a uneto ostaje u formi. Pošalji je kad se veza vrati.',
+      );
       return;
     }
 
@@ -356,16 +420,36 @@ export function ComposeDrawer() {
   };
 
   const focusMap = () => {
-    setCollapseSignal((value) => value + 1);
+    requestSnap('peek');
+    const map = mapRef.current;
+    // Focus goes to the map, where the arrow keys move it and Enter puts the
+    // point under the crosshair. A click or tap works there as before.
+    map?.getContainer().focus({ preventScroll: true });
     if (composeLocation) {
       flyTo(composeLocation, undefined, { accountForDrawer: true });
       return;
     }
+    map?.flyTo([APP.center.latitude, APP.center.longitude], 14, {
+      duration: 0.5,
+      animate: !prefersReducedMotion(),
+    });
+  };
+
+  // The point under the crosshair in the middle of the visible map. Works the
+  // same with a mouse, a finger or a keyboard (WCAG 2.1.1).
+  const placeAtCentre = () => {
     const map = mapRef.current;
-    map?.flyTo([APP.center.latitude, APP.center.longitude], 14, { duration: 0.5 });
+    if (!map) return;
+    const size = map.getSize();
+    const [dx, dy] = drawerOffset();
+    const centre = map.containerPointToLatLng([size.x / 2 - dx, size.y / 2 - dy]);
+    const point = { latitude: roundCoordinate(centre.lat), longitude: roundCoordinate(centre.lng) };
+    setComposeLocation(point);
+    if (!isInServiceArea(point)) notify('error', 'Izabrana tačka je izvan područja Novog Sada.');
   };
 
   const useMyLocation = () => {
+    if (locating) return;
     if (!('geolocation' in navigator)) {
       notify('error', 'Tvoj pregledač ne podržava određivanje lokacije.');
       return;
@@ -375,7 +459,7 @@ export function ComposeDrawer() {
         latitude: userPosition.latitude,
         longitude: userPosition.longitude,
       });
-      setCollapseSignal((value) => value + 1);
+      requestSnap('peek');
       flyTo(userPosition, 17, { accountForDrawer: true });
       return;
     }
@@ -389,15 +473,19 @@ export function ComposeDrawer() {
           longitude: position.coords.longitude,
         };
         setComposeLocation(point);
-        setCollapseSignal((value) => value + 1);
+        requestSnap('peek');
         flyTo(point, 17, { accountForDrawer: true });
         if (!isInServiceArea(point)) {
           notify('error', 'Tvoja lokacija je izvan Novog Sada.');
         }
       },
-      () => {
+      (error) => {
         setLocating(false);
-        notify('error', 'Lokaciju nije moguće odrediti. Izaberi tačku na mapi.');
+        setLocationNote(
+          error.code === error.PERMISSION_DENIED
+            ? 'Pristup lokaciji je odbijen. Izaberi tačku na mapi, ili „Izaberi“ pa Enter na tastaturi.'
+            : 'Lokaciju nije moguće odrediti. Izaberi tačku na mapi.',
+        );
       },
       { enableHighAccuracy: true, timeout: 12_000 },
     );
@@ -406,6 +494,7 @@ export function ComposeDrawer() {
   if (submitted) {
     return (
       <Drawer
+        key="sent"
         label="Prijava je poslata"
         onClose={cancelCompose}
         className="drawer--compose"
@@ -440,8 +529,8 @@ export function ComposeDrawer() {
             </li>
           </ol>
           <p className="submit-success__note">
-            Ako nešto treba ispraviti, moderator će napisati razlog. Videćeš ga uz prijavu kada
-            se prijavi ovim nalogom.
+            Ako nešto treba ispraviti, moderator će napisati razlog. Videćeš ga uz prijavu kad
+            se prijaviš ovim nalogom.
           </p>
         </div>
       </Drawer>
@@ -475,17 +564,19 @@ export function ComposeDrawer() {
   const footer = (
     <div className="compose-foot">
       {submitError ? (
-        <div className="form-alert" role="alert">
+        <div className="form-alert" role="alert" ref={alertRef} tabIndex={-1}>
           <TriangleAlert size={15} aria-hidden="true" />
           <p>{submitError}</p>
         </div>
       ) : null}
       <div className="compose-foot__row">
+        {/* Not disabled while sending: a disabled button drops the focus. Both
+            handlers ignore presses until sending is over. */}
         <button
           type="button"
           className="btn btn--quiet"
           onClick={requestClose}
-          disabled={submitting}
+          aria-disabled={submitting || undefined}
         >
           Otkaži
         </button>
@@ -493,12 +584,15 @@ export function ComposeDrawer() {
           type="button"
           className="btn btn--primary"
           onClick={() => void submit()}
-          disabled={submitting}
+          aria-disabled={submitting || undefined}
         >
           {submitting ? <Spinner size={15} /> : null}
           {submitLabel}
         </button>
       </div>
+      <p className="visually-hidden" role="status">
+        {submitting ? submitLabel : ''}
+      </p>
       <p className="compose-foot__note">{footNote}</p>
     </div>
   );
@@ -509,8 +603,10 @@ export function ComposeDrawer() {
       onClose={requestClose}
       footer={footer}
       className="drawer--compose"
-      collapseSignal={collapseSignal}
+      snapRequest={snapRequest}
     >
+      <ErrorSummary ref={summaryRef} errors={summaryErrors} />
+
       <div className="compose-head">
         <span className="eyebrow">{editing ? 'Izmena prijave' : 'Nova prijava'}</span>
         <span className="compose-head__hint">
@@ -583,13 +679,15 @@ export function ComposeDrawer() {
           <span className="form-section__num">01</span>
           <h3 id="compose-location-label">Lokacija</h3>
           {composeLocation && !outsideArea ? (
-            <span className="form-section__done" aria-label="Lokacija je izabrana">
+            <span className="form-section__done" role="img" aria-label="Lokacija je izabrana">
               <Check size={12} aria-hidden="true" />
             </span>
           ) : null}
         </div>
 
-        <div className={`location-pick${composeLocation ? ' is-set' : ''}${outsideArea ? ' is-error' : ''}`}>
+        <div
+          className={`location-pick${composeLocation ? ' is-set' : ''}${outsideArea || errors.location ? ' is-error' : ''}`}
+        >
           <span className="location-pick__icon" aria-hidden="true">
             <Crosshair size={16} />
           </span>
@@ -600,7 +698,7 @@ export function ComposeDrawer() {
             <span>
               {composeLocation
                 ? formatCoordinates(composeLocation.latitude, composeLocation.longitude)
-                : 'Klikni na mapu da postaviš marker.'}
+                : 'Izaberi tačku na mapi.'}
             </span>
           </div>
           <button
@@ -608,28 +706,32 @@ export function ComposeDrawer() {
             id="compose-map-button"
             className="btn btn--quiet btn--sm"
             onClick={focusMap}
+            aria-describedby={errors.location ? 'error-location' : undefined}
           >
             {composeLocation ? 'Pomeri' : 'Izaberi'}
           </button>
         </div>
 
         <div className="location-actions">
+          <button type="button" className="btn btn--quiet btn--sm" onClick={placeAtCentre}>
+            <Crosshair size={13} aria-hidden="true" />
+            Postavi na sredinu mape
+          </button>
           <button
             type="button"
             className="btn btn--quiet btn--sm"
             onClick={useMyLocation}
-            disabled={locating}
+            aria-disabled={locating || undefined}
           >
             {locating ? <Spinner size={13} /> : <Navigation size={13} aria-hidden="true" />}
             {locating ? 'Traženje lokacije…' : 'Koristi moju lokaciju'}
           </button>
         </div>
 
-        {errors.location ? (
-          <p className="field__error" role="alert">
-            {errors.location}
-          </p>
-        ) : null}
+        <p className="field__hint location-note" role="status">
+          {locationNote}
+        </p>
+        {errors.location ? <FieldError id="error-location">{errors.location}</FieldError> : null}
         {outsideArea && !errors.location ? (
           <p className="field__error" role="alert">
             Izabrana tačka je izvan Novog Sada.
@@ -642,19 +744,26 @@ export function ComposeDrawer() {
             <label htmlFor="report-address">
               Adresa ili orijentir <span className="field__optional">opciono</span>
             </label>
-            <span className="field__counter">{address.length}/{LIMITS.addressMax}</span>
+            <CharCount value={address} max={LIMITS.addressMax} />
           </div>
           <input
             id="report-address"
             type="text"
             value={address}
-            maxLength={LIMITS.addressMax}
             placeholder="Na primer: Dunavski park, ulaz sa Keja"
-            onChange={(event) => setAddress(event.target.value)}
+            onChange={(event) => {
+              setAddress(event.target.value);
+              if (errors.address) setErrors((prev) => ({ ...prev, address: undefined }));
+            }}
+            aria-invalid={Boolean(errors.address)}
+            aria-describedby={errors.address ? 'hint-address error-address' : 'hint-address'}
             disabled={submitting}
             autoComplete="off"
           />
-          <p className="field__hint">Pomaže drugima da pronađu mesto bez otvaranja mape.</p>
+          <p className="field__hint" id="hint-address">
+            Pomaže drugima da pronađu mesto bez otvaranja mape.
+          </p>
+          {errors.address ? <FieldError id="error-address">{errors.address}</FieldError> : null}
         </div>
       </section>
 
@@ -667,33 +776,32 @@ export function ComposeDrawer() {
         <div className={`field${errors.title ? ' has-error' : ''}`}>
           <div className="field__top">
             <label htmlFor="report-title">Naslov</label>
-            <span className="field__counter">
-              {title.length}/{TITLE_MAX}
-            </span>
+            <CharCount value={title} max={TITLE_MAX} />
           </div>
           <input
             id="report-title"
             type="text"
             value={title}
-            maxLength={TITLE_MAX}
             placeholder="Na primer: Polomljena klupa u Dunavskom parku"
             onChange={(event) => {
               setTitle(event.target.value);
               if (errors.title) setErrors((prev) => ({ ...prev, title: undefined }));
             }}
             aria-invalid={Boolean(errors.title)}
-            aria-describedby={errors.title ? 'error-title' : undefined}
+            aria-describedby={errors.title ? 'hint-title error-title' : 'hint-title'}
             disabled={submitting}
             autoComplete="off"
           />
-          {errors.title ? (
-            <p className="field__error" id="error-title" role="alert">
-              {errors.title}
-            </p>
-          ) : null}
+          <p className="field__hint" id="hint-title">
+            Najmanje {TITLE_MIN} znakova. Kratko: šta je i gde.
+          </p>
+          {errors.title ? <FieldError id="error-title">{errors.title}</FieldError> : null}
         </div>
 
-        <fieldset className={`field field--fieldset${errors.category ? ' has-error' : ''}`}>
+        <fieldset
+          className={`field field--fieldset${errors.category ? ' has-error' : ''}`}
+          aria-describedby={errors.category ? 'error-category' : undefined}
+        >
           <legend className="field__label">Kategorija</legend>
           <div className="category-grid">
             {CATEGORIES.map((option, index) => (
@@ -721,25 +829,18 @@ export function ComposeDrawer() {
               </label>
             ))}
           </div>
-          {errors.category ? (
-            <p className="field__error" role="alert">
-              {errors.category}
-            </p>
-          ) : null}
+          {errors.category ? <FieldError id="error-category">{errors.category}</FieldError> : null}
         </fieldset>
 
         <div className={`field${errors.description ? ' has-error' : ''}`}>
           <div className="field__top">
             <label htmlFor="report-description">Opis problema</label>
-            <span className="field__counter">
-              {description.length}/{DESC_MAX}
-            </span>
+            <CharCount value={description} max={DESC_MAX} />
           </div>
           <textarea
             id="report-description"
             rows={5}
             value={description}
-            maxLength={DESC_MAX}
             placeholder="Šta je oštećeno ili zapušteno? Koliko je prostor pristupačan? Šta bi trebalo uraditi?"
             onChange={(event) => {
               setDescription(event.target.value);
@@ -748,16 +849,16 @@ export function ComposeDrawer() {
               }
             }}
             aria-invalid={Boolean(errors.description)}
-            aria-describedby={errors.description ? 'error-description' : 'hint-description'}
+            aria-describedby={
+              errors.description ? 'hint-description error-description' : 'hint-description'
+            }
             disabled={submitting}
           />
           <p className="field__hint" id="hint-description">
             Najmanje {DESC_MIN} znakova. Bez ličnih podataka i bez optužbi.
           </p>
           {errors.description ? (
-            <p className="field__error" id="error-description" role="alert">
-              {errors.description}
-            </p>
+            <FieldError id="error-description">{errors.description}</FieldError>
           ) : null}
         </div>
       </section>
@@ -775,7 +876,7 @@ export function ComposeDrawer() {
         <PlanField
           id="report-community"
           label="Šta zajednica može sama"
-          hint="Na primer rad, alat koji već imaš ili termin kada komšije mogu da se okupe."
+          hint={`Najmanje ${COMMUNITY_MIN} znakova ili izaberi ponuđeno. Na primer rad, alat koji već imaš ili termin kada komšije mogu da se okupe.`}
           placeholder="Možemo da skupimo sitan otpad u džakove i očistimo stazu."
           presets={COMMUNITY_CAN_PRESETS}
           value={communityCan}
@@ -790,7 +891,7 @@ export function ComposeDrawer() {
         <PlanField
           id="report-help"
           label="Za šta nam treba pomoć"
-          hint="Na primer odvoz, materijal, stručan rad ili nadležna služba."
+          hint={`Najmanje ${COMMUNITY_MIN} znakova ili izaberi ponuđeno. Na primer odvoz, materijal, stručan rad ili nadležna služba.`}
           placeholder="Potreban je kontejner za krupni otpad i odvoz šuta."
           presets={HELP_NEEDED_PRESETS}
           value={helpNeeded}
@@ -837,9 +938,9 @@ export function ComposeDrawer() {
         )}
 
         {errors.photos ? (
-          <p className="field__error" role="alert">
+          <FieldError id="error-photos" alert>
             {errors.photos}
-          </p>
+          </FieldError>
         ) : null}
 
         {photos.some((photo) => photo.error) ? (
@@ -853,7 +954,7 @@ export function ComposeDrawer() {
         <p className="eyebrow">Napomena</p>
         <p>
           {isFirebaseConfigured
-            ? 'Moderator pregleda prijavu i objavljuje je na javnoj mapi. Ako nešto treba ispraviti, dobićeš razlog. Posle objave, član zajednice može da je poveže sa akcijom čišćenja.'
+            ? 'Moderator pregleda prijavu i objavljuje je na javnoj mapi. Ako nešto treba ispraviti, dobićeš razlog. Posle objave, član zajednice može da je poveže sa akcijom čišćenja. Uz prijavu se javno prikazuje ime sa tvog Google naloga.'
             : 'Prijava se prikazuje na mapi. U pravoj bazi moderator je prvo pregleda, a član zajednice može da je poveže sa akcijom čišćenja.'}
         </p>
       </div>
