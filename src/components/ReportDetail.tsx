@@ -377,6 +377,7 @@ export function ReportDetail() {
       label={`Prijava: ${report.title}`}
       onClose={closeSelection}
       snapRequest={sheetRequest}
+      focusKey={report.id}
       footer={
         <div className="detail-foot">
           {published ? (

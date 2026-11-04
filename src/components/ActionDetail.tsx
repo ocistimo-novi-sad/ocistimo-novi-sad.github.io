@@ -64,6 +64,7 @@ export function ActionDetail() {
     <Drawer
       label={`Akcija: ${action.title}`}
       onClose={closeSelection}
+      focusKey={action.id}
       className="drawer--action"
       footer={
         <div className="detail-foot">

@@ -44,7 +44,12 @@ import { prefersReducedMotion } from '../lib/motion';
 
 function MapBridge() {
   const map = useMap();
-  const { mapRef } = useApp();
+  const { mapRef, layer } = useApp();
+
+  // The map's name says what it shows.
+  useEffect(() => {
+    map.getContainer().setAttribute('aria-label', layer === 'actions' ? 'Mapa akcija' : 'Mapa prijava');
+  }, [map, layer]);
 
   useEffect(() => {
     mapRef.current = map;
@@ -54,7 +59,6 @@ function MapBridge() {
     // which keys work (WCAG 4.1.2).
     const container = map.getContainer();
     container.setAttribute('role', 'region');
-    container.setAttribute('aria-label', 'Mapa');
     container.setAttribute('aria-describedby', 'map-keys');
 
     // Escape closes an open marker tooltip first, before anything else (WCAG 1.4.13).

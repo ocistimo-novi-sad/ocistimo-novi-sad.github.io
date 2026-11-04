@@ -903,7 +903,8 @@ button.impact-stat:hover {
   font-family: var(--font-mono);
   font-size: var(--text-label);
   font-weight: 500;
-  letter-spacing: 0.1em;
+  /* Tighter caps, so long category names fit at 320-375px. */
+  letter-spacing: 0.04em;
   text-overflow: ellipsis;
   text-transform: uppercase;
   white-space: nowrap;

@@ -14,6 +14,8 @@ import { CategoryGlyph } from './ui/CategoryGlyph';
 import { StatusShape } from './ui/StatusShape';
 import { Modal } from './modals/Modal';
 
+const IS_MAC = /Mac|iPhone|iPad/.test(navigator.platform);
+
 /** One placeholder per layer, shared by the list and the map; short enough for a phone. */
 export const SEARCH_PLACEHOLDER = {
   reports: 'Ulica, kvart ili opis',
@@ -33,7 +35,7 @@ export function SearchInput({
   placeholder: string;
   label: string;
   inputRef?: Ref<HTMLInputElement>;
-  /** Shows the "/" shortcut hint while empty. */
+  /** Shows the keyboard shortcut (Ctrl+K, ⌘K on a Mac) while empty. */
   hint?: boolean;
 }) {
   return (
@@ -59,7 +61,7 @@ export function SearchInput({
         </button>
       ) : hint ? (
         <kbd className="search-field__hint" aria-hidden="true">
-          /
+          {IS_MAC ? '⌘K' : 'Ctrl K'}
         </kbd>
       ) : null}
     </div>
@@ -356,16 +358,12 @@ export function FiltersBar() {
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // Ctrl+K (⌘K on a Mac) jumps to the search. A modifier key means it can't
+    // fire by accident while typing or from speech input (WCAG 2.1.4); it does
+    // nothing while a dialog is open.
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey) return;
-      const target = event.target as HTMLElement | null;
-      // Only inside the list panel, so a stray "/" elsewhere (or from speech
-      // input) does not move focus (WCAG 2.1.4).
-      if (!target?.closest('.discovery')) return;
-      const tag = target.tagName.toLowerCase();
-      if (tag === 'input' || tag === 'textarea' || tag === 'select' || target.isContentEditable) {
-        return;
-      }
+      if (event.key.toLowerCase() !== 'k' || !(IS_MAC ? event.metaKey : event.ctrlKey)) return;
+      if (event.altKey || event.shiftKey || document.querySelector('[aria-modal="true"]')) return;
       event.preventDefault();
       searchRef.current?.focus();
     };

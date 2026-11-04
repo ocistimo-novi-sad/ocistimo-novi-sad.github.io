@@ -50,6 +50,7 @@ export function Drawer({
   footer,
   className = '',
   snapRequest,
+  focusKey,
 }: {
   label: string;
   onClose: () => void;
@@ -58,6 +59,8 @@ export function Drawer({
   className?: string;
   /** Moves the sheet to a height on a phone; a new `id` repeats the same height. */
   snapRequest?: { snap: Snap; id: number };
+  /** What the panel shows; when it changes, focus moves into the panel again. */
+  focusKey?: string;
 }) {
   const isMobile = useIsMobile();
   const [snap, setSnap] = useState<Snap>('normal');
@@ -76,18 +79,33 @@ export function Drawer({
 
   // Focus moves into the panel when it opens and back when it closes (WAI-ARIA
   // dialog pattern), so keyboard and screen reader users notice it.
+  const opener = useRef<HTMLElement | null>(null);
   useEffect(() => {
-    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     drawerRef.current?.focus({ preventScroll: true });
     return () => {
+      // Only when focus fell to the page with the panel; a click on the map
+      // that closed it keeps focus there.
+      if (document.activeElement && document.activeElement !== document.body) return;
       // On a phone the opener can be hidden by then (a report opened from the
       // list shows on the map tab); the active tab keeps focus on the page.
-      const target = canFocus(opener)
-        ? opener
+      const target = canFocus(opener.current)
+        ? opener.current
         : document.querySelector<HTMLElement>('.tabbar__item.is-active');
       target?.focus({ preventScroll: true });
     };
   }, []);
+
+  // Another report opened while the panel is open: focus moves to it too.
+  const shownKey = useRef(focusKey);
+  useEffect(() => {
+    if (focusKey === shownKey.current) return;
+    shownKey.current = focusKey;
+    const active = document.activeElement;
+    if (drawerRef.current?.contains(active)) return;
+    if (active instanceof HTMLElement) opener.current = active;
+    drawerRef.current?.focus({ preventScroll: true });
+  }, [focusKey]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
