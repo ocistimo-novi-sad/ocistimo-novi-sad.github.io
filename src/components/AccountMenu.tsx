@@ -131,7 +131,7 @@ export function AccountMenu() {
               {reviewCount > 0 ? <span className="account__count">{reviewCount}</span> : null}
             </button>
           ) : null}
-          {auth.isAdmin ? (
+          {auth.isModerator ? (
             <button
               type="button"
               role="menuitem"
@@ -142,7 +142,7 @@ export function AccountMenu() {
               }}
             >
               <Settings size={15} aria-hidden="true" />
-              Administracija
+              {auth.isAdmin ? 'Administracija' : 'Akcije čišćenja'}
             </button>
           ) : null}
           <button
@@ -153,8 +153,8 @@ export function AccountMenu() {
               setOpen(false);
               void auth
                 .signOut()
-                .then(() => notify('info', 'Odjavljeni ste.'))
-                .catch(() => notify('error', 'Odjava nije uspela. Pokušajte ponovo.'));
+                .then(() => notify('info', 'Odjava je uspela.'))
+                .catch(() => notify('error', 'Odjava nije uspela. Pokušaj ponovo.'));
             }}
           >
             <LogOut size={15} aria-hidden="true" />

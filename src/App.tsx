@@ -3,6 +3,7 @@ import { ActionDetail } from './components/ActionDetail';
 import { AdminPanel } from './components/admin/AdminPanel';
 import { ComposeDrawer } from './components/ComposeDrawer';
 import { DiscoveryPanel } from './components/DiscoveryPanel';
+import { FirstVisitGuide } from './components/FirstVisitGuide';
 import { Header } from './components/Header';
 import { MapCanvas } from './components/MapCanvas';
 import { MobileTabBar } from './components/MobileTabBar';
@@ -51,7 +52,7 @@ function ModalHost() {
 }
 
 function AppShell() {
-  const { view, mobileTab, selectedReport, selectedAction, composeOpen, composeEditing } =
+  const { layer, mobileTab, selectedReport, selectedAction, composeOpen, composeEditing } =
     useApp();
   const drawerOpen = composeOpen || Boolean(selectedReport) || Boolean(selectedAction);
 
@@ -61,7 +62,7 @@ function AppShell() {
 
       <main className="workspace">
         <div className={`discovery${mobileTab === 'map' ? ' is-hidden-mobile' : ''}`}>
-          {view === 'actions' ? <ActionsPanel /> : <DiscoveryPanel />}
+          {layer === 'actions' ? <ActionsPanel /> : <DiscoveryPanel />}
         </div>
 
         <div className="map-slot">
@@ -79,6 +80,7 @@ function AppShell() {
       </main>
 
       <MobileTabBar />
+      <FirstVisitGuide />
       <Toasts />
       <ModalHost />
     </div>

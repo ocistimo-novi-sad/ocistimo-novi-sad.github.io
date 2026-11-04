@@ -278,7 +278,7 @@ export function createDemoActions(): CleanupAction[] {
       supplies: ['Radne rukavice', 'Vreće za otpad', 'Grablje i metle', 'Voda za piće'],
       organizerName: 'Ekološko udruženje Futoški park',
       organizerNote:
-        'Prijavite se porukom na mejl organizatora najkasnije dan ranije. Maloletni mogu doći uz pratnju roditelja.',
+        'Prijavi se porukom na mejl organizatora najkasnije dan ranije. Maloletni mogu doći uz pratnju roditelja.',
       createdAt: hoursAgo(150),
       createdBy: 'demo-admin',
       source: 'demo',
@@ -287,7 +287,7 @@ export function createDemoActions(): CleanupAction[] {
       id: 'a-detelinara',
       title: 'Veliko spremanje Detelinare',
       description:
-        'Čistimo prostor oko škole i zida pored igrališta. Pripremljene su vreće za odvojeno sakupljanje plastike i stakla, a nakon čišćenja krečimo zid u dogovoru sa školom. Pridružite se na sat ili na celo jutro.',
+        'Čistimo prostor oko škole i zida pored igrališta. Pripremljene su vreće za odvojeno sakupljanje plastike i stakla, a nakon čišćenja krečimo zid u dogovoru sa školom. Pridruži se na sat ili na celo jutro.',
       date: dateFromNow(16, 9, 30),
       meetingPoint: 'Ispred škole na Detelinari, ulaz sa dvorišne strane',
       latitude: 45.26161,

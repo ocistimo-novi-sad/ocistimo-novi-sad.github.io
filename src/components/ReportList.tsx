@@ -9,7 +9,8 @@ import {
   TriangleAlert,
 } from 'lucide-react';
 import { CATEGORY_MAP, STATUS_MAP } from '../config';
-import { formatRelativeTime } from '../lib/format';
+import { formatDistance, formatRelativeTime } from '../lib/format';
+import { distanceInMeters } from '../lib/geo';
 import { optimizedImageUrl } from '../services/images';
 import { useApp } from '../state/app-context';
 import type { Report } from '../types';
@@ -29,8 +30,10 @@ function ReportCard({
   report: Report;
   selected: boolean;
 }) {
-  const { selectReport } = useApp();
+  const { selectReport, filters, userPosition } = useApp();
   const [imageFailed, setImageFailed] = useState(false);
+  const distance =
+    filters.sort === 'nearest' && userPosition ? distanceInMeters(userPosition, report) : null;
   const image = report.imageUrls[0];
   const hasImage = Boolean(image) && !imageFailed;
 
@@ -71,6 +74,9 @@ function ReportCard({
             ·
           </span>
           <span className="report-card__place">{shortPlace(report)}</span>
+          {distance !== null ? (
+            <span className="card-distance">{formatDistance(distance)}</span>
+          ) : null}
           {report.imageUrls.length > 1 ? (
             <span className="report-card__photos">
               <ImageIcon size={11} aria-hidden="true" />
@@ -131,7 +137,7 @@ export function ReportList() {
       <EmptyState
         icon={<TriangleAlert size={20} />}
         title="Prijave nisu učitane"
-        description={reportsError ?? 'Proverite internet vezu i pokušajte ponovo.'}
+        description={reportsError ?? 'Proveri internet vezu i pokušaj ponovo.'}
         action={
           <button
             type="button"
@@ -150,7 +156,7 @@ export function ReportList() {
       <EmptyState
         icon={<Inbox size={20} />}
         title="Još nema prijava"
-        description="Prijavite prvi problem u svom kvartu. Prijava je javna i pomaže komšijama da je pronađu."
+        description="Prijavi prvi problem u svom kvartu. Prijava je javna i pomaže komšijama da je pronađu."
         action={
           <button type="button" className="btn btn--primary btn--sm" onClick={startCompose}>
             <Plus size={14} aria-hidden="true" /> Prijavi problem
@@ -165,7 +171,7 @@ export function ReportList() {
       <EmptyState
         icon={<SearchX size={20} />}
         title="Nema rezultata"
-        description="Nijedna prijava ne odgovara pretrazi i filterima. Pokušajte sa drugim pojmom ili očistite filtere."
+        description="Nijedna prijava ne odgovara pretrazi i filterima. Pokušaj sa drugim pojmom ili očisti filtere."
         action={
           <button type="button" className="btn btn--quiet btn--sm" onClick={resetFilters}>
             Očisti filtere

@@ -41,13 +41,15 @@ export function AdminPanel() {
     }
   }, [initialEditId, actions]);
 
-  if (!auth.isAdmin) {
+  // Moderators (community coordinators) manage cleanup actions; only admins
+  // also see "Korisnici i uloge".
+  if (!auth.isModerator) {
     return (
-      <Modal title="Administracija" size="sm" onClose={closeModal}>
+      <Modal title="Akcije čišćenja" size="sm" onClose={closeModal}>
         <EmptyState
           icon={<ShieldAlert size={20} />}
-          title="Nemate administratorski pristup"
-          description="Administracija je dostupna samo nalozima upisanim u kolekciju admins u Firestore-u. Pristup se ne može dodeliti iz aplikacije."
+          title="Nemaš pristup akcijama"
+          description="Akcije čišćenja prave moderatori i administratori. Ulogu moderatora dodeljuje administrator."
           action={
             <button type="button" className="btn btn--quiet btn--sm" onClick={closeModal}>
               Zatvori
@@ -76,7 +78,7 @@ export function AdminPanel() {
     return (
       <Modal
         title={editing ? 'Uredi akciju' : 'Nova akcija'}
-        description="Akcije su javne i vidljive svim posetiocima. Sačuvajte tek kada su termin i mesto potvrđeni."
+        description="Akcije su javne i vidljive svim posetiocima. Sačuvaj tek kada su termin i mesto potvrđeni."
         size="xl"
         onClose={() => {
           setFormOpen(false);
@@ -105,8 +107,10 @@ export function AdminPanel() {
 
   return (
     <Modal
-      title="Administracija"
-      description="Akcije čišćenja, korisnici i uloge."
+      title={auth.isAdmin ? 'Administracija' : 'Akcije čišćenja'}
+      description={
+        auth.isAdmin ? 'Akcije čišćenja, korisnici i uloge.' : 'Pravljenje i uređivanje akcija čišćenja.'
+      }
       size="lg"
       onClose={closeModal}
       footer={
@@ -120,26 +124,28 @@ export function AdminPanel() {
         </div>
       }
     >
-      <div className="admin-tabs" role="tablist" aria-label="Administracija">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'actions'}
-          className={`admin-tab${tab === 'actions' ? ' is-active' : ''}`}
-          onClick={() => setTab('actions')}
-        >
-          Akcije čišćenja <span>{actions.length}</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === 'users'}
-          className={`admin-tab${tab === 'users' ? ' is-active' : ''}`}
-          onClick={() => setTab('users')}
-        >
-          Korisnici i uloge
-        </button>
-      </div>
+      {auth.isAdmin ? (
+        <div className="admin-tabs" role="tablist" aria-label="Administracija">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'actions'}
+            className={`admin-tab${tab === 'actions' ? ' is-active' : ''}`}
+            onClick={() => setTab('actions')}
+          >
+            Akcije čišćenja <span>{actions.length}</span>
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === 'users'}
+            className={`admin-tab${tab === 'users' ? ' is-active' : ''}`}
+            onClick={() => setTab('users')}
+          >
+            Korisnici i uloge
+          </button>
+        </div>
+      ) : null}
 
       {tab === 'actions' ? (
         <div className="admin-actions">
@@ -161,7 +167,7 @@ export function AdminPanel() {
             <EmptyState
               icon={<ShieldCheck size={20} />}
               title="Nema akcija"
-              description="Napravite prvu akciju i povežite je sa prijavama koje treba rešiti."
+              description="Napravi prvu akciju i poveži je sa prijavama koje treba rešiti."
             />
           ) : (
             <ul className="admin-action-list">
@@ -225,9 +231,9 @@ export function AdminPanel() {
             </ul>
           )}
         </div>
-      ) : (
+      ) : auth.isAdmin ? (
         <UsersPanel />
-      )}
+      ) : null}
     </Modal>
   );
 }

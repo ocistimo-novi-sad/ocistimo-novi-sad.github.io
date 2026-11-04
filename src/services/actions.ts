@@ -158,7 +158,7 @@ export async function createActionRecord(input: NewActionInput): Promise<void> {
   const db = requireDb();
   const user = requireAuth().currentUser;
   if (!user) {
-    throw new AppError('unauthenticated', 'Prijavite se kao administrator.');
+    throw new AppError('unauthenticated', 'Prijavi se kao administrator.');
   }
 
   const actionRef = doc(collection(db, 'actions'));
@@ -183,7 +183,7 @@ export async function updateActionRecord(
   const db = requireDb();
   const user = requireAuth().currentUser;
   if (!user) {
-    throw new AppError('unauthenticated', 'Prijavite se kao administrator.');
+    throw new AppError('unauthenticated', 'Prijavi se kao administrator.');
   }
 
   const batch = writeBatch(db);
@@ -203,7 +203,7 @@ export async function updateActionStatus(
   const db = requireDb();
   const user = requireAuth().currentUser;
   if (!user) {
-    throw new AppError('unauthenticated', 'Prijavite se kao administrator.');
+    throw new AppError('unauthenticated', 'Prijavi se kao administrator.');
   }
 
   const actionRef = doc(db, 'actions', actionId);

@@ -27,7 +27,7 @@ export function FlagDialog({ reportId }: { reportId: string }) {
       setError(
         toSerbianError(
           flagError,
-          'Prijava sadržaja nije poslata. Možda ste već prijavili ovu prijavu.',
+          'Prijava sadržaja nije poslata. Možda je ova prijava već prijavljena sa tvog naloga.',
         ),
       );
     } finally {
@@ -94,7 +94,7 @@ export function FlagDialog({ reportId }: { reportId: string }) {
           maxLength={500}
           value={note}
           onChange={(event) => setNote(event.target.value)}
-          placeholder="Kratko objasnite šta nije u redu sa ovom prijavom."
+          placeholder="Kratko objasni šta nije u redu sa ovom prijavom."
           disabled={busy}
         />
       </div>

@@ -1,37 +1,110 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type Ref } from 'react';
+import { ArrowUpDown, ChevronDown, SlidersHorizontal, Search, X } from 'lucide-react';
 import {
-  ArrowUpDown,
-  ChevronDown,
-  ListFilter,
-  MapPinned,
-  Search,
-  X,
-} from 'lucide-react';
-import { CATEGORIES, REPORT_STATUSES, SORT_OPTIONS } from '../config';
+  CATEGORIES,
+  CATEGORY_MAP,
+  DEFAULT_FILTERS,
+  REPORT_STATUSES,
+  SORT_OPTIONS,
+  STATUS_MAP,
+} from '../config';
 import { useApp } from '../state/app-context';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { StatusDot } from './ui/StatusBadge';
+import { Modal } from './modals/Modal';
 
-function StatusFilter() {
-  const { filters, updateFilters } = useApp();
-  const [open, setOpen] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
+/** One placeholder per layer, shared by the list and the map; short enough for a phone. */
+export const SEARCH_PLACEHOLDER = {
+  reports: 'Ulica, kvart ili opis',
+  actions: 'Naziv ili lokacija',
+} as const;
 
-  useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (event: MouseEvent) => {
-      if (!wrapperRef.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('mousedown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [open]);
+export function SearchInput({
+  value,
+  onChange,
+  placeholder,
+  label,
+  inputRef,
+  hint,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  label: string;
+  inputRef?: Ref<HTMLInputElement>;
+  /** Shows the "/" shortcut hint while empty. */
+  hint?: boolean;
+}) {
+  return (
+    <div className="search-field">
+      <Search size={15} aria-hidden="true" />
+      <input
+        ref={inputRef}
+        type="search"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        aria-label={label}
+        autoComplete="off"
+      />
+      {value ? (
+        <button
+          type="button"
+          className="search-field__clear"
+          onClick={() => onChange('')}
+          aria-label="Obriši pretragu"
+        >
+          <X size={13} aria-hidden="true" />
+        </button>
+      ) : hint ? (
+        <kbd className="search-field__hint" aria-hidden="true">
+          /
+        </kbd>
+      ) : null}
+    </div>
+  );
+}
+
+function CategoryChips({ scroll = false }: { scroll?: boolean }) {
+  const { filters, updateFilters, toggleCategory } = useApp();
+
+  return (
+    <div
+      className={`category-chips${scroll ? ' category-chips--scroll' : ''}`}
+      role="group"
+      aria-label="Filter po kategoriji"
+    >
+      <button
+        type="button"
+        className={`chip${filters.categories.length === 0 ? ' is-active' : ''}`}
+        onClick={() => updateFilters({ categories: [] })}
+        aria-pressed={filters.categories.length === 0}
+      >
+        Sve
+      </button>
+      {CATEGORIES.map((category) => {
+        const active = filters.categories.includes(category.id);
+        return (
+          <button
+            key={category.id}
+            type="button"
+            className={`chip${active ? ' is-active' : ''}`}
+            data-category={category.id}
+            onClick={() => toggleCategory(category.id)}
+            aria-pressed={active}
+            title={category.hint}
+          >
+            <CategoryGlyph category={category.id} size={12} />
+            {category.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ReportFilterOptions() {
+  const { filters, updateFilters, setSort } = useApp();
 
   const toggleStatus = (status: (typeof REPORT_STATUSES)[number]['id']) => {
     const next = filters.statuses.includes(status)
@@ -40,41 +113,16 @@ function StatusFilter() {
     updateFilters({ statuses: next });
   };
 
-  const label =
-    filters.statuses.length === 0
-      ? 'Svi statusi'
-      : filters.statuses.length === 1
-        ? REPORT_STATUSES.find((status) => status.id === filters.statuses[0])?.label ??
-          'Status'
-        : `Status (${filters.statuses.length})`;
-
   return (
-    <div className="popover" ref={wrapperRef}>
-      <button
-        type="button"
-        className={`filter-btn${filters.statuses.length > 0 ? ' is-active' : ''}`}
-        onClick={() => setOpen((value) => !value)}
-        aria-expanded={open}
-        aria-haspopup="true"
-      >
-        <ListFilter size={13} aria-hidden="true" />
-        <span>{label}</span>
-        <ChevronDown size={12} aria-hidden="true" />
-      </button>
+    <>
+      <section className="filter-sheet__section">
+        <p className="eyebrow">Kategorija</p>
+        <CategoryChips />
+      </section>
 
-      {open ? (
-        <div className="popover__panel" role="group" aria-label="Filter po statusu">
-          <p className="popover__title">Status prijave</p>
-          <button
-            type="button"
-            className={`popover__row${filters.statuses.length === 0 ? ' is-active' : ''}`}
-            onClick={() => updateFilters({ statuses: [] })}
-          >
-            <span className="popover__check" aria-hidden="true">
-              {filters.statuses.length === 0 ? '✓' : ''}
-            </span>
-            Svi statusi
-          </button>
+      <section className="filter-sheet__section" role="group" aria-label="Filter po statusu">
+        <p className="eyebrow">Status</p>
+        <div className="filter-sheet__rows filter-sheet__rows--grid">
           {REPORT_STATUSES.map((status) => {
             const checked = filters.statuses.includes(status.id);
             return (
@@ -90,13 +138,219 @@ function StatusFilter() {
             );
           })}
         </div>
+      </section>
+
+      <section className="filter-sheet__section">
+        <p className="eyebrow">Oblast i sortiranje</p>
+        <label className={`popover__row${filters.viewportOnly ? ' is-active' : ''}`}>
+          <input
+            type="checkbox"
+            checked={filters.viewportOnly}
+            onChange={() => updateFilters({ viewportOnly: !filters.viewportOnly })}
+          />
+          <span>Samo prijave na vidljivom delu mape</span>
+        </label>
+        <label className="select-field">
+          <ArrowUpDown size={13} aria-hidden="true" />
+          <select
+            value={filters.sort}
+            onChange={(event) => setSort(event.target.value as typeof filters.sort)}
+            aria-label="Sortiranje prijava"
+          >
+            {SORT_OPTIONS.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown size={12} aria-hidden="true" />
+        </label>
+      </section>
+    </>
+  );
+}
+
+function ActionFilterOptions() {
+  const { actionScope, setActionScope, upcomingActions, pastActions } = useApp();
+
+  return (
+    <section className="filter-sheet__section" role="radiogroup" aria-label="Period akcija">
+      <p className="eyebrow">Period</p>
+      <div className="filter-sheet__rows">
+        <label className={`popover__row${actionScope === 'upcoming' ? ' is-active' : ''}`}>
+          <input
+            type="radio"
+            name="action-scope"
+            checked={actionScope === 'upcoming'}
+            onChange={() => setActionScope('upcoming')}
+          />
+          <span>Predstojeće ({upcomingActions.length})</span>
+        </label>
+        <label className={`popover__row${actionScope === 'past' ? ' is-active' : ''}`}>
+          <input
+            type="radio"
+            name="action-scope"
+            checked={actionScope === 'past'}
+            onChange={() => setActionScope('past')}
+          />
+          <span>Završene ({pastActions.length})</span>
+        </label>
+      </div>
+    </section>
+  );
+}
+
+function FiltersSheet({ onClose }: { onClose: () => void }) {
+  const { layer, filteredReports, filteredActions, updateFilters, setActionScope } = useApp();
+  const isActions = layer === 'actions';
+  const count = isActions ? filteredActions.length : filteredReports.length;
+
+  // Clears what the sheet sets; the search stays as typed.
+  const clear = () => {
+    if (isActions) {
+      setActionScope('upcoming');
+      return;
+    }
+    updateFilters({
+      categories: [],
+      statuses: [],
+      sort: DEFAULT_FILTERS.sort,
+      viewportOnly: false,
+    });
+  };
+
+  return (
+    <Modal
+      title={isActions ? 'Filteri akcija' : 'Filteri prijava'}
+      description="Filteri važe i za mapu i za listu."
+      onClose={onClose}
+      size="sm"
+      footer={
+        <div className="filter-sheet__foot">
+          <button type="button" className="link-btn" onClick={clear}>
+            Očisti
+          </button>
+          <button type="button" className="btn btn--primary" onClick={onClose}>
+            Prikaži {count}
+          </button>
+        </div>
+      }
+    >
+      <div className="filter-sheet">
+        {isActions ? <ActionFilterOptions /> : <ReportFilterOptions />}
+      </div>
+    </Modal>
+  );
+}
+
+/** Opens the filters of the current layer; the badge counts what is narrowed. */
+export function FiltersButton() {
+  const { layer, filters, actionScope } = useApp();
+  const [open, setOpen] = useState(false);
+
+  const count =
+    layer === 'actions'
+      ? actionScope === 'past'
+        ? 1
+        : 0
+      : filters.categories.length + filters.statuses.length + (filters.viewportOnly ? 1 : 0);
+
+  return (
+    <>
+      <button
+        type="button"
+        className={`filters-btn${count > 0 ? ' is-active' : ''}`}
+        onClick={() => setOpen(true)}
+        aria-haspopup="dialog"
+      >
+        <SlidersHorizontal size={14} aria-hidden="true" />
+        <span>Filteri</span>
+        {count > 0 ? <span className="filters-btn__count">{count}</span> : null}
+      </button>
+      {open ? <FiltersSheet onClose={() => setOpen(false)} /> : null}
+    </>
+  );
+}
+
+/**
+ * The filters that are on, as chips under the search. Each one can be removed,
+ * so a map or list that shows less than usual always says why.
+ */
+export function ActiveFilters() {
+  const { layer, filters, updateFilters, actionScope, setActionScope } = useApp();
+
+  if (layer === 'actions') {
+    if (actionScope !== 'past') return null;
+    return (
+      <div className="active-filters" role="group" aria-label="Uključeni filteri">
+        <button
+          type="button"
+          className="active-chip"
+          onClick={() => setActionScope('upcoming')}
+          aria-label="Ukloni filter: Završene akcije"
+        >
+          Završene akcije
+          <X size={12} aria-hidden="true" />
+        </button>
+      </div>
+    );
+  }
+
+  const chips = [
+    ...filters.categories.map((category) => ({
+      key: `category-${category}`,
+      label: CATEGORY_MAP[category].label,
+      remove: () =>
+        updateFilters({ categories: filters.categories.filter((item) => item !== category) }),
+    })),
+    ...filters.statuses.map((status) => ({
+      key: `status-${status}`,
+      label: STATUS_MAP[status].label,
+      remove: () => updateFilters({ statuses: filters.statuses.filter((item) => item !== status) }),
+    })),
+    ...(filters.viewportOnly
+      ? [
+          {
+            key: 'area',
+            label: 'Samo ova oblast',
+            remove: () => updateFilters({ viewportOnly: false, bounds: null }),
+          },
+        ]
+      : []),
+  ];
+  if (chips.length === 0) return null;
+
+  return (
+    <div className="active-filters" role="group" aria-label="Uključeni filteri">
+      {chips.map((chip) => (
+        <button
+          key={chip.key}
+          type="button"
+          className="active-chip"
+          onClick={chip.remove}
+          aria-label={`Ukloni filter: ${chip.label}`}
+        >
+          {chip.label}
+          <X size={12} aria-hidden="true" />
+        </button>
+      ))}
+      {chips.length > 1 ? (
+        <button
+          type="button"
+          className="active-chip active-chip--clear"
+          onClick={() =>
+            updateFilters({ categories: [], statuses: [], viewportOnly: false, bounds: null })
+          }
+        >
+          Očisti sve
+        </button>
       ) : null}
     </div>
   );
 }
 
 export function FiltersBar() {
-  const { filters, updateFilters, toggleCategory, resetFilters, mapRef } = useApp();
+  const { filters, updateFilters } = useApp();
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -114,123 +368,22 @@ export function FiltersBar() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const toggleViewport = () => {
-    if (filters.viewportOnly) {
-      updateFilters({ viewportOnly: false });
-      return;
-    }
-    const bounds = mapRef.current
-      ? {
-          south: mapRef.current.getBounds().getSouth(),
-          west: mapRef.current.getBounds().getWest(),
-          north: mapRef.current.getBounds().getNorth(),
-          east: mapRef.current.getBounds().getEast(),
-        }
-      : null;
-    updateFilters({ viewportOnly: true, bounds });
-  };
-
-  const activeCount =
-    filters.categories.length +
-    filters.statuses.length +
-    (filters.query.trim() ? 1 : 0) +
-    (filters.viewportOnly ? 1 : 0);
-
   return (
     <div className="filters">
-      <div className="search-field">
-        <Search size={15} aria-hidden="true" />
-        <input
-          ref={searchRef}
-          type="search"
+      <div className="filters__row">
+        <SearchInput
+          inputRef={searchRef}
           value={filters.query}
-          onChange={(event) => updateFilters({ query: event.target.value })}
-          placeholder="Pretraži ulicu, kvart ili opis"
-          aria-label="Pretraga prijava"
-          autoComplete="off"
+          onChange={(query) => updateFilters({ query })}
+          placeholder={SEARCH_PLACEHOLDER.reports}
+          label="Pretraga prijava"
+          hint
         />
-        {filters.query ? (
-          <button
-            type="button"
-            className="search-field__clear"
-            onClick={() => updateFilters({ query: '' })}
-            aria-label="Obriši pretragu"
-          >
-            <X size={13} aria-hidden="true" />
-          </button>
-        ) : (
-          <kbd className="search-field__hint" aria-hidden="true">
-            /
-          </kbd>
-        )}
+        <FiltersButton />
       </div>
+      <ActiveFilters />
 
-      <div className="category-chips" role="group" aria-label="Filter po kategoriji">
-        <button
-          type="button"
-          className={`chip${filters.categories.length === 0 ? ' is-active' : ''}`}
-          onClick={() => updateFilters({ categories: [] })}
-          aria-pressed={filters.categories.length === 0}
-        >
-          Sve
-        </button>
-        {CATEGORIES.map((category) => {
-          const active = filters.categories.includes(category.id);
-          return (
-            <button
-              key={category.id}
-              type="button"
-              className={`chip${active ? ' is-active' : ''}`}
-              data-category={category.id}
-              onClick={() => toggleCategory(category.id)}
-              aria-pressed={active}
-              title={category.hint}
-            >
-              <CategoryGlyph category={category.id} size={12} />
-              {category.label}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="filter-tools">
-        <StatusFilter />
-
-        <label className="select-field">
-          <ArrowUpDown size={13} aria-hidden="true" />
-          <select
-            value={filters.sort}
-            onChange={(event) =>
-              updateFilters({ sort: event.target.value as typeof filters.sort })
-            }
-            aria-label="Sortiranje prijava"
-          >
-            {SORT_OPTIONS.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown size={12} aria-hidden="true" />
-        </label>
-
-        <button
-          type="button"
-          className={`icon-btn${filters.viewportOnly ? ' is-active' : ''}`}
-          onClick={toggleViewport}
-          aria-pressed={filters.viewportOnly}
-          title="Samo prijave na vidljivom delu mape"
-          aria-label="Samo prijave na vidljivom delu mape"
-        >
-          <MapPinned size={15} aria-hidden="true" />
-        </button>
-
-        {activeCount > 0 ? (
-          <button type="button" className="link-btn" onClick={resetFilters}>
-            Očisti
-          </button>
-        ) : null}
-      </div>
+      <CategoryChips scroll />
     </div>
   );
 }

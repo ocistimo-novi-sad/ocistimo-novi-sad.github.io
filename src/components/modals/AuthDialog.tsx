@@ -47,7 +47,7 @@ export function AuthDialog({
     try {
       await auth.signIn();
     } catch (signInError) {
-      setError(toSerbianError(signInError, 'Prijava nije uspela. Pokušajte ponovo.'));
+      setError(toSerbianError(signInError, 'Prijava nije uspela. Pokušaj ponovo.'));
     } finally {
       setBusy(false);
     }
@@ -58,11 +58,11 @@ export function AuthDialog({
       ? 'Prijava problema je vezana za nalog kako bi zajednica mogla da odgovori na pitanja i spreči zloupotrebu.'
       : intent === 'flag'
         ? 'Prijava neprikladnog sadržaja je vezana za nalog kako bi administratori mogli da provere slučaj.'
-        : 'Prijavite se da biste objavljivali prijave i prijavili neprikladan sadržaj.';
+        : 'Prijavi se da objavljuješ prijave i prijaviš neprikladan sadržaj.';
 
   return (
     <Modal
-      title="Prijavite se da nastavite"
+      title="Prijavi se da nastaviš"
       description="Pregled prijava i akcija je javan, bez naloga."
       size="sm"
       onClose={closeModal}
@@ -83,7 +83,7 @@ export function AuthDialog({
 
         {auth.isModerator ? (
           <p className="auth-card__admin">
-            <ShieldCheck size={13} aria-hidden="true" /> Prijavljeni ste kao{' '}
+            <ShieldCheck size={13} aria-hidden="true" /> Tvoja uloga:{' '}
             {auth.isAdmin ? 'administrator' : 'moderator'}.
           </p>
         ) : null}
