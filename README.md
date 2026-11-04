@@ -43,7 +43,7 @@ Glavni deo aplikacije je interaktivna mapa Novog Sada (OpenStreetMap podloga). N
 
 Mapa i lista prijava rade zajedno: izbor prijave u listi usmerava mapu na njenu lokaciju, dok izbor oznake na mapi otvara detalje odgovarajuće prijave.
 
-Na vrhu liste nalazi se kratak pregled napretka zajednice: ukupan broj prijava, broj rešenih, udeo rešenih prijava i broj predstojećih akcija.
+Na vrhu liste nalazi se kratak pregled napretka zajednice: broj učitanih prijava, broj rešenih, udeo rešenih prijava i broj predstojećih akcija. Broj uz „Prijave“ na prekidaču „Prijave | Akcije“ računa samo prijave koje nisu rešene ni označene kao „Nije za akciju“, a broj uz „Akcije“ samo predstojeće akcije.
 
 ### 2. Prijavljivanje problema
 
@@ -81,7 +81,7 @@ Taster `/` prebacuje fokus na polje za pretragu. Prijave se učitavaju u delovim
 
 ### 4. Detalji i praćenje statusa
 
-Svaka prijava ima prikaz sa opisom, fotografijama (sa uvećanim prikazom), lokacijom i trenutnim statusom. Lokaciju je moguće otvoriti i na OpenStreetMap mapi, a koordinate kopirati radi lakšeg deljenja. Ako je prijava uključena u akciju čišćenja, detalji prikazuju i povezanu akciju.
+Svaka prijava ima prikaz sa opisom, fotografijama (sa uvećanim prikazom), lokacijom i trenutnim statusom. Ispod naslova je tok prijave: Prijavljena → Objavljena → Akcija planirana (ili u toku) → Rešena, sa označenim korakom na kom je prijava. Lokaciju je moguće otvoriti i na OpenStreetMap mapi, a koordinate kopirati radi lakšeg deljenja. Ako je prijava uključena u akciju čišćenja, detalji prikazuju i povezanu akciju.
 
 Statusi pomažu da se razlikuje tek prijavljen problem od potvrđenog problema ili onog koji je već uključen u plan akcije.
 
@@ -144,11 +144,7 @@ Moderatori (koordinatori zajednice) u panelu „Moderacija“ mogu da:
 - menjaju statuse prijava i uređuju ili brišu bilo koju prijavu;
 - pregledaju označen sadržaj i odbace ga ili zatvore kao rešen.
 
-- menjaju statuse prijava;
-- pregledaju označen sadržaj i odbace ga ili zatvore kao rešen;
-- kreiraju, uređuju, otkazuju i brišu akcije čišćenja i povezuju ih sa prijavama.
-
-Akcije čišćenja mogu da kreiraju, uređuju, otkazuju i brišu i moderatori (koordinatori zajednica). Njima se isti panel u meniju naloga zove „Akcije čišćenja“ i nema deo „Korisnici i uloge“.
+Moderatori takođe kreiraju, uređuju, otkazuju i brišu akcije čišćenja i povezuju ih sa prijavama, u panelu „Akcije čišćenja“ u meniju naloga. Administratori imaju sva prava moderatora; njihov panel se zove „Administracija“ i ima još deo „Korisnici i uloge“, gde dodeljuju i oduzimaju ulogu moderatora.
 
 Time se smanjuje mogućnost da neprimeren sadržaj ili netačne prijave ostanu bez reakcije. Ova pravila nisu samo u interfejsu — sprovode ih Firestore i Storage Security Rules (`firestore.rules`, `storage.rules`). Šta tačno koja uloga može opisano je u [Kako aplikacija radi → Uloge](docs/use-cases.md#2-uloge).
 
@@ -171,7 +167,7 @@ Korisnici treba da objavljuju samo informacije relevantne za problem na javnom p
 
 ## Pristupačnost i korišćenje na različitim uređajima
 
-Interfejs je na srpskom jeziku, latinicom, i prilagođava se desktop računarima, tabletima i mobilnim telefonima. Na manjim ekranima donja traka (Mapa, ＋ Prijavi, Lista) omogućava brz prelazak između mape i liste, a prekidač „Prijave | Akcije“ bira šta one prikazuju, dok se detalji i forma za prijavu prikazuju u panelima prilagođenim mobilnom uređaju.
+Interfejs je na srpskom jeziku, latinicom, i prilagođava se desktop računarima, tabletima i mobilnim telefonima. Na manjim ekranima donja traka (Mapa, ＋ Prijavi, Lista) omogućava brz prelazak između mape i liste, a prekidač „Prijave | Akcije“ bira šta one prikazuju, dok se detalji i forma za prijavu prikazuju u panelima prilagođenim mobilnom uređaju. Pri prvom dolasku na telefonu kratak vodič u tri koraka pokazuje dugme za prijavu, prekidač „Prijave | Akcije“ i listu; može se ponovo pokrenuti iz „O projektu“.
 
 Dizajn je usmeren na preglednost i brzo korišćenje: mapa ostaje u prvom planu, kontrole su jasno grupisane, a boje i ikonice pomažu u razlikovanju kategorija i statusa. Kontrole imaju opisne oznake za čitače ekrana, a dijalozi i paneli se mogu zatvoriti tasterom `Esc`.
 
