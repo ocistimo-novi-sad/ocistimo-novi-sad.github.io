@@ -144,9 +144,11 @@ Moderatori (koordinatori zajednice) u panelu „Moderacija“ mogu da:
 - menjaju statuse prijava i uređuju ili brišu bilo koju prijavu;
 - pregledaju označen sadržaj i odbace ga ili zatvore kao rešen.
 
-Moderatori u meniju naloga imaju i stavku „Akcije čišćenja“, gde kreiraju, uređuju i otkazuju akcije i povezuju ih sa prijavama.
+- menjaju statuse prijava;
+- pregledaju označen sadržaj i odbace ga ili zatvore kao rešen;
+- kreiraju, uređuju, otkazuju i brišu akcije čišćenja i povezuju ih sa prijavama.
 
-Administratori imaju sva prava moderatora. Kod njih se ta stavka zove „Administracija“: tu mogu i da brišu akcije, a u delu „Korisnici i uloge“ dodeljuju i oduzimaju ulogu moderatora. Administratori se dodaju samo u Firebase konzoli.
+Akcije čišćenja mogu da kreiraju, uređuju, otkazuju i brišu i moderatori (koordinatori zajednica). Njima se isti panel u meniju naloga zove „Akcije čišćenja“ i nema deo „Korisnici i uloge“.
 
 Time se smanjuje mogućnost da neprimeren sadržaj ili netačne prijave ostanu bez reakcije. Ova pravila nisu samo u interfejsu — sprovode ih Firestore i Storage Security Rules (`firestore.rules`, `storage.rules`). Šta tačno koja uloga može opisano je u [Kako aplikacija radi → Uloge](docs/use-cases.md#2-uloge).
 
