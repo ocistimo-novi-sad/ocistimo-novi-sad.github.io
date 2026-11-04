@@ -20,7 +20,6 @@ export const APP = {
   center: { latitude: 45.2671, longitude: 19.8335 } satisfies Coordinates,
   initialZoom: 13,
   focusZoom: 16,
-  /** Novi Sad municipality with a small margin (also enforced in Firestore Rules). */
   bounds: { south: 45.05, west: 19.55, north: 45.45, east: 20.05 },
   openStreetMap: 'https://www.openstreetmap.org',
 } as const;
@@ -64,7 +63,6 @@ export const CATEGORIES: CategoryMeta[] = [
   },
 ];
 
-/** Category preselected when a new report is opened. */
 export const DEFAULT_CATEGORY: Category = 'unwanted_graffiti';
 
 export const CATEGORY_MAP: Record<Category, CategoryMeta> = Object.fromEntries(
@@ -75,7 +73,6 @@ export interface StatusMeta {
   id: ReportStatus;
   label: string;
   description: string;
-  /** Lower value sorts first. */
   weight: number;
 }
 
@@ -127,11 +124,6 @@ export const ACTION_STATUS_MAP: Record<ActionStatus, string> = Object.fromEntrie
   ACTION_STATUSES.map((status) => [status.id, status.label]),
 ) as Record<ActionStatus, string>;
 
-/**
- * Report status applied to every report linked to an action when the action is
- * saved. Reports have no "completed" status, so a completed action resolves
- * its reports. Cancelling an action leaves the report statuses unchanged.
- */
 export const ACTION_REPORT_STATUS: Record<ActionStatus, ReportStatus | null> = {
   planned: 'planned',
   in_progress: 'in_progress',
@@ -172,7 +164,6 @@ export const MODERATION_LABELS: Record<ModerationState, { label: string; descrip
   },
 };
 
-/** Quick picks appended to the "what can we do / what do we need" fields. */
 export const COMMUNITY_CAN_PRESETS = [
   'Čišćenje i sakupljanje otpada',
   'Krečenje i farbanje',
@@ -214,10 +205,8 @@ export const LIMITS = {
   resolutionNoteMax: 500,
   addressMax: 160,
   imagesMax: 3,
-  /** Largest original accepted; photos are shrunk in the browser before upload. */
   imageMaxBytes: 20 * 1024 * 1024,
   imageTypes: ['image/jpeg', 'image/png', 'image/webp'],
-  /** Longer side of the stored full image and of its thumbnail, in pixels. */
   imageFullPx: 1600,
   imageThumbPx: 480,
   actionCoverMax: 1,
