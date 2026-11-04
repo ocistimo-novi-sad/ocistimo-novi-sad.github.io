@@ -348,6 +348,12 @@ export function ComposeDrawer() {
       setSubmitError('Prijava je istekla. Prijavi se ponovo i pokušaj.');
       return;
     }
+    if (isFirebaseConfigured && !navigator.onLine) {
+      setSubmitError(
+        'Nema internet veze. Prijava još nije poslata, a uneto ostaje u formi. Pošalji je kad se veza vrati.',
+      );
+      return;
+    }
 
     setSubmitting(true);
     setSubmitError(null);

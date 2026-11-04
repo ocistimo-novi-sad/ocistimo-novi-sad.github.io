@@ -14,7 +14,7 @@ import { useActions } from '../hooks/useActions';
 import { isUpcomingAction } from '../lib/counts';
 import { isWithinBounds } from '../lib/geo';
 import { distanceInMeters } from '../lib/geo';
-import { toSerbianError } from '../services/errors';
+import { errorCode, toSerbianError } from '../services/errors';
 import { isFirebaseConfigured } from '../services/firebase';
 import { deleteActionRecord } from '../services/actions';
 import { droppedImages, removeImages } from '../services/images';
@@ -1022,7 +1022,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
         applyReport(report);
         selectReport(report);
       })
-      .catch(() => {
+      .catch((error) => {
+        // Only a refusal means the report is not public; anything else is the
+        // connection, and the link stays so a reload can open it.
+        if (errorCode(error) !== 'permission-denied') {
+          notify(
+            'error',
+            'Prijava nije otvorena jer nema veze sa serverom. Proveri internet vezu i osveži stranicu.',
+          );
+          return;
+        }
         clearLink();
         notify(
           'info',

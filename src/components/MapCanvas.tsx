@@ -28,6 +28,7 @@ import { APP, CATEGORIES, REPORT_STATUSES } from '../config';
 import type { Category } from '../types';
 import { useApp } from '../state/app-context';
 import { useIsMobile } from '../hooks/useMediaQuery';
+import { useOnline } from '../hooks/useOnline';
 import { formatCoordinates } from '../lib/format';
 import { isInServiceArea, roundCoordinate } from '../lib/geo';
 import { CategoryGlyph } from './ui/CategoryGlyph';
@@ -172,6 +173,7 @@ function mapBounds(map: LeafletMap) {
 export function MapCanvas() {
   const app = useApp();
   const isMobile = useIsMobile();
+  const online = useOnline();
   const {
     filteredReports,
     reports,
@@ -288,6 +290,12 @@ export function MapCanvas() {
   // bar instead of over it.
   const statusBanners = (
     <>
+      {!online ? (
+        <div className="map-error-banner" role="status">
+          <TriangleAlert size={14} aria-hidden="true" />
+          <span>Nema internet veze. Prijave i mapa se ne osvežavaju.</span>
+        </div>
+      ) : null}
       {reportsPhase === 'loading' ? (
         <div className="map-loading" role="status">
           <Spinner size={14} />
