@@ -20,7 +20,7 @@ import { AppProvider } from './state/AppProvider';
 // import { useApp } from './state/app-context';
 
 function ModalHost() {
-  const { modal, closeModal } = useApp();
+  // const { modal, closeModal } = useApp();
   if (!modal) return null;
 
   switch (modal.kind) {
