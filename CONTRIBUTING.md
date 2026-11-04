@@ -20,7 +20,7 @@ flowchart LR
 
 PR se ne spaja dok ga bar jedna osoba ne pregleda i ne odobri (**Approve**).
 
-Čim se otvori PR, issue-u za koji je otvoren dodaje se labela `ready-for-review`.
+Čim se otvori PR, issue-u za koji je otvoren dodaje se labela `ready for review`. To radi GitHub sam, za issue iz „Closes #…“ u opisu PR-a ili iz imena grane (npr. `44-…`). Dok je PR draft, labela se skida, a vraća se kad se PR označi kao **Ready for review**.
 
 ### 2. Odobren PR se spaja u `staging`
 
@@ -53,13 +53,14 @@ Uvodimo Release Notes: spisak tiketa koji su ušli u svaku objavu. Tako i mi i s
 - Posle svakog spajanja u `staging` ažurira se nacrt **„Sledeća verzija“**: spisak PR-ova koji su na stagingu, a još nisu na produkciji. Nacrt vide samo članovi tima.
 - Posle spajanja `staging` → `main` nacrt postaje javna objava sa datumom (npr. `v2026.11.04`).
 - PR-ovi su razvrstani po labeli: `enhancement` → Novo, `bug` → Ispravke, `accessibility` → Pristupačnost, `documentation` → Dokumentacija, ostalo → Ostalo. Zato svaki PR treba da ima labelu.
+- Labela se stavlja sama: prepisuje se sa issue-a iz „Closes #…“ (ili iz imena grane, npr. `44-…`). „Ispravka za #…“ i grane `bug-…`/`fix-…` dobijaju `bug`, `docs-…` dobija `documentation`, a `feat-…` dobija `enhancement`. Ako labela ne može da se odredi, check **labela** pada i PR ne može da se spoji dok autor ne doda labelu ručno.
 
 ## Ukratko, za svaki PR
 
 - [ ] PR je otvoren ka grani `staging`.
 - [ ] U opisu PR-a piše tiket („Closes #…“ ili „Ispravka za #…“).
-- [ ] Issue ima labelu `ready-for-review`.
-- [ ] PR ima labelu (`enhancement`, `bug`, …) zbog Release Notes.
+- [ ] Issue ima labelu `ready for review` (dodaje se sama kad PR ima „Closes #…“).
+- [ ] PR ima labelu (`enhancement`, `bug`, …) zbog Release Notes; najčešće se doda sama sa issue-a.
 - [ ] Ima bar jedno odobrenje pre spajanja.
 - [ ] Posle objave na staging, tester je potvrdio da radi.
 - [ ] Posle testiranja na stagingu obrisani su svi test podaci (staging koristi produkcijsku bazu).
