@@ -60,7 +60,7 @@ jobs:
             exit 0
           fi
 
-          # "Closes #N" does not link issues on PRs to staging (not the default branch), so parse it here.
+          # Parse "Closes #N" lines and the branch name here; GitHub's own issue links ignore the branch name.
           issues=$( { printf '%s\n' "$BODY" | grep -oiE '^[[:space:]]*(closes|fixes|resolves)[[:space:]]+#[0-9]+' | grep -oE '[0-9]+'; printf '%s\n' "$BRANCH" | grep -oE '^[0-9]+'; } | sort -un || true)
 
           labels=""
