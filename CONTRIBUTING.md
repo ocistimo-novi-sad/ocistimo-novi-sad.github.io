@@ -30,6 +30,8 @@ Ciljna grana svakog PR-a je `staging`, ne `main`.
 
 Staging se objavljuje na **Vercelu**, automatski posle svakog spajanja u `staging`; ništa ne treba pokretati ručno. Kada se nova verzija pojavi na Vercelu, Tijana (i svako ko želi da pomogne u testiranju) proverava implementaciju i javlja da li je sve u redu.
 
+> **Važno: staging radi sa produkcijskom bazom.** Sve što se napravi tokom testiranja (prijave, akcije, fotografije, prijave sadržaja, test nalozi) vide i pravi korisnici. Zato se **posle svakog testiranja na stagingu obavezno obrišu svi test podaci**.
+
 Produkcija ostaje na GitHub Pages i objavljuje se sama kada se `staging` spoji u `main`. Cloud Functions, ekstenzija za e-poštu i Firestore/Storage pravila se i dalje objavljuju ručno (vidi [README → Obaveštenja e-poštom](README.md#obaveštenja-e-poštom)).
 
 ### 4. Na `main` ide više PR-ova odjednom
@@ -60,4 +62,5 @@ Uvodimo Release Notes: spisak tiketa koji su ušli u svaku objavu. Tako i mi i s
 - [ ] PR ima labelu (`enhancement`, `bug`, …) zbog Release Notes.
 - [ ] Ima bar jedno odobrenje pre spajanja.
 - [ ] Posle objave na staging, tester je potvrdio da radi.
+- [ ] Posle testiranja na stagingu obrisani su svi test podaci (staging koristi produkcijsku bazu).
 - [ ] Ako je ovo ispravka, u issue-u ili PR-u piše na koji se tiket odnosi.
