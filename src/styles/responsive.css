@@ -187,7 +187,7 @@
     align-items: center;
     justify-content: center;
     gap: 6px;
-    height: 44px;
+    height: 28px;
     color: var(--muted-2);
     cursor: grab;
     touch-action: none;
@@ -211,7 +211,7 @@
   }
 
   .drawer__scroll {
-    padding: 40px 16px 16px;
+    padding: 26px 16px 16px;
   }
 
   .drawer__foot {
@@ -447,7 +447,7 @@
     display: block;
     color: var(--muted-2);
     font-family: var(--font-mono);
-    font-size: 10.5px;
+    font-size: 9px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
@@ -560,7 +560,7 @@
   }
 
   .segmented__item {
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .compose-foot__row .btn {
@@ -595,82 +595,5 @@
 @media (max-width: 380px) {
   .brand__name {
     letter-spacing: 0.09em;
-  }
-}
-
-/* --- Touch screens -------------------------------------------------------- */
-
-/* Every control gets a target of at least 44 x 44 px (Apple HIG 44 pt,
-   Material 48 dp, WCAG 2.5.8). Small controls keep their look and get a larger
-   invisible hit area centred on them. */
-@media (pointer: coarse) {
-  .brand,
-  .segmented__item,
-  .chip,
-  .near-btn,
-  .link-btn,
-  .map-area-btn,
-  .modal__close,
-  .icon-btn,
-  .btn {
-    position: relative;
-  }
-
-  .brand::after,
-  .segmented__item::after,
-  .chip::after,
-  .near-btn::after,
-  .link-btn::after,
-  .map-area-btn::after,
-  .modal__close::after,
-  .drawer__close::after,
-  .icon-btn::after,
-  .btn::after {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: max(100%, 44px);
-    height: max(100%, 44px);
-    content: '';
-    transform: translate(-50%, -50%);
-  }
-
-  /* Room for those hit areas where a container would clip them or the next
-     row would cover them. */
-  .category-chips {
-    row-gap: 12px;
-  }
-
-  .category-chips--scroll {
-    margin-block: -6px;
-    padding-block: 6px;
-  }
-
-  .panel__list-head {
-    padding-bottom: 8px;
-  }
-
-  /* These line up in one row or hold a text field, so they grow instead; the
-     2px border leaves a 44px field. The map buttons keep 38px so all four fit
-     above an open panel; pinch and double tap zoom as well. */
-  .search-field,
-  .filters-btn,
-  .select-field,
-  .filter-sheet__section .select-field {
-    height: 46px;
-  }
-
-  .active-chip {
-    min-height: 36px;
-  }
-
-  .popover__row,
-  .filter-sheet__section .popover__row {
-    min-height: 44px;
-  }
-
-  .popover__row input[type='checkbox'] {
-    width: 18px;
-    height: 18px;
   }
 }

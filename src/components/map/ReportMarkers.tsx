@@ -1,13 +1,12 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import type { LatLng } from 'leaflet';
-import { Polyline, Tooltip, useMap } from 'react-leaflet';
+import { Marker, Polyline, Tooltip, useMap } from 'react-leaflet';
 import Supercluster from 'supercluster';
 import { CATEGORIES, CATEGORY_MAP, MODERATION_LABELS, STATUS_MAP } from '../../config';
 import { formatRelativeTime, plural } from '../../lib/format';
 import { optimizedImageUrl } from '../../services/images';
 import type { Category, Report } from '../../types';
 import { clusterIcon, draftIcon, reportIcon, type CategoryCounts } from './map-icons';
-import { NamedMarker } from './NamedMarker';
 
 interface PointProps {
   reportId: string;
@@ -24,10 +23,6 @@ function categoryBreakdown(counts: CategoryCounts): string {
   return CATEGORIES.filter((category) => (counts[category.id] ?? 0) > 0)
     .map((category) => `${counts[category.id]} ${category.label}`)
     .join(' · ');
-}
-
-function reportLabel(report: Report): string {
-  return `Prijava: ${report.title} (${CATEGORY_MAP[report.category].label}, ${STATUS_MAP[report.status].label})`;
 }
 
 function ReportTooltipContent({ report }: { report: Report }) {
@@ -210,9 +205,8 @@ export function ReportMarkers({
         if (properties.cluster && typeof properties.cluster_id === 'number') {
           const count = properties.point_count ?? 0;
           return (
-            <NamedMarker
+            <Marker
               key={`cluster-${properties.cluster_id}`}
-              label={`${count} ${plural(count, 'prijava', 'prijave', 'prijava')} u ovoj oblasti`}
               position={[latitude, longitude]}
               icon={clusterIcon(count, properties)}
               zIndexOffset={200}
@@ -239,7 +233,7 @@ export function ReportMarkers({
                 <br />
                 <span className="ns-tooltip__meta">{categoryBreakdown(properties)}</span>
               </Tooltip>
-            </NamedMarker>
+            </Marker>
           );
         }
 
@@ -247,9 +241,8 @@ export function ReportMarkers({
         if (!report) return null;
 
         return (
-          <NamedMarker
+          <Marker
             key={report.id}
-            label={reportLabel(report)}
             position={[report.latitude, report.longitude]}
             icon={reportIcon(report)}
             zIndexOffset={300}
@@ -264,7 +257,7 @@ export function ReportMarkers({
             <Tooltip direction="top" offset={[0, -18]} className="ns-tooltip ns-tooltip--rich">
               <ReportTooltipContent report={report} />
             </Tooltip>
-          </NamedMarker>
+          </Marker>
         );
       })}
 
@@ -276,9 +269,8 @@ export function ReportMarkers({
                 pathOptions={{ color: '#234c3b', weight: 1.5, opacity: 0.7 }}
                 interactive={false}
               />
-              <NamedMarker
+              <Marker
                 position={position}
-                label={reportLabel(report)}
                 icon={reportIcon(report)}
                 zIndexOffset={1000}
                 bubblingMouseEvents={false}
@@ -292,15 +284,14 @@ export function ReportMarkers({
                 <Tooltip direction="top" offset={[0, -18]} className="ns-tooltip ns-tooltip--rich">
                   <ReportTooltipContent report={report} />
                 </Tooltip>
-              </NamedMarker>
+              </Marker>
             </Fragment>
           ))
         : null}
 
       {selectedReport ? (
-        <NamedMarker
+        <Marker
           key={`selected-${selectedReport.id}`}
-          label={`Izabrana prijava: ${selectedReport.title}`}
           position={[selectedReport.latitude, selectedReport.longitude]}
           icon={
             selectedReport.moderation === 'approved'
@@ -337,9 +328,8 @@ export function DraftMarkers({
       {reports
         .filter((report) => report.id !== selectedReportId)
         .map((report) => (
-          <NamedMarker
+          <Marker
             key={`draft-${report.id}`}
-            label={`${MODERATION_LABELS[report.moderation].label}: ${report.title}`}
             position={[report.latitude, report.longitude]}
             icon={draftIcon(report.category)}
             zIndexOffset={250}
@@ -358,7 +348,7 @@ export function DraftMarkers({
               <br />
               <span className="ns-tooltip__meta">Vidiš je samo ti i moderatori.</span>
             </Tooltip>
-          </NamedMarker>
+          </Marker>
         ))}
     </>
   );
