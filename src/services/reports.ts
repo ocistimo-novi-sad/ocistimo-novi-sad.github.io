@@ -201,14 +201,6 @@ export async function fetchReportsPage(
     : query(base, orderBy('createdAt', 'desc'), limit(pageSize));
 
   const snapshot = await getDocs(pageQuery);
-  // Without a connection Firestore answers from its cache, which may be empty.
-  // That is not "no reports yet": the map would look empty for the wrong reason.
-  if (!cursor && snapshot.empty && snapshot.metadata.fromCache) {
-    throw new AppError(
-      'offline',
-      'Nema veze sa serverom, pa prijave nisu učitane. Proveri internet vezu i pokušaj ponovo.',
-    );
-  }
   const reports = mapSnapshots(snapshot.docs);
 
   return {

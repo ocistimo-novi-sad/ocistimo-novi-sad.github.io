@@ -1,7 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { useBackdropClose } from '../../hooks/useBackdropClose';
-import { useModalFocus } from '../../hooks/useModalFocus';
 import { optimizedImageUrl } from '../../services/images';
 
 export function Lightbox({
@@ -15,17 +13,13 @@ export function Lightbox({
 }) {
   const [index, setIndex] = useState(Math.min(initialIndex, images.length - 1));
   const [failed, setFailed] = useState(false);
-  const dialog = useRef<HTMLDivElement>(null);
-  const backdrop = useBackdropClose(onClose);
-
-  // Escape closes only the viewer, not the report panel under it.
-  useModalFocus(dialog, onClose, { initialFocus: () => document.getElementById('lightbox-close') });
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
       if (event.key === 'ArrowRight') {
         setIndex((value) => Math.min(value + 1, images.length - 1));
         setFailed(false);
@@ -37,21 +31,23 @@ export function Lightbox({
     };
 
     document.addEventListener('keydown', handleKeyDown);
+    document.getElementById('lightbox-close')?.focus();
 
     return () => {
       document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [images.length]);
+  }, [images.length, onClose]);
 
   return (
     <div
-      ref={dialog}
       className="lightbox"
       role="dialog"
       aria-modal="true"
       aria-label={`Fotografija ${index + 1} od ${images.length}`}
-      {...backdrop}
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
     >
       <button
         type="button"
@@ -71,7 +67,7 @@ export function Lightbox({
             setIndex((value) => Math.max(value - 1, 0));
             setFailed(false);
           }}
-          aria-disabled={index === 0 || undefined}
+          disabled={index === 0}
           aria-label="Prethodna fotografija"
         >
           <ChevronLeft size={22} aria-hidden="true" />
@@ -102,7 +98,7 @@ export function Lightbox({
             setIndex((value) => Math.min(value + 1, images.length - 1));
             setFailed(false);
           }}
-          aria-disabled={index === images.length - 1 || undefined}
+          disabled={index === images.length - 1}
           aria-label="Sledeća fotografija"
         >
           <ChevronRight size={22} aria-hidden="true" />

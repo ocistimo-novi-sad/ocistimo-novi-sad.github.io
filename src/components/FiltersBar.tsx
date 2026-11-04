@@ -1,4 +1,4 @@
-import { useEffect, useRef, type Ref } from 'react';
+import { useEffect, useRef, useState, type Ref } from 'react';
 import { ArrowUpDown, ChevronDown, SlidersHorizontal, Search, X } from 'lucide-react';
 import {
   CATEGORIES,
@@ -8,13 +8,10 @@ import {
   SORT_OPTIONS,
   STATUS_MAP,
 } from '../config';
-import { focusableIn } from '../hooks/useModalFocus';
 import { useApp } from '../state/app-context';
 import { CategoryGlyph } from './ui/CategoryGlyph';
-import { StatusShape } from './ui/StatusShape';
+import { StatusDot } from './ui/StatusBadge';
 import { Modal } from './modals/Modal';
-
-const IS_MAC = /Mac|iPhone|iPad/.test(navigator.platform);
 
 /** One placeholder per layer, shared by the list and the map; short enough for a phone. */
 export const SEARCH_PLACEHOLDER = {
@@ -35,7 +32,7 @@ export function SearchInput({
   placeholder: string;
   label: string;
   inputRef?: Ref<HTMLInputElement>;
-  /** Shows the keyboard shortcut (Ctrl+K, ⌘K on a Mac) while empty. */
+  /** Shows the "/" shortcut hint while empty. */
   hint?: boolean;
 }) {
   return (
@@ -61,7 +58,7 @@ export function SearchInput({
         </button>
       ) : hint ? (
         <kbd className="search-field__hint" aria-hidden="true">
-          {IS_MAC ? '⌘K' : 'Ctrl K'}
+          /
         </kbd>
       ) : null}
     </div>
@@ -135,7 +132,7 @@ function ReportFilterOptions() {
                   checked={checked}
                   onChange={() => toggleStatus(status.id)}
                 />
-                <StatusShape status={status.id} />
+                <StatusDot status={status.id} />
                 <span>{status.label}</span>
               </label>
             );
@@ -203,11 +200,10 @@ function ActionFilterOptions() {
   );
 }
 
-export function FiltersSheet({ onClose }: { onClose: () => void }) {
+function FiltersSheet({ onClose }: { onClose: () => void }) {
   const { layer, filteredReports, filteredActions, updateFilters, setActionScope } = useApp();
   const isActions = layer === 'actions';
   const count = isActions ? filteredActions.length : filteredReports.length;
-  const sheet = useRef<HTMLDivElement>(null);
 
   // Clears what the sheet sets; the search stays as typed.
   const clear = () => {
@@ -229,8 +225,6 @@ export function FiltersSheet({ onClose }: { onClose: () => void }) {
       description="Filteri važe i za mapu i za listu."
       onClose={onClose}
       size="sm"
-      // Start at the top of the sheet, the categories, not at the first checkbox.
-      initialFocus={() => focusableIn(sheet.current)[0]}
       footer={
         <div className="filter-sheet__foot">
           <button type="button" className="link-btn" onClick={clear}>
@@ -242,7 +236,7 @@ export function FiltersSheet({ onClose }: { onClose: () => void }) {
         </div>
       }
     >
-      <div className="filter-sheet" ref={sheet}>
+      <div className="filter-sheet">
         {isActions ? <ActionFilterOptions /> : <ReportFilterOptions />}
       </div>
     </Modal>
@@ -251,7 +245,8 @@ export function FiltersSheet({ onClose }: { onClose: () => void }) {
 
 /** Opens the filters of the current layer; the badge counts what is narrowed. */
 export function FiltersButton() {
-  const { layer, filters, actionScope, openModal } = useApp();
+  const { layer, filters, actionScope } = useApp();
+  const [open, setOpen] = useState(false);
 
   const count =
     layer === 'actions'
@@ -265,13 +260,14 @@ export function FiltersButton() {
       <button
         type="button"
         className={`filters-btn${count > 0 ? ' is-active' : ''}`}
-        onClick={() => openModal({ kind: 'filters' })}
+        onClick={() => setOpen(true)}
         aria-haspopup="dialog"
       >
         <SlidersHorizontal size={14} aria-hidden="true" />
         <span>Filteri</span>
         {count > 0 ? <span className="filters-btn__count">{count}</span> : null}
       </button>
+      {open ? <FiltersSheet onClose={() => setOpen(false)} /> : null}
     </>
   );
 }
@@ -358,12 +354,13 @@ export function FiltersBar() {
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Ctrl+K (⌘K on a Mac) jumps to the search. A modifier key means it can't
-    // fire by accident while typing or from speech input (WCAG 2.1.4); it does
-    // nothing while a dialog is open.
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() !== 'k' || !(IS_MAC ? event.metaKey : event.ctrlKey)) return;
-      if (event.altKey || event.shiftKey || document.querySelector('[aria-modal="true"]')) return;
+      if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select' || target?.isContentEditable) {
+        return;
+      }
       event.preventDefault();
       searchRef.current?.focus();
     };

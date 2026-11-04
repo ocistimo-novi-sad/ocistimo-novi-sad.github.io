@@ -127,7 +127,7 @@ export function ResolutionsQueue() {
               type="button"
               className="link-btn"
               onClick={() => void load()}
-              aria-disabled={loading || undefined}
+              disabled={loading}
             >
               <RefreshCw size={12} aria-hidden="true" /> Osveži
             </button>
@@ -241,7 +241,7 @@ export function ResolutionsQueue() {
                   type="button"
                   className="btn btn--quiet"
                   onClick={() => setRejecting(true)}
-                  aria-disabled={busy || undefined}
+                  disabled={busy}
                 >
                   <X size={14} aria-hidden="true" /> Odbij…
                 </button>
@@ -249,7 +249,7 @@ export function ResolutionsQueue() {
                   type="button"
                   className="btn btn--primary"
                   onClick={() => void decide(() => approveReportResolution(active))}
-                  aria-disabled={busy || undefined}
+                  disabled={busy}
                 >
                   {busy ? <Spinner size={14} /> : <Check size={14} aria-hidden="true" />}
                   Potvrdi sanaciju

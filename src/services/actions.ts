@@ -82,13 +82,6 @@ export async function fetchActions(): Promise<CleanupAction[]> {
   const snapshot = await getDocs(
     query(collection(db, 'actions'), orderBy('date', 'desc'), limit(80)),
   );
-  // An empty answer from the cache means no connection, not "no actions yet".
-  if (snapshot.empty && snapshot.metadata.fromCache) {
-    throw new AppError(
-      'offline',
-      'Nema veze sa serverom, pa akcije nisu učitane. Proveri internet vezu i pokušaj ponovo.',
-    );
-  }
 
   return snapshot.docs
     .map((document) => mapAction(document.id, document.data()))

@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ChevronDown,
   ClipboardCheck,
@@ -24,26 +24,21 @@ export function AccountMenu() {
   const attention = rejectedCount + reviewCount;
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const menuId = useId();
 
   useEffect(() => {
     if (!open) return;
 
-    // On release, not on press (WCAG 2.5.2).
-    const handlePointerUp = (event: PointerEvent) => {
+    const handlePointerDown = (event: MouseEvent) => {
       if (!wrapperRef.current?.contains(event.target as Node)) setOpen(false);
     };
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      setOpen(false);
-      triggerRef.current?.focus();
+      if (event.key === 'Escape') setOpen(false);
     };
 
-    document.addEventListener('pointerup', handlePointerUp);
+    document.addEventListener('mousedown', handlePointerDown);
     document.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.removeEventListener('pointerup', handlePointerUp);
+      document.removeEventListener('mousedown', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [open]);
@@ -70,21 +65,12 @@ export function AccountMenu() {
   const name = auth.user.displayName ?? 'Član zajednice';
 
   return (
-    // A list of links and buttons that opens and closes (WAI-ARIA disclosure);
-    // it closes when focus leaves it.
-    <div
-      className="account"
-      ref={wrapperRef}
-      onBlur={(event) => {
-        if (!wrapperRef.current?.contains(event.relatedTarget as Node | null)) setOpen(false);
-      }}
-    >
+    <div className="account" ref={wrapperRef}>
       <button
-        ref={triggerRef}
         type="button"
         className="account__trigger"
+        aria-haspopup="menu"
         aria-expanded={open}
-        aria-controls={open ? menuId : undefined}
         onClick={() => setOpen((value) => !value)}
         aria-label={attention > 0 ? `Nalog: ${name}, ima novosti` : `Nalog: ${name}`}
       >
@@ -100,7 +86,7 @@ export function AccountMenu() {
       </button>
 
       {open ? (
-        <div className="account__menu" id={menuId}>
+        <div className="account__menu" role="menu">
           <div className="account__identity">
             <span className="account__name">{name}</span>
             <span className="account__email">{auth.user.email}</span>
@@ -112,6 +98,7 @@ export function AccountMenu() {
           </div>
           <button
             type="button"
+            role="menuitem"
             className="account__item"
             onClick={() => {
               setOpen(false);
@@ -132,6 +119,7 @@ export function AccountMenu() {
           {auth.isModerator ? (
             <button
               type="button"
+              role="menuitem"
               className="account__item"
               onClick={() => {
                 setOpen(false);
@@ -146,6 +134,7 @@ export function AccountMenu() {
           {auth.isModerator ? (
             <button
               type="button"
+              role="menuitem"
               className="account__item"
               onClick={() => {
                 setOpen(false);
@@ -158,6 +147,7 @@ export function AccountMenu() {
           ) : null}
           <button
             type="button"
+            role="menuitem"
             className="account__item"
             onClick={() => {
               setOpen(false);

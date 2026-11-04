@@ -1,7 +1,6 @@
 import { Map } from 'lucide-react';
 import { APP } from '../../config';
 import { useIsMobile } from '../../hooks/useMediaQuery';
-import { isFirebaseConfigured } from '../../services/firebase';
 import { useApp } from '../../state/app-context';
 import { GUIDE_EVENT } from '../FirstVisitGuide';
 import { Modal } from './Modal';
@@ -74,19 +73,8 @@ export function InfoDialog() {
         </button>
       ) : null}
 
-      {/* "Detalji" on the demo notice opens this dialog, so it says what demo mode means. */}
-      {!isFirebaseConfigured ? (
-        <div className="info-block">
-          <h3>Demo režim</h3>
-          <p>
-            Ova kopija nije povezana sa bazom. Prijave na mapi su primeri. Prijave koje dodaš
-            čuvaju se samo u ovom pregledaču i niko drugi ih ne vidi.
-          </p>
-        </div>
-      ) : null}
-
       <div className="info-block">
-        <h3>Podaci i privatnost</h3>
+        <h4>Podaci i privatnost</h4>
         <p>Prijave su javne. Uz prijavu se prikazuje ime iz naloga, ali ne i mejl adresa.</p>
       </div>
 

@@ -25,7 +25,7 @@ export function ActionMarkers({
           bubblingMouseEvents={false}
           eventHandlers={{ click: () => onSelect(action) }}
         >
-          <Tooltip interactive direction="top" offset={[0, -20]} className="ns-tooltip">
+          <Tooltip direction="top" offset={[0, -20]} className="ns-tooltip">
             <span className="ns-tooltip__label">Akcija</span>
             <br />
             {action.title}
