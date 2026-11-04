@@ -441,9 +441,11 @@ fieldset {
 }
 
 .error-summary__list a {
-  /* Each link is at least a 24px target (WCAG 2.5.8). */
+  /* Each link is at least a 24px target (WCAG 2.5.8); top-aligned, so the
+     bullet stays on the first line when the text wraps. */
   display: inline-block;
   line-height: 24px;
+  vertical-align: top;
   color: var(--alert);
   font-size: var(--text-ui);
   font-weight: 600;
