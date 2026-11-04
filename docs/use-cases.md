@@ -139,18 +139,17 @@ stateDiagram-v2
 
 ### 4.2 Status (samo za objavljene prijave)
 
-Status opisuje stanje problema na terenu. Menja ga moderator ručno; jedini automatski prelaz je u „Rešeno“ kada moderator potvrdi dokaz sanacije ili klikne „Označi kao rešeno“.
+Status opisuje stanje problema na terenu. Menja ga moderator ručno; automatski se menja i kada moderator potvrdi dokaz sanacije ili klikne „Označi kao rešeno“, kao i kada se promeni status akcije kojoj je prijava povezana (vidi napomenu ispod).
 
 | Status | Značenje |
 |---|---|
-| **Nova** | Objavljena, još bez plana akcije |
-| **Proverena** | Problem je potvrđen na terenu |
-| **Planirana akcija** | Prijava je uključena u planirano čišćenje |
-| **U toku** | Radovi ili akcija su počeli |
+| **Nova prijava** | Objavljena, još bez plana akcije |
+| **Akcija planirana** | Prijava je uključena u planirano čišćenje |
+| **Akcija u toku** | Radovi ili akcija su počeli |
 | **Rešeno** | Problem je uklonjen |
 | **Nije za akciju** | Problem nije pogodan za volontersko čišćenje |
 
-> Povezivanje prijave sa akcijom **ne menja** status prijave automatski. Moderator status menja posebno.
+> Status akcije se automatski prenosi na sve povezane prijave: „Planirano“ → „Akcija planirana“, „U toku“ → „Akcija u toku“, „Završeno“ → „Rešeno“. Otkazivanje akcije ne menja status prijava.
 
 ### 4.3 Izmena objavljene prijave
 
@@ -353,7 +352,7 @@ Moderator ima sve što i član zajednice, plus stavku **Moderacija** u meniju na
 - **Gde:** Moderacija → **Nove prijave** (najstarije prvo); ili detalji neobjavljene prijave → okvir „Moderacija“; ili link iz e-pošte
 - **Tok — odobravanje:**
   1. Moderator pregleda prijavu (fotografije, opis, lokacija, „Otvori na mapi“).
-  2. „Odobri i objavi“ → prijava odmah postaje javna, sa statusom „Nova“.
+  2. „Odobri i objavi“ → prijava odmah postaje javna, sa statusom „Nova prijava“.
   3. **E-pošta:** autoru **„Prijava je objavljena“** (E-6).
 - **Tok — odbijanje:**
   1. „Odbij…“ → upis razloga (najmanje 10 znakova) ili izbor čestog razloga:
@@ -402,7 +401,7 @@ Moderator ima sve što i član zajednice, plus stavku **Moderacija** u meniju na
 ### UC-18 Promena statusa prijave
 
 - **Gde:** detalji objavljene prijave → okvir „Moderacija“ → izbor statusa → „Sačuvaj“
-- **Tok:** moderator bira bilo koji od šest statusa (npr. „Proverena“, „Planirana akcija“, „Nije za akciju“).
+- **Tok:** moderator bira bilo koji od pet statusa (npr. „Akcija planirana“, „Akcija u toku“, „Nije za akciju“).
 - **E-pošta:** autoru **„Promenjen status prijave“** sa novim statusom i njegovim značenjem (E-12). Važi za svaki status, uključujući „Rešeno“ izabrano iz liste. Kada prijava postane rešena preko UC-16 ili UC-17, autor umesto toga dobija E-8, ne obe poruke.
 
 ### UC-19 Izmena i brisanje bilo koje prijave
@@ -436,15 +435,15 @@ Administrator ima sva prava moderatora, plus tab „Korisnici i uloge“ u stavc
   1. **Osnovno:** naziv, opis i plan rada, status (podrazumevano „Planirano“).
   2. **Fotografije:** naslovna slika (opciono); fotografije sa akcije (do 6) tek kada je status „Završeno“.
   3. **Termin i mesto:** datum i vreme (podrazumevano za nedelju dana u 10:00), mesto okupljanja, tačka na mapi (mora biti u Novom Sadu).
-  4. **Povezane prijave:** izbor do 50 objavljenih prijava koje akcija rešava.
+  4. **Povezane prijave:** izbor do 50 objavljenih prijava koje akcija rešava. Sve izabrane prijave dobijaju status akcije.
   5. **Oprema i organizator:** šta poneti (jedna stavka po redu, do 20), naziv organizatora, napomena za učesnike (opciono).
   6. „Objavi akciju“ → akcija je odmah javna.
-- **E-pošta:** ako je status **„Planirano“** i povezane su prijave → autorima tih prijava **„Akcija čišćenja za vašu prijavu“** (E-10). Ako je akcija napravljena odmah kao „U toku“ ili „Završeno“, poruka se ne šalje.
+- **E-pošta:** ako je status **„Planirano“** i povezane su prijave → autorima tih prijava **„Akcija čišćenja za vašu prijavu“** (E-10). Ako je akcija napravljena odmah kao „U toku“ ili „Završeno“, poruka se ne šalje. Promena statusa povezanih prijava šalje autorima i E-12.
 
 ### UC-22 Uređivanje akcije
 
 - **Gde:** Administracija → Akcije čišćenja → „Uredi“; ili detalji akcije → „Uredi akciju“
-- **Tok:** ista forma kao UC-21. Najčešće izmene: dodavanje prijava, pomeranje termina, promena statusa u „U toku“ / „Završeno“, dodavanje fotografija sa akcije.
+- **Tok:** ista forma kao UC-21. Najčešće izmene: dodavanje prijava, pomeranje termina, promena statusa u „U toku“ / „Završeno“, dodavanje fotografija sa akcije. Sve povezane prijave dobijaju novi status akcije.
 - **E-pošta** se šalje samo dok je akcija „Planirano“:
 
   | Izmena | Poruka | Ko je dobija |
@@ -459,6 +458,8 @@ Administrator ima sva prava moderatora, plus tab „Korisnici i uloge“ u stavc
   | Promena naziva, opisa, opreme, organizatora, fotografija ili samo tačke na mapi | — | Niko |
   | Uklanjanje prijave iz akcije | — | Niko |
   | Status promenjen u „U toku“ ili „Završeno“ | — | Niko |
+
+  Nezavisno od akcionih poruka, svaka promena statusa povezane prijave šalje autoru E-12.
 
   Ako se status u formi promeni u „Otkazano“, važi UC-23.
 
@@ -499,7 +500,7 @@ Naslov svake poruke se završava sa „ – Kuka i Motika“.
 | **E-9** | Dokaz sanacije je odbijen | Moderator (UC-16) | Autor prijave | Dokaz sanacije nije prihvaćen | Naslov, razlog, uputstvo da se pošalje novi dokaz | Otvori prijavu |
 | **E-10** | Prijava je uključena u planiranu akciju | Administrator (UC-21, UC-22) | Autori prijava koje su upravo povezane (vidi tabelu u UC-22) | Akcija čišćenja za vašu prijavu | Naziv akcije, kada (pun datum i vreme), mesto okupljanja, poziv da se pridruže | Otvori Kuka i Motika (početna strana) |
 | **E-11** | Akcija je otkazana | Administrator (UC-23) | Autori svih prijava povezanih sa akcijom | Akcija je otkazana | Naziv akcije i za kada je bila zakazana | Otvori Kuka i Motika (početna strana) |
-| **E-12** | Moderator je promenio status objavljene prijave | Moderator (UC-18) | Autor prijave | Promenjen status prijave | Naslov, novi status i njegovo značenje (npr. „Proverena — Problem je potvrđen na terenu.“) | Otvori prijavu |
+| **E-12** | Moderator je promenio status objavljene prijave | Moderator (UC-18) | Autor prijave | Promenjen status prijave | Naslov, novi status i njegovo značenje (npr. „Akcija planirana — Prijava je uključena u planirano čišćenje.“) | Otvori prijavu |
 | **E-13** | Moderator je vratio prethodnu verziju izmenjene prijave | Moderator (UC-15) | Autor prijave | Izmena prijave nije prihvaćena | Naslov; izmena se može ponovo napraviti iz detalja prijave | Otvori prijavu |
 | **E-14** | Planiranoj akciji je promenjen datum, vreme ili mesto okupljanja | Administrator (UC-22) | Autori prijava koje su već bile povezane sa akcijom | Promenjen termin ili mesto akcije | Naziv akcije, novi datum i vreme, mesto okupljanja | Otvori Kuka i Motika (početna strana) |
 
@@ -559,7 +560,7 @@ sequenceDiagram
     App-->>M: E-2 Ispravljena prijava čeka pregled
     M->>App: Odobrava
     App-->>A: E-6 Prijava je objavljena
-    M->>App: Menja status u „Proverena“
+    M->>App: Menja status u „Akcija planirana“
     App-->>A: E-12 Promenjen status prijave
     Adm->>App: Pravi planiranu akciju sa ovom prijavom
     App-->>A: E-10 Akcija čišćenja za vašu prijavu

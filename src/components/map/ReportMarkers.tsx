@@ -58,7 +58,7 @@ interface ReportMarkersProps {
   interactive?: boolean;
 }
 
-const CLUSTER_MAX_ZOOM = 15;
+const CLUSTER_MAX_ZOOM = 20;
 
 /** A group whose reports are shown around it, because zooming in no longer separates them. */
 interface Spread {
