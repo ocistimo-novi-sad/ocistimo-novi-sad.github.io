@@ -6,7 +6,7 @@ Kuka i Motika je zamišljen kao praktičan alat za građane koji žele da prijav
 
 Ideja projekta je jednostavna: umesto da informacije o zapuštenim mestima ostanu rasute po porukama i društvenim mrežama, sve prijave mogu da budu pregledno prikazane na jednoj mapi. Tako zajednica lakše može da proceni gde je pomoć potrebna i da organizuje konkretnu akciju.
 
-Detaljan opis rada aplikacije — uloge, slučajevi korišćenja, životni ciklus prijava i akcija i sva obaveštenja e-poštom — nalazi se u dokumentu [Kako aplikacija radi](docs/use-cases.md).
+Detaljan opis rada aplikacije — uloge, slučajevi korišćenja, životni ciklus prijava i akcija i sva obaveštenja e-poštom — nalazi se u dokumentu [Kako aplikacija radi](docs/use-cases.md). Kako se predlažu i objavljuju izmene (grane, pregled, staging, Release Notes) opisano je u [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Sadržaj
 
