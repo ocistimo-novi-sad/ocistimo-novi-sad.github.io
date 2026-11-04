@@ -34,17 +34,27 @@ Produkcija ostaje na GitHub Pages i objavljuje se sama kada se `staging` spoji u
 
 Ne objavljujemo svaki PR posebno. Kada se na stagingu skupi više proverenih PR-ova, `staging` se spaja u `main`. Tako se sve testira na stagingu, a na `main` stiže samo ono što je potvrđeno.
 
+- U `main` se spaja samo grana `staging`; PR iz bilo koje druge grane GitHub blokira.
+- PR `staging` → `main` odobrava [@svilimonovicQA](https://github.com/svilimonovicQA) ili [@sekuchu](https://github.com/sekuchu) (spisak je u [.github/CODEOWNERS](.github/CODEOWNERS)).
+- Spaja se dugmetom **Create a merge commit** (ne squash), da `staging` i `main` ostanu usklađeni.
+
 ### 5. Ispravka za nešto što je već na stagingu ide kroz novi issue
 
 Ako nešto što je već na stagingu treba popraviti, otvara se **novi issue**. U njemu, u komentaru ili u opisu PR-a jasno se navede na koji se tiket ispravka odnosi (na primer „Ispravka za #44“).
 
 ### 6. Release Notes
 
-Uvodimo Release Notes: spisak tiketa koji su ušli u svaku objavu. Tako i mi i svi ostali lako vidimo šta je prošlo.
+Uvodimo Release Notes: spisak tiketa koji su ušli u svaku objavu. Tako i mi i svi ostali lako vidimo šta je prošlo. Prave se same, na stranici [Releases](https://github.com/ocistimo-novi-sad/ocistimo-novi-sad.github.io/releases):
+
+- Posle svakog spajanja u `staging` ažurira se nacrt **„Sledeća verzija“**: spisak PR-ova koji su na stagingu, a još nisu na produkciji. Nacrt vide samo članovi tima.
+- Posle spajanja `staging` → `main` nacrt postaje javna objava sa datumom (npr. `v2026.11.04`).
+- PR-ovi su razvrstani po labeli: `enhancement` → Novo, `bug` → Ispravke, `accessibility` → Pristupačnost, `documentation` → Dokumentacija, ostalo → Ostalo. Zato svaki PR treba da ima labelu.
 
 ## Ukratko, za svaki PR
 
 - [ ] PR je otvoren ka grani `staging`.
+- [ ] U opisu PR-a piše tiket („Closes #…“ ili „Ispravka za #…“).
+- [ ] PR ima labelu (`enhancement`, `bug`, …) zbog Release Notes.
 - [ ] Ima bar jedno odobrenje pre spajanja.
 - [ ] Posle objave na staging, tester je potvrdio da radi.
 - [ ] Ako je ovo ispravka, u issue-u ili PR-u piše na koji se tiket odnosi.

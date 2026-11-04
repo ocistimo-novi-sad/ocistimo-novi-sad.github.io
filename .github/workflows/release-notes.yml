@@ -1,0 +1,71 @@
+name: Release Notes
+
+on:
+  push:
+    branches: [staging, main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-notes
+  cancel-in-progress: false
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  GH_REPO: ${{ github.repository }}
+  DRAFT_NAME: Sledeća verzija
+  DRAFT_TAG: sledeca-verzija
+
+jobs:
+  notes:
+    runs-on: ubuntu-latest
+    steps:
+      # Notes cover everything since the last published (non-draft) release.
+      - name: Find previous release and draft
+        id: prev
+        run: |
+          echo "tag=$(gh release list --exclude-drafts --limit 1 --json tagName --jq '.[0].tagName // ""')" >> "$GITHUB_OUTPUT"
+          echo "draft_id=$(gh api --paginate "repos/$GH_REPO/releases" --jq ".[] | select(.draft and .name == \"$DRAFT_NAME\") | .id" | head -n1)" >> "$GITHUB_OUTPUT"
+
+      # Staging: one draft release lists what is on staging but not yet in production.
+      - name: Update draft release
+        if: github.ref_name == 'staging'
+        env:
+          PREV: ${{ steps.prev.outputs.tag }}
+          DRAFT_ID: ${{ steps.prev.outputs.draft_id }}
+        run: |
+          args=(-f tag_name="$DRAFT_TAG" -f target_commitish=staging)
+          if [ -n "$PREV" ]; then args+=(-f previous_tag_name="$PREV"); fi
+          notes=$(gh api "repos/$GH_REPO/releases/generate-notes" "${args[@]}" --jq .body)
+          body=$(printf '_Ovo je na stagingu i još nije na produkciji._\n\n%s' "$notes")
+
+          if [ -n "$DRAFT_ID" ]; then
+            gh api -X PATCH "repos/$GH_REPO/releases/$DRAFT_ID" -f body="$body" > /dev/null
+          else
+            gh api "repos/$GH_REPO/releases" -f tag_name="$DRAFT_TAG" -f target_commitish=staging \
+              -f name="$DRAFT_NAME" -f body="$body" -F draft=true > /dev/null
+          fi
+
+      # Main: publish a dated release and drop the staging draft.
+      - name: Publish release
+        if: github.ref_name == 'main'
+        env:
+          PREV: ${{ steps.prev.outputs.tag }}
+          DRAFT_ID: ${{ steps.prev.outputs.draft_id }}
+        run: |
+          base="v$(TZ=Europe/Belgrade date +%Y.%m.%d)"
+          tag="$base"
+          n=2
+          while gh api "repos/$GH_REPO/git/ref/tags/$tag" > /dev/null 2>&1; do
+            tag="$base-$n"
+            n=$((n + 1))
+          done
+
+          args=(--target "$GITHUB_SHA" --title "Objava $(TZ=Europe/Belgrade date +%d.%m.%Y.)" --generate-notes)
+          if [ -n "$PREV" ]; then args+=(--notes-start-tag "$PREV"); fi
+          gh release create "$tag" "${args[@]}"
+
+          if [ -n "$DRAFT_ID" ]; then
+            gh api -X DELETE "repos/$GH_REPO/releases/$DRAFT_ID"
+          fi
