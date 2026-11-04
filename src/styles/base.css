@@ -21,7 +21,7 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: var(--text-ui);
+  font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -43,7 +43,7 @@ button {
   cursor: pointer;
 }
 
-button:is(:disabled, [aria-disabled='true']) {
+button:disabled {
   cursor: not-allowed;
 }
 
@@ -115,7 +115,7 @@ fieldset {
 
 .eyebrow {
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.11em;
   line-height: 1.3;
@@ -158,7 +158,7 @@ fieldset {
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--ink);
-  font-size: var(--text-ui);
+  font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.005em;
   white-space: nowrap;
@@ -170,23 +170,17 @@ fieldset {
     transform 0.18s var(--ease);
 }
 
-.btn:hover:not(:disabled, [aria-disabled='true']) {
+.btn:hover:not(:disabled) {
   background: var(--surface-2);
   border-color: var(--muted-2);
 }
 
-.btn:active:not(:disabled, [aria-disabled='true']) {
+.btn:active:not(:disabled) {
   background: var(--surface-3);
 }
 
 .btn:disabled {
   opacity: 0.5;
-}
-
-/* A send button stays focusable while it works; it only looks busy. */
-.btn[aria-disabled='true'] {
-  opacity: 0.75;
-  cursor: progress;
 }
 
 .btn--primary {
@@ -196,14 +190,14 @@ fieldset {
   font-weight: 600;
 }
 
-.btn--primary:hover:not(:disabled, [aria-disabled='true']) {
+.btn--primary:hover:not(:disabled) {
   background: var(--forest-2);
   border-color: var(--forest-2);
   box-shadow: var(--shadow-2);
   transform: translateY(-1px);
 }
 
-.btn--primary:active:not(:disabled, [aria-disabled='true']) {
+.btn--primary:active:not(:disabled) {
   background: #143024;
   box-shadow: none;
   transform: none;
@@ -223,14 +217,14 @@ fieldset {
   box-shadow: var(--shadow-1);
 }
 
-.btn--accent:hover:not(:disabled, [aria-disabled='true']) {
+.btn--accent:hover:not(:disabled) {
   background: var(--forest-2);
   border-color: var(--forest-2);
   box-shadow: var(--shadow-2);
   transform: translateY(-1px);
 }
 
-.btn--accent:active:not(:disabled, [aria-disabled='true']) {
+.btn--accent:active:not(:disabled) {
   background: #143024;
   box-shadow: none;
   transform: none;
@@ -245,7 +239,7 @@ fieldset {
   border-color: var(--line);
 }
 
-.btn--quiet:hover:not(:disabled, [aria-disabled='true']) {
+.btn--quiet:hover:not(:disabled) {
   background: var(--surface-2);
   border-color: var(--line-strong);
 }
@@ -256,7 +250,7 @@ fieldset {
   color: #fff;
 }
 
-.btn--danger:hover:not(:disabled, [aria-disabled='true']) {
+.btn--danger:hover:not(:disabled) {
   background: var(--alert-strong);
   border-color: var(--alert-strong);
 }
@@ -264,7 +258,7 @@ fieldset {
 .btn--sm {
   height: 30px;
   padding: 0 10px;
-  font-size: var(--text-meta);
+  font-size: 12px;
 }
 
 .btn--block {
@@ -286,7 +280,7 @@ fieldset {
   min-height: 24px;
   gap: 4px;
   color: var(--forest);
-  font-size: var(--text-ui);
+  font-size: 12.5px;
   font-weight: 500;
   text-decoration: underline;
   text-decoration-thickness: 1px;
@@ -323,7 +317,7 @@ fieldset {
     color 0.14s var(--ease);
 }
 
-.icon-btn:hover:not(:disabled, [aria-disabled='true']) {
+.icon-btn:hover:not(:disabled) {
   background: var(--surface-2);
   border-color: var(--line-strong);
 }
@@ -342,12 +336,12 @@ fieldset {
   color: var(--muted);
 }
 
-.icon-btn--ghost:hover:not(:disabled, [aria-disabled='true']) {
+.icon-btn--ghost:hover:not(:disabled) {
   background: var(--surface-3);
   color: var(--ink);
 }
 
-.icon-btn:is(:disabled, [aria-disabled='true']) {
+.icon-btn:disabled {
   opacity: 0.5;
 }
 
@@ -381,7 +375,7 @@ fieldset {
 .field label,
 .field__label {
   color: var(--ink-2);
-  font-size: var(--text-ui);
+  font-size: 13.5px;
   font-weight: 600;
   letter-spacing: 0.005em;
 }
@@ -390,7 +384,7 @@ fieldset {
   margin-left: 4px;
   color: var(--muted-2);
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 11px;
   font-weight: 400;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -399,58 +393,21 @@ fieldset {
 .field__counter {
   color: var(--muted-2);
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 11px;
   white-space: nowrap;
 }
 
 .field__hint {
   color: var(--muted);
-  font-size: var(--text-ui);
+  font-size: 12.5px;
   line-height: 1.45;
 }
 
 .field__error {
   color: var(--alert);
-  font-size: var(--text-ui);
+  font-size: 13px;
   font-weight: 600;
   line-height: 1.4;
-}
-
-/* GOV.UK error summary: every error of the form, as links, at the top. */
-.error-summary {
-  margin-bottom: 18px;
-  padding: 14px 16px;
-  border: 3px solid var(--alert);
-  border-radius: var(--radius);
-  background: var(--surface);
-}
-
-.error-summary__title {
-  margin-bottom: 8px;
-  color: var(--ink);
-  font-size: var(--text-heading);
-  font-weight: 700;
-}
-
-.error-summary__list {
-  display: grid;
-  gap: 6px;
-  padding-left: 18px;
-  list-style: disc;
-  color: var(--alert);
-}
-
-.error-summary__list a {
-  /* Each link is at least a 24px target (WCAG 2.5.8); top-aligned, so the
-     bullet stays on the first line when the text wraps. */
-  display: inline-block;
-  line-height: 24px;
-  vertical-align: top;
-  color: var(--alert);
-  font-size: var(--text-ui);
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 2px;
 }
 
 .field input[type='text'],
@@ -461,11 +418,11 @@ fieldset {
   width: 100%;
   min-height: 36px;
   padding: 8px 10px;
-  border: 1px solid var(--line-field);
+  border: 1px solid var(--line-strong);
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--ink);
-  font-size: var(--text-body);
+  font-size: 13px;
   transition:
     border-color 0.14s var(--ease),
     box-shadow 0.14s var(--ease);
@@ -525,7 +482,7 @@ fieldset {
   border-radius: var(--radius-pill);
   background: var(--surface);
   color: var(--ink-2);
-  font-size: var(--text-label);
+  font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
   transition:
@@ -555,8 +512,8 @@ fieldset {
 
 /* An active category chip wears its own colour, matching its map pins. */
 .chip[data-category].is-active {
-  background: var(--cat-ink);
-  border-color: var(--cat-ink);
+  background: var(--cat);
+  border-color: var(--cat);
   color: #fff;
 }
 
@@ -572,8 +529,8 @@ fieldset {
   border: 1px solid rgba(28, 34, 30, 0.07);
   border-radius: var(--radius-pill);
   background: var(--cat-tint);
-  color: var(--cat-ink);
-  font-size: var(--text-label);
+  color: var(--cat);
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.01em;
   white-space: nowrap;
@@ -621,7 +578,7 @@ fieldset {
   border-radius: var(--radius-pill);
   background: var(--surface-2);
   color: var(--ink-2);
-  font-size: var(--text-label);
+  font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
 }
@@ -670,7 +627,7 @@ fieldset {
   padding: 2px 8px;
   border: 1px solid;
   border-radius: var(--radius-pill);
-  font-size: var(--text-label);
+  font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
 }
@@ -703,7 +660,7 @@ fieldset {
 .status-badge.is-compact {
   padding: 1px 5px;
   gap: 4px;
-  font-size: var(--text-label);
+  font-size: 11px;
 }
 
 .action-status {
@@ -713,7 +670,7 @@ fieldset {
   border: 1px solid;
   border-radius: var(--radius-pill);
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -766,7 +723,7 @@ fieldset {
   padding: 0 8px;
   border-radius: var(--radius);
   color: var(--ink-2);
-  font-size: var(--text-meta);
+  font-size: 12px;
   text-align: left;
 }
 
@@ -812,7 +769,7 @@ label.popover__row:hover {
 .empty-state__title {
   color: var(--ink);
   font-family: var(--font-display);
-  font-size: var(--text-heading);
+  font-size: 16px;
   font-weight: 650;
   letter-spacing: -0.015em;
 }
@@ -820,7 +777,7 @@ label.popover__row:hover {
 .empty-state__text {
   max-width: 290px;
   color: var(--muted);
-  font-size: var(--text-ui);
+  font-size: 13px;
   line-height: 1.55;
 }
 
@@ -832,23 +789,26 @@ label.popover__row:hover {
   margin-bottom: 7px;
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.13em;
   text-transform: uppercase;
 }
 
-/* Loading placeholders fade in and out instead of sweeping sideways. */
 .skeleton {
   display: block;
   border-radius: var(--radius);
-  background: var(--surface-3);
-  animation: loading-pulse 1.5s ease-in-out infinite;
+  background: linear-gradient(90deg, var(--surface-3) 25%, var(--surface-2) 50%, var(--surface-3) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
 }
 
-@keyframes loading-pulse {
-  50% {
-    opacity: 0.45;
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
   }
 }
 
@@ -876,16 +836,11 @@ label.popover__row:hover {
   border-radius: var(--radius-md);
   background: var(--ink);
   color: #f4f3ed;
-  font-size: var(--text-ui);
+  font-size: 12.5px;
   line-height: 1.45;
   box-shadow: var(--shadow-3);
   pointer-events: auto;
   animation: toast-in 0.26s var(--ease-spring);
-}
-
-/* Toasts are dark, so the green ring would not show (1.5:1); white does. */
-.toast :focus-visible {
-  outline-color: #fff;
 }
 
 @keyframes toast-in {
@@ -949,11 +904,6 @@ label.popover__row:hover {
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
-
-  /* Loading still shows, as a fade instead of a turning spinner. */
-  .spinner {
-    animation: loading-pulse 1.2s ease-in-out infinite !important;
-  }
 }
 
 /* Mapa and Lista slide like two sides of one screen (View Transitions API).
@@ -1014,21 +964,4 @@ label.popover__row:hover {
     opacity: 0;
     transform: translateX(-24%);
   }
-}
-
-/* Text people type can hold long links and e-mail addresses; they wrap instead
-   of making the panel scroll sideways (WCAG 1.4.10, technique C33). */
-.detail-prose,
-.detail-title,
-.location-box__head,
-.organizer__note,
-.report-card__title,
-.action-card__title {
-  overflow-wrap: anywhere;
-}
-
-/* Over the limit: the text stays, the counter turns red, and sending asks to shorten it. */
-.field__counter.is-over {
-  color: var(--alert);
-  font-weight: 600;
 }

@@ -1,43 +1,34 @@
 import { useState } from 'react';
 import { Flag, TriangleAlert } from 'lucide-react';
 import { FLAG_REASONS } from '../../config';
-import { errorCode, toSerbianError } from '../../services/errors';
+import { toSerbianError } from '../../services/errors';
 import { createFlag } from '../../services/flags';
 import { useApp } from '../../state/app-context';
 import type { FlagReason } from '../../types';
 import { Modal } from './Modal';
-import { FieldError } from '../ui/FormErrors';
 import { Spinner } from '../ui/EmptyState';
 
 export function FlagDialog({ reportId }: { reportId: string }) {
   const { reports, closeModal, notify } = useApp();
   const report = reports.find((item) => item.id === reportId);
-  // No reason is chosen in advance (GOV.UK: do not pre-select answers).
-  const [reason, setReason] = useState<FlagReason | null>(null);
-  const [reasonError, setReasonError] = useState<string | null>(null);
+  const [reason, setReason] = useState<FlagReason>('spam');
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const submit = async () => {
-    if (busy) return;
-    if (!reason) {
-      setReasonError('Izaberi razlog.');
-      document.getElementById('flag-reason-first')?.focus();
-      return;
-    }
     setBusy(true);
     setError(null);
     try {
       await createFlag(reportId, reason, note.trim());
-      notify('success', 'Prijava sadržaja je poslata moderatorima.');
+      notify('success', 'Prijava sadržaja je poslata administratorima.');
       closeModal();
     } catch (flagError) {
-      // The rules refuse a second flag from the same account, so say exactly that.
       setError(
-        errorCode(flagError) === 'permission-denied'
-          ? 'Ova prijava je već prijavljena sa tvog naloga. Moderatori je pregledaju.'
-          : toSerbianError(flagError, 'Prijava sadržaja nije poslata. Pokušaj ponovo.'),
+        toSerbianError(
+          flagError,
+          'Prijava sadržaja nije poslata. Možda je ova prijava već prijavljena sa tvog naloga.',
+        ),
       );
     } finally {
       setBusy(false);
@@ -47,7 +38,7 @@ export function FlagDialog({ reportId }: { reportId: string }) {
   return (
     <Modal
       title="Prijavi sadržaj"
-      description="Moderatori pregledaju prijavu i mogu da uklone ili isprave sadržaj."
+      description="Administratori pregledaju prijavu i mogu da uklone ili isprave sadržaj."
       size="sm"
       onClose={closeModal}
       footer={
@@ -59,7 +50,7 @@ export function FlagDialog({ reportId }: { reportId: string }) {
             type="button"
             className="btn btn--primary btn--sm"
             onClick={() => void submit()}
-            aria-disabled={busy || undefined}
+            disabled={busy}
           >
             {busy ? <Spinner size={14} /> : <Flag size={13} aria-hidden="true" />}
             {busy ? 'Slanje…' : 'Pošalji prijavu'}
@@ -74,35 +65,21 @@ export function FlagDialog({ reportId }: { reportId: string }) {
         </div>
       ) : null}
 
-      <fieldset
-        className={`field field--fieldset${reasonError ? ' has-error' : ''}`}
-        aria-describedby={reasonError ? 'flag-reason-error' : undefined}
-      >
-        <legend className="field__label">Razlog</legend>
-        <div className="filter-sheet__rows">
-          {FLAG_REASONS.map((option, index) => (
-            <label
-              key={option.id}
-              className={`popover__row${reason === option.id ? ' is-active' : ''}`}
-            >
-              <input
-                id={index === 0 ? 'flag-reason-first' : undefined}
-                type="radio"
-                name="flag-reason"
-                value={option.id}
-                checked={reason === option.id}
-                onChange={() => {
-                  setReason(option.id as FlagReason);
-                  setReasonError(null);
-                }}
-                disabled={busy}
-              />
-              <span>{option.label}</span>
-            </label>
+      <div className="field">
+        <label htmlFor="flag-reason">Razlog</label>
+        <select
+          id="flag-reason"
+          value={reason}
+          onChange={(event) => setReason(event.target.value as FlagReason)}
+          disabled={busy}
+        >
+          {FLAG_REASONS.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.label}
+            </option>
           ))}
-        </div>
-        {reasonError ? <FieldError id="flag-reason-error">{reasonError}</FieldError> : null}
-      </fieldset>
+        </select>
+      </div>
 
       <div className="field">
         <div className="field__top">

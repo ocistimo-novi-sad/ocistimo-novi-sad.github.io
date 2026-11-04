@@ -233,7 +233,7 @@ export function UsersPanel() {
                         type="button"
                         className="btn btn--quiet btn--sm"
                         onClick={() => setPending(null)}
-                        aria-disabled={saving || undefined}
+                        disabled={saving}
                       >
                         Odustani
                       </button>
@@ -241,7 +241,7 @@ export function UsersPanel() {
                         type="button"
                         className="btn btn--primary btn--sm"
                         onClick={() => void confirmRole()}
-                        aria-disabled={saving || undefined}
+                        disabled={saving}
                       >
                         {saving ? <Spinner size={12} /> : null}
                         Potvrdi

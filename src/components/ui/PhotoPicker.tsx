@@ -40,7 +40,7 @@ export function PhotoPicker({
               </span>
             ) : null}
             {photo.status === 'done' ? (
-              <span className="photo-draft__done" role="img" aria-label="Fotografija je otpremljena">
+              <span className="photo-draft__done" aria-label="Fotografija je otpremljena">
                 <Check size={11} aria-hidden="true" />
               </span>
             ) : null}
@@ -54,7 +54,7 @@ export function PhotoPicker({
               className="photo-draft__remove"
               onClick={() => onRemove(photo)}
               aria-label="Ukloni fotografiju"
-              aria-disabled={disabled || undefined}
+              disabled={disabled}
             >
               <X size={12} aria-hidden="true" />
             </button>
@@ -67,7 +67,7 @@ export function PhotoPicker({
             id={addButtonId}
             className="photo-add"
             onClick={() => fileInputRef.current?.click()}
-            aria-disabled={disabled || undefined}
+            disabled={disabled}
           >
             <ImagePlus size={18} aria-hidden="true" />
             <span>{addLabel}</span>

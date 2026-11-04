@@ -21,13 +21,17 @@ export function errorCode(error: unknown): string {
 }
 
 const MESSAGES: Record<string, string> = {
-  'permission-denied': 'Ova radnja nije dozvoljena za tvoj nalog. Osveži stranicu i pokušaj ponovo.',
+  'permission-denied':
+    'Pristup bazi je odbijen. Proveri da li je nalog prijavljen i da li su Firestore pravila objavljena.',
   unauthenticated: 'Potrebna je prijava na nalog.',
   'auth/requires-recent-login': 'Prijavi se ponovo da nastaviš.',
-  unavailable: 'Nema veze sa serverom. Proveri internet vezu i pokušaj ponovo.',
-  timeout: 'Server ne odgovara. Pokušaj ponovo za nekoliko minuta.',
-  'failed-precondition': 'Nešto ne radi na sajtu. Pokušaj ponovo kasnije.',
-  'invalid-argument': 'Neki podaci nisu ispravni. Proveri polja i pokušaj ponovo.',
+  unavailable:
+    'Baza trenutno nije dostupna. Proveri internet vezu i da li je Cloud Firestore omogućen.',
+  timeout:
+    'Baza ne odgovara. Proveri da li je Cloud Firestore kreiran u Firebase konzoli, da li je API omogućen i da li su pravila objavljena.',
+  'failed-precondition':
+    'Baza nije pravilno pripremljena. Proveri da li su pravila i indeksi primenjeni.',
+  'invalid-argument': 'Poslati podaci nisu ispravni.',
   'resource-exhausted': 'Prekoračen je dozvoljeni broj zahteva. Pokušaj kasnije.',
   'deadline-exceeded': 'Zahtev je istekao. Pokušaj ponovo.',
   'not-found': 'Traženi zapis više ne postoji.',
@@ -36,8 +40,9 @@ const MESSAGES: Record<string, string> = {
   'auth/cancelled-popup-request': 'Prijava je otkazana.',
   'auth/popup-blocked':
     'Pregledač je blokirao prozor za prijavu. Dozvoli iskačuće prozore za ovaj sajt.',
-  'auth/operation-not-allowed': 'Prijava preko Google naloga trenutno ne radi. Pokušaj kasnije.',
-  'auth/unauthorized-domain': 'Prijava preko Google naloga trenutno ne radi. Pokušaj kasnije.',
+  'auth/operation-not-allowed': 'Google prijava nije omogućena u Firebase konzoli.',
+  'auth/unauthorized-domain':
+    'Ovaj domen nije autorizovan u Firebase konzoli (Authentication → Settings → Authorized domains).',
   'auth/network-request-failed': 'Prijava nije uspela zbog mreže. Pokušaj ponovo.',
   'auth/account-exists-with-different-credential':
     'Nalog sa ovom mejl adresom već koristi drugi način prijave.',
@@ -50,23 +55,18 @@ const MESSAGES: Record<string, string> = {
   'storage/upload-failed': 'Otpremanje fotografije nije uspelo. Pokušaj ponovo.',
   'storage/processing':
     'Fotografiju nije moguće obraditi. Probaj drugu fotografiju (JPG, PNG ili WebP).',
-  'storage/unauthorized': 'Fotografija nije poslata. Prijavi se ponovo na nalog i pokušaj opet.',
+  'storage/unauthorized':
+    'Otpremanje je odbijeno. Proveri da li je nalog prijavljen i da li su Storage pravila objavljena.',
   'storage/unauthenticated': 'Prijavi se da dodaš fotografiju.',
   'storage/retry-limit-exceeded':
     'Otpremanje fotografije nije uspelo zbog mreže. Pokušaj ponovo.',
-  'storage/quota-exceeded':
-    'Fotografije trenutno ne mogu da se sačuvaju. Pošalji bez njih ili pokušaj kasnije.',
+  'storage/quota-exceeded': 'Prostor za fotografije je trenutno pun. Javi se administratoru.',
   'storage/canceled': 'Otpremanje fotografije je prekinuto.',
 };
 
-/**
- * A message people can act on, in plain words (GOV.UK error messages). The
- * technical cause goes to the console for whoever maintains the site.
- */
 export function toSerbianError(error: unknown, fallback: string): string {
   if (error instanceof AppError) return error.message;
   const code = errorCode(error);
-  console.warn(`[kuka-i-motika] ${code}`, error);
   if (MESSAGES[code]) return MESSAGES[code];
 
   if (code.startsWith('auth/')) {

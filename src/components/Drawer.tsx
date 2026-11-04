@@ -7,10 +7,9 @@ import {
 } from 'react';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useIsMobile } from '../hooks/useMediaQuery';
-import { canFocus } from '../hooks/useModalFocus';
 
 /** The three heights of the drawer on a phone. CSS owns the actual values. */
-export type Snap = 'peek' | 'normal' | 'full';
+type Snap = 'peek' | 'normal' | 'full';
 const SNAPS: Snap[] = ['peek', 'normal', 'full'];
 const SNAP_CLASS: Record<Snap, string> = { peek: ' is-peek', normal: '', full: ' is-expanded' };
 
@@ -24,9 +23,6 @@ function snapHeight(drawer: HTMLElement, snap: Snap): number {
   const measured = drawer.getBoundingClientRect().height;
   drawer.className = className;
   drawer.style.height = height;
-  // Apply the restored height before the transition is back, or the panel
-  // animates from the last measured height on the next frame.
-  void drawer.offsetHeight;
   drawer.style.transition = transition;
   return measured;
 }
@@ -34,8 +30,7 @@ function snapHeight(drawer: HTMLElement, snap: Snap): number {
 interface DragState {
   startY: number;
   startHeight: number;
-  /** Measured once the finger really moves, so a tap never changes the layout. */
-  heights: Record<Snap, number> | null;
+  heights: Record<Snap, number>;
   lastY: number;
   lastTime: number;
   /** Pixels per millisecond, positive when moving up. */
@@ -49,18 +44,14 @@ export function Drawer({
   children,
   footer,
   className = '',
-  snapRequest,
-  focusKey,
+  collapseSignal,
 }: {
   label: string;
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
   className?: string;
-  /** Moves the sheet to a height on a phone; a new `id` repeats the same height. */
-  snapRequest?: { snap: Snap; id: number };
-  /** What the panel shows; when it changes, focus moves into the panel again. */
-  focusKey?: string;
+  collapseSignal?: number;
 }) {
   const isMobile = useIsMobile();
   const [snap, setSnap] = useState<Snap>('normal');
@@ -69,43 +60,20 @@ export function Drawer({
   // A drag ends with a click on the handle in some browsers; that click must not toggle.
   const suppressClick = useRef(false);
 
-  // Only requests made while this panel is open; an older one is not replayed.
-  const seenRequest = useRef(snapRequest?.id);
   useEffect(() => {
-    if (!snapRequest || snapRequest.id === seenRequest.current) return;
-    seenRequest.current = snapRequest.id;
-    setSnap(snapRequest.snap);
-  }, [snapRequest]);
+    if (collapseSignal === undefined) return;
+    setSnap('normal');
+  }, [collapseSignal]);
 
   // Focus moves into the panel when it opens and back when it closes (WAI-ARIA
   // dialog pattern), so keyboard and screen reader users notice it.
-  const opener = useRef<HTMLElement | null>(null);
   useEffect(() => {
-    opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     drawerRef.current?.focus({ preventScroll: true });
     return () => {
-      // Only when focus fell to the page with the panel; a click on the map
-      // that closed it keeps focus there.
-      if (document.activeElement && document.activeElement !== document.body) return;
-      // On a phone the opener can be hidden by then (a report opened from the
-      // list shows on the map tab); the active tab keeps focus on the page.
-      const target = canFocus(opener.current)
-        ? opener.current
-        : document.querySelector<HTMLElement>('.tabbar__item.is-active');
-      target?.focus({ preventScroll: true });
+      if (opener?.isConnected) opener.focus({ preventScroll: true });
     };
   }, []);
-
-  // Another report opened while the panel is open: focus moves to it too.
-  const shownKey = useRef(focusKey);
-  useEffect(() => {
-    if (focusKey === shownKey.current) return;
-    shownKey.current = focusKey;
-    const active = document.activeElement;
-    if (drawerRef.current?.contains(active)) return;
-    if (active instanceof HTMLElement) opener.current = active;
-    drawerRef.current?.focus({ preventScroll: true });
-  }, [focusKey]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -122,7 +90,11 @@ export function Drawer({
     drag.current = {
       startY: event.clientY,
       startHeight: drawer.getBoundingClientRect().height,
-      heights: null,
+      heights: {
+        peek: snapHeight(drawer, 'peek'),
+        normal: snapHeight(drawer, 'normal'),
+        full: snapHeight(drawer, 'full'),
+      },
       lastY: event.clientY,
       lastTime: event.timeStamp,
       velocity: 0,
@@ -138,11 +110,6 @@ export function Drawer({
     const distance = state.startY - event.clientY;
     if (!state.moved && Math.abs(distance) < 6) return;
     state.moved = true;
-    state.heights ??= {
-      peek: snapHeight(drawer, 'peek'),
-      normal: snapHeight(drawer, 'normal'),
-      full: snapHeight(drawer, 'full'),
-    };
     state.velocity = (state.lastY - event.clientY) / Math.max(1, event.timeStamp - state.lastTime);
     state.lastY = event.clientY;
     state.lastTime = event.timeStamp;
@@ -154,7 +121,7 @@ export function Drawer({
     const state = drag.current;
     const drawer = drawerRef.current;
     drag.current = null;
-    if (!state || !drawer || !state.moved || !state.heights) return;
+    if (!state || !drawer || !state.moved) return;
     suppressClick.current = true;
     const height = drawer.getBoundingClientRect().height;
     const { heights } = state;
@@ -191,9 +158,7 @@ export function Drawer({
       suppressClick.current = false;
       return;
     }
-    // A tap goes through all three heights, so the lowest one does not need a
-    // drag (WCAG 2.5.7): normal, full, peek, and back to normal.
-    setSnap((value) => (value === 'normal' ? 'full' : value === 'full' ? 'peek' : 'normal'));
+    setSnap((value) => (value === 'full' ? 'normal' : value === 'peek' ? 'normal' : 'full'));
   };
 
   return (

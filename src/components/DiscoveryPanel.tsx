@@ -52,8 +52,7 @@ export function DiscoveryPanel() {
       </div>
 
       <div className="panel__scroll">
-        {/* While searching or filtering, the results come first. */}
-        {filtered ? null : <ImpactSummary />}
+        <ImpactSummary />
 
         <div className="panel__list-head">
           <NearMeButton
@@ -77,7 +76,7 @@ export function DiscoveryPanel() {
               onClick={() => void reloadReports()}
               aria-label="Osveži prijave"
               title="Osveži prijave"
-              aria-disabled={reportsPhase === 'loading' || undefined}
+              disabled={reportsPhase === 'loading'}
             >
               <RefreshCw
                 size={14}
@@ -88,7 +87,6 @@ export function DiscoveryPanel() {
           </span>
         </div>
 
-        <h2 className="visually-hidden">Lista prijava</h2>
         <ReportList />
         <LoadMoreButton />
 

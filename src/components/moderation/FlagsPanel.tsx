@@ -104,7 +104,7 @@ export function FlagsPanel() {
     <div className="flags">
       <div className="flags__head">
         <span className="eyebrow">Otvorene prijave sadržaja</span>
-        <button type="button" className="link-btn" onClick={() => void load()} aria-disabled={loading || undefined}>
+        <button type="button" className="link-btn" onClick={() => void load()} disabled={loading}>
           <RefreshCw size={12} aria-hidden="true" /> Osveži
         </button>
       </div>
@@ -129,7 +129,7 @@ export function FlagsPanel() {
                   type="button"
                   className="btn btn--quiet btn--sm"
                   onClick={() => openReport(flag)}
-                  aria-disabled={!report || undefined}
+                  disabled={!report}
                 >
                   <ExternalLink size={12} aria-hidden="true" /> Otvori prijavu
                 </button>
@@ -137,7 +137,7 @@ export function FlagsPanel() {
                   type="button"
                   className="btn btn--quiet btn--sm"
                   onClick={() => void resolve(flag, 'dismissed')}
-                  aria-disabled={busyId === flag.id || undefined}
+                  disabled={busyId === flag.id}
                 >
                   Odbij
                 </button>
@@ -145,7 +145,7 @@ export function FlagsPanel() {
                   type="button"
                   className="btn btn--primary btn--sm"
                   onClick={() => void resolve(flag, 'resolved')}
-                  aria-disabled={busyId === flag.id || undefined}
+                  disabled={busyId === flag.id}
                 >
                   {busyId === flag.id ? <Spinner size={12} /> : null}
                   Rešeno

@@ -80,8 +80,6 @@ export function ResolveDialog({ reportId }: { reportId: string }) {
       title="Označi kao sanirano"
       description="Pošalji fotografiju sadašnjeg stanja. Kada moderator potvrdi, prijava postaje zelena."
       size="md"
-      // The photo is the one required answer, and a button does not open the phone keyboard.
-      initialFocus={() => document.getElementById('resolve-photo-button')}
       onClose={() => {
         if (!submitting) closeModal();
       }}
@@ -91,7 +89,7 @@ export function ResolveDialog({ reportId }: { reportId: string }) {
             type="button"
             className="btn btn--quiet btn--sm"
             onClick={closeModal}
-            aria-disabled={submitting || undefined}
+            disabled={submitting}
           >
             Otkaži
           </button>
@@ -99,7 +97,7 @@ export function ResolveDialog({ reportId }: { reportId: string }) {
             type="button"
             className="btn btn--primary btn--sm"
             onClick={() => void submit()}
-            aria-disabled={submitting || undefined}
+            disabled={submitting}
           >
             {submitting ? <Spinner size={13} /> : <CheckCircle2 size={13} aria-hidden="true" />}
             {submitting ? 'Šaljem…' : 'Pošalji na potvrdu'}
@@ -147,7 +145,6 @@ export function ResolveDialog({ reportId }: { reportId: string }) {
           />
         </div>
       </div>
-      <p className="field__hint">Potrebna je bar jedna fotografija sadašnjeg stanja.</p>
 
       <div className="field">
         <div className="field__top">

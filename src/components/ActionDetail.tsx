@@ -5,6 +5,7 @@ import {
   Check,
   Clock,
   ExternalLink,
+  HandHeart,
   MapPin,
   Pencil,
   ShieldCheck,
@@ -23,7 +24,6 @@ import { PhotoGallery } from './PhotoGallery';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { SectionLabel, Spinner } from './ui/EmptyState';
 import { ActionStatusBadge } from './ui/ActionStatusBadge';
-import { ShareButton } from './ui/ShareButton';
 import { StatusBadge } from './ui/StatusBadge';
 
 export function ActionDetail() {
@@ -77,11 +77,13 @@ export function ActionDetail() {
     <Drawer
       label={`Akcija: ${action.title}`}
       onClose={closeSelection}
-      focusKey={action.id}
       className="drawer--action"
       footer={
         <div className="detail-foot">
-          <ShareButton title={action.title} />
+          <span className="link-btn link-btn--muted">
+            <HandHeart size={13} aria-hidden="true" />
+            Akcija zajednice
+          </span>
           <span className="detail-foot__hint">
             {actionReports.length}{' '}
             {plural(
@@ -271,7 +273,7 @@ export function ActionDetail() {
                   type="button"
                   className="btn btn--danger btn--sm"
                   onClick={() => void cancelAction()}
-                  aria-disabled={busy || undefined}
+                  disabled={busy}
                 >
                   {busy ? <Spinner size={13} /> : <X size={13} aria-hidden="true" />}
                   Potvrdi otkazivanje
@@ -280,7 +282,7 @@ export function ActionDetail() {
                   type="button"
                   className="btn btn--quiet btn--sm"
                   onClick={() => setConfirming(null)}
-                  aria-disabled={busy || undefined}
+                  disabled={busy}
                 >
                   Odustani
                 </button>
@@ -297,7 +299,7 @@ export function ActionDetail() {
                   type="button"
                   className="btn btn--danger btn--sm"
                   onClick={() => void removeAction()}
-                  aria-disabled={busy || undefined}
+                  disabled={busy}
                 >
                   {busy ? <Spinner size={13} /> : <Trash2 size={13} aria-hidden="true" />}
                   Potvrdi brisanje
@@ -306,7 +308,7 @@ export function ActionDetail() {
                   type="button"
                   className="btn btn--quiet btn--sm"
                   onClick={() => setConfirming(null)}
-                  aria-disabled={busy || undefined}
+                  disabled={busy}
                 >
                   Odustani
                 </button>
@@ -340,7 +342,7 @@ export function ActionDetail() {
             </div>
           )}
           <p className="admin-box__hint">
-            Akcije menjaju moderatori. Izmene odmah vide svi.
+            Akcije menjaju samo administratori. Izmene su vidljive svim posetiocima.
           </p>
         </div>
       ) : null}

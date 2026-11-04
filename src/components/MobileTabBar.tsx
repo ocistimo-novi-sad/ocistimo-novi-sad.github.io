@@ -1,19 +1,13 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { CalendarPlus, Map, Plus, Rows3, TriangleAlert } from 'lucide-react';
 import { isOpenReport, isUpcomingAction } from '../lib/counts';
 import { useApp, type MobileTab } from '../state/app-context';
-import { prefersReducedMotion } from '../lib/motion';
 
 /**
  * Mobile navigation: map or list (what they show is the layer switch), with
  * the report button in the middle. Moderators and admins also get
  * "Nova akcija" from it.
- *
- * Apple and Material keep a tab bar for places and put the main action in a
- * floating button above it. The team chose this shape in #39/PR #50: "Prijavi"
- * is the one thing a first visitor should find, so it sits where the thumb
- * already is, between the two views.
  */
 export function MobileTabBar() {
   const {
@@ -22,47 +16,37 @@ export function MobileTabBar() {
     layer,
     reports,
     actions,
+    selectedReport,
+    selectedAction,
+    composeOpen,
     startCompose,
     openModal,
     auth,
   } = useApp();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const createRef = useRef<HTMLButtonElement>(null);
-  const menuId = useId();
 
   useEffect(() => {
     if (!menuOpen) return;
-    // A pointer event, as taps on the map do not always produce mouse events;
-    // on release, not on press (WCAG 2.5.2).
-    const onPointerUp = (event: PointerEvent) => {
+    // pointerdown, not mousedown: taps on the map do not always produce a mousedown.
+    const onPointerDown = (event: PointerEvent) => {
       if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      setMenuOpen(false);
-      createRef.current?.focus();
+      if (event.key === 'Escape') setMenuOpen(false);
     };
-    document.addEventListener('pointerup', onPointerUp);
+    document.addEventListener('pointerdown', onPointerDown);
     document.addEventListener('keydown', onKeyDown);
     return () => {
-      document.removeEventListener('pointerup', onPointerUp);
+      document.removeEventListener('pointerdown', onPointerDown);
       document.removeEventListener('keydown', onKeyDown);
     };
   }, [menuOpen]);
 
   // Map and list slide like two sides of one screen where the browser supports it.
   const switchTab = (tab: MobileTab) => {
-    const reduceMotion = prefersReducedMotion();
-    // A second tap on Lista goes back to the top of the list.
-    if (tab === mobileTab) {
-      if (tab === 'list') {
-        document
-          .querySelector('.discovery .panel__scroll')
-          ?.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
-      }
-      return;
-    }
+    if (tab === mobileTab) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!('startViewTransition' in document) || reduceMotion) {
       setMobileTab(tab);
       return;
@@ -70,6 +54,8 @@ export function MobileTabBar() {
     document.documentElement.dataset.slide = tab === 'list' ? 'left' : 'right';
     document.startViewTransition(() => flushSync(() => setMobileTab(tab)));
   };
+
+  if (selectedReport || selectedAction || composeOpen) return null;
 
   // Only what people can still act on: upcoming actions, open reports (#31, #33).
   const now = Date.now();
@@ -98,31 +84,24 @@ export function MobileTabBar() {
         <span>Mapa</span>
       </button>
 
-      {/* For moderators a short list that opens and closes (WAI-ARIA disclosure). */}
-      <div
-        className="tabbar__create"
-        ref={menuRef}
-        onBlur={(event) => {
-          if (!menuRef.current?.contains(event.relatedTarget as Node | null)) setMenuOpen(false);
-        }}
-      >
+      <div className="tabbar__create" ref={menuRef}>
         <button
-          ref={createRef}
           type="button"
           className="tabbar__item tabbar__item--cta"
           data-guide="create"
           onClick={onCreate}
           aria-expanded={auth.isModerator ? menuOpen : undefined}
-          aria-controls={auth.isModerator && menuOpen ? menuId : undefined}
+          aria-haspopup={auth.isModerator ? 'menu' : undefined}
         >
           <Plus size={20} aria-hidden="true" />
           <span>Prijavi</span>
         </button>
 
         {menuOpen ? (
-          <div className="tabbar__menu" id={menuId}>
+          <div className="tabbar__menu" role="menu">
             <button
               type="button"
+              role="menuitem"
               onClick={() => {
                 setMenuOpen(false);
                 startCompose();
@@ -132,6 +111,7 @@ export function MobileTabBar() {
             </button>
             <button
               type="button"
+              role="menuitem"
               onClick={() => {
                 setMenuOpen(false);
                 openModal({ kind: 'admin' });

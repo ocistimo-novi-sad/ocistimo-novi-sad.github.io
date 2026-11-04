@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { TriangleAlert } from 'lucide-react';
 import { ACTION_STATUSES, APP, LIMITS } from '../../config';
 import { usePhotoUploads } from '../../hooks/usePhotoUploads';
@@ -9,7 +9,6 @@ import { droppedImages, imagesEnabled, removeImages } from '../../services/image
 import { useApp } from '../../state/app-context';
 import type { ActionStatus, CleanupAction, NewActionInput, Report } from '../../types';
 import { CategoryGlyph } from '../ui/CategoryGlyph';
-import { ErrorSummary, FieldError } from '../ui/FormErrors';
 import { Spinner } from '../ui/EmptyState';
 import { PhotoPicker } from '../ui/PhotoPicker';
 import { StatusDot } from '../ui/StatusBadge';
@@ -35,18 +34,6 @@ type ErrorKey =
   | 'supplies';
 
 type Errors = Partial<Record<ErrorKey, string>>;
-
-/** Fields in form order, and the input each error links to. */
-const FIELD_ORDER: ErrorKey[] = ['title', 'description', 'date', 'meetingPoint', 'coordinates', 'supplies', 'organizer'];
-const FIELD_TARGET: Record<ErrorKey, string> = {
-  title: 'action-title',
-  description: 'action-description',
-  date: 'action-date',
-  meetingPoint: 'action-meeting',
-  coordinates: 'action-latitude',
-  supplies: 'action-supplies',
-  organizer: 'action-organizer',
-};
 
 function defaultDate(): Date {
   const date = new Date();
@@ -102,21 +89,6 @@ export function ActionForm({
   const [errors, setErrors] = useState<Errors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  // Same pattern as the report form: a summary with links takes focus (GOV.UK).
-  const [failedSaves, setFailedSaves] = useState(0);
-  const summaryRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (failedSaves > 0) summaryRef.current?.focus();
-  }, [failedSaves]);
-  const summaryErrors =
-    failedSaves > 0
-      ? FIELD_ORDER.flatMap((key) => {
-          const message = errors[key];
-          return message ? [{ id: FIELD_TARGET[key], message }] : [];
-        })
-      : [];
-  const describe = (key: ErrorKey, hint?: string) =>
-    [hint, errors[key] ? `action-error-${key}` : undefined].filter(Boolean).join(' ') || undefined;
 
   const latNumber = Number(latitude.replace(',', '.'));
   const lngNumber = Number(longitude.replace(',', '.'));
@@ -171,11 +143,9 @@ export function ActionForm({
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (saving) return;
     const nextErrors = validate();
-    setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
-      setFailedSaves((value) => value + 1);
+      setErrors(nextErrors);
       return;
     }
 
@@ -243,7 +213,6 @@ export function ActionForm({
   return (
     <form className="admin-form" onSubmit={(event) => void submit(event)}>
       <div className="admin-form__scroll">
-        <ErrorSummary ref={summaryRef} errors={summaryErrors} />
         {submitError ? (
           <div className="form-alert" role="alert">
             <TriangleAlert size={15} aria-hidden="true" />
@@ -268,13 +237,9 @@ export function ActionForm({
               maxLength={TITLE_MAX}
               onChange={(event) => setTitle(event.target.value)}
               placeholder="Na primer: Jesenje čišćenje Futoškog parka"
-              aria-invalid={Boolean(errors.title)}
-              aria-describedby={describe('title')}
               disabled={saving}
             />
-            {errors.title ? (
-              <FieldError id="action-error-title">{errors.title}</FieldError>
-            ) : null}
+            {errors.title ? <p className="field__error">{errors.title}</p> : null}
           </div>
 
           <div className={`field${errors.description ? ' has-error' : ''}`}>
@@ -291,13 +256,9 @@ export function ActionForm({
               maxLength={DESCRIPTION_MAX}
               onChange={(event) => setDescription(event.target.value)}
               placeholder="Šta se radi, kako je organizovano, šta učesnici treba da znaju."
-              aria-invalid={Boolean(errors.description)}
-              aria-describedby={describe('description')}
               disabled={saving}
             />
-            {errors.description ? (
-              <FieldError id="action-error-description">{errors.description}</FieldError>
-            ) : null}
+            {errors.description ? <p className="field__error">{errors.description}</p> : null}
           </div>
 
           <div className="field">
@@ -388,13 +349,9 @@ export function ActionForm({
                 type="datetime-local"
                 value={dateValue}
                 onChange={(event) => setDateValue(event.target.value)}
-                aria-invalid={Boolean(errors.date)}
-                aria-describedby={describe('date')}
                 disabled={saving}
               />
-              {errors.date ? (
-              <FieldError id="action-error-date">{errors.date}</FieldError>
-            ) : null}
+              {errors.date ? <p className="field__error">{errors.date}</p> : null}
             </div>
 
             <div className={`field${errors.meetingPoint ? ' has-error' : ''}`}>
@@ -411,12 +368,10 @@ export function ActionForm({
                 maxLength={MEETING_MAX}
                 onChange={(event) => setMeetingPoint(event.target.value)}
                 placeholder="Ulaz u park, kod spomenika…"
-                aria-invalid={Boolean(errors.meetingPoint)}
-                aria-describedby={describe('meetingPoint')}
                 disabled={saving}
               />
               {errors.meetingPoint ? (
-                <FieldError id="action-error-meetingPoint">{errors.meetingPoint}</FieldError>
+                <p className="field__error">{errors.meetingPoint}</p>
               ) : null}
             </div>
           </div>
@@ -427,13 +382,10 @@ export function ActionForm({
               <label className="coord-input">
                 <span>Geografska širina</span>
                 <input
-                  id="action-latitude"
                   type="text"
                   inputMode="decimal"
                   value={latitude}
                   onChange={(event) => setLatitude(event.target.value)}
-                  aria-invalid={Boolean(errors.coordinates)}
-                  aria-describedby={describe('coordinates')}
                   disabled={saving}
                 />
               </label>
@@ -444,14 +396,12 @@ export function ActionForm({
                   inputMode="decimal"
                   value={longitude}
                   onChange={(event) => setLongitude(event.target.value)}
-                  aria-invalid={Boolean(errors.coordinates)}
-                  aria-describedby={describe('coordinates')}
                   disabled={saving}
                 />
               </label>
             </div>
             {errors.coordinates ? (
-              <FieldError id="action-error-coordinates">{errors.coordinates}</FieldError>
+              <p className="field__error">{errors.coordinates}</p>
             ) : null}
           </div>
 
@@ -515,16 +465,10 @@ export function ActionForm({
               value={suppliesText}
               onChange={(event) => setSuppliesText(event.target.value)}
               placeholder={'Rukavice\nVreće za otpad\nGrablje i metle'}
-              aria-invalid={Boolean(errors.supplies)}
-              aria-describedby={describe('supplies', 'action-hint-supplies')}
               disabled={saving}
             />
-            <p className="field__hint" id="action-hint-supplies">
-              Jedna stavka po redu. Najviše {MAX_SUPPLIES} stavki.
-            </p>
-            {errors.supplies ? (
-              <FieldError id="action-error-supplies">{errors.supplies}</FieldError>
-            ) : null}
+            <p className="field__hint">Jedna stavka po redu. Najviše {MAX_SUPPLIES} stavki.</p>
+            {errors.supplies ? <p className="field__error">{errors.supplies}</p> : null}
           </div>
 
           <div className={`field${errors.organizer ? ' has-error' : ''}`}>
@@ -541,13 +485,9 @@ export function ActionForm({
               maxLength={ORGANIZER_MAX}
               onChange={(event) => setOrganizerName(event.target.value)}
               placeholder="Udruženje, mesna zajednica ili ime organizatora"
-              aria-invalid={Boolean(errors.organizer)}
-              aria-describedby={describe('organizer')}
               disabled={saving}
             />
-            {errors.organizer ? (
-              <FieldError id="action-error-organizer">{errors.organizer}</FieldError>
-            ) : null}
+            {errors.organizer ? <p className="field__error">{errors.organizer}</p> : null}
           </div>
 
           <div className="field">
@@ -573,18 +513,10 @@ export function ActionForm({
       </div>
 
       <div className="admin-form__actions">
-        <button
-          type="button"
-          className="btn btn--quiet"
-          onClick={() => {
-            if (!saving) onCancel();
-          }}
-          aria-disabled={saving || undefined}
-        >
+        <button type="button" className="btn btn--quiet" onClick={onCancel} disabled={saving}>
           Nazad
         </button>
-        {/* Not disabled while saving, so focus stays on it. */}
-        <button type="submit" className="btn btn--primary" aria-disabled={saving || undefined}>
+        <button type="submit" className="btn btn--primary" disabled={saving}>
           {saving ? <Spinner size={15} /> : null}
           {saving ? 'Čuvanje…' : action ? 'Sačuvaj izmene' : 'Objavi akciju'}
         </button>

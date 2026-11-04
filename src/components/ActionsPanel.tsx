@@ -119,10 +119,11 @@ export function ActionsPanel() {
           label="Pretraga akcija"
         />
 
-        <div className="segmented" role="group" aria-label="Period akcija">
+        <div className="segmented" role="tablist" aria-label="Period akcija">
           <button
             type="button"
-            aria-pressed={scope === 'upcoming'}
+            role="tab"
+            aria-selected={scope === 'upcoming'}
             className={`segmented__item${scope === 'upcoming' ? ' is-active' : ''}`}
             onClick={() => setScope('upcoming')}
           >
@@ -131,7 +132,8 @@ export function ActionsPanel() {
           </button>
           <button
             type="button"
-            aria-pressed={scope === 'past'}
+            role="tab"
+            aria-selected={scope === 'past'}
             className={`segmented__item${scope === 'past' ? ' is-active' : ''}`}
             onClick={() => setScope('past')}
           >
@@ -152,9 +154,6 @@ export function ActionsPanel() {
       </div>
 
       <div className="panel__scroll">
-        <h2 className="visually-hidden">
-          {scope === 'upcoming' ? 'Predstojeće akcije' : 'Završene akcije'}
-        </h2>
         <div className="panel__list-head">
           <NearMeButton active={actionsNearest} onToggle={setActionsNearest} />
           <span className="panel__list-tools">
@@ -167,7 +166,7 @@ export function ActionsPanel() {
               onClick={() => void reloadActions()}
               aria-label="Osveži akcije"
               title="Osveži akcije"
-              aria-disabled={actionsPhase === 'loading' || undefined}
+              disabled={actionsPhase === 'loading'}
             >
               <RefreshCw
                 size={14}

@@ -42,7 +42,7 @@ export function DeleteReportButton({
         type="button"
         className="btn btn--danger btn--sm"
         onClick={() => void confirm()}
-        aria-disabled={busy || undefined}
+        disabled={busy}
       >
         {busy ? <Spinner size={12} /> : <Trash2 size={12} aria-hidden="true" />}
         Obriši
@@ -51,7 +51,7 @@ export function DeleteReportButton({
         type="button"
         className="btn btn--quiet btn--sm"
         onClick={() => setConfirming(false)}
-        aria-disabled={busy || undefined}
+        disabled={busy}
       >
         Ne
       </button>

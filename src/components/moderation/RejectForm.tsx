@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { LIMITS } from '../../config';
 import { Spinner } from '../ui/EmptyState';
-import { FieldError } from '../ui/FormErrors';
 
 /**
  * Inline rejection form. Lives inside the review pane (and the report drawer)
@@ -41,9 +40,7 @@ export function RejectForm({
   return (
     <div className="reject-form">
       <p className="reject-form__title">{heading}</p>
-      <p className="reject-form__hint" id="reject-reason-hint">
-        Najmanje {LIMITS.rejectReasonMin} znakova. Autor će videti razlog uz svoju prijavu.
-      </p>
+      <p className="reject-form__hint">Autor će videti razlog uz svoju prijavu.</p>
 
       <div className="preset-row" role="group" aria-label="Česti razlozi">
         {presets.map((preset) => (
@@ -55,7 +52,7 @@ export function RejectForm({
               setReason(preset);
               setError(null);
             }}
-            aria-disabled={busy || undefined}
+            disabled={busy}
           >
             {preset}
           </button>
@@ -81,21 +78,20 @@ export function RejectForm({
             if (error) setError(null);
           }}
           aria-invalid={Boolean(error)}
-          aria-describedby={error ? 'reject-reason-hint reject-reason-error' : 'reject-reason-hint'}
           disabled={busy}
         />
         {error ? (
-          <FieldError id="reject-reason-error" alert>
+          <p className="field__error" role="alert">
             {error}
-          </FieldError>
+          </p>
         ) : null}
       </div>
 
       <div className="reject-form__actions">
-        <button type="button" className="btn btn--quiet btn--sm" onClick={onCancel} aria-disabled={busy || undefined}>
+        <button type="button" className="btn btn--quiet btn--sm" onClick={onCancel} disabled={busy}>
           Odustani
         </button>
-        <button type="button" className="btn btn--danger btn--sm" onClick={submit} aria-disabled={busy || undefined}>
+        <button type="button" className="btn btn--danger btn--sm" onClick={submit} disabled={busy}>
           {busy ? <Spinner size={12} /> : null}
           Odbij
         </button>

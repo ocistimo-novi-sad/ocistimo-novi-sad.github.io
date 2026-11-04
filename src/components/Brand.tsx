@@ -3,9 +3,7 @@ import { APP } from '../config';
 export function BrandMark({ size = 26 }: { size?: number }) {
   return (
     <img
-      // Small copies for the 26px header logo; brand-mark.png (192px) stays the favicon.
-      src={`${import.meta.env.BASE_URL}brand-mark-52.png`}
-      srcSet={`${import.meta.env.BASE_URL}brand-mark-52.png 2x, ${import.meta.env.BASE_URL}brand-mark-78.png 3x`}
+      src={`${import.meta.env.BASE_URL}brand-mark.png`}
       width={size}
       height={size}
       alt=""

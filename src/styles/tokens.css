@@ -14,15 +14,11 @@
 
   --ink: #1c221e;
   --ink-2: #363d38;
-  /* Secondary text. One grey, dark enough for 4.5:1 on every tinted surface
-     (4.7:1 on --paper-2), not only on white (WCAG 1.4.3). */
-  --muted: #636961;
-  --muted-2: var(--muted);
+  --muted: #6a7068;
+  --muted-2: #737870;
 
-  /* Decorative lines. Text fields use --line-field, which reaches 3:1 (WCAG 1.4.11). */
   --line: #e2e1da;
   --line-strong: #cbcdc3;
-  --line-field: #7f847b;
 
   --forest: #234c3b;
   --forest-2: #1a3b2d;
@@ -72,19 +68,6 @@
   --shadow-2: 0 1px 2px rgba(28, 34, 30, 0.06), 0 10px 28px -12px rgba(28, 34, 30, 0.28);
   --shadow-3: 0 2px 6px rgba(28, 34, 30, 0.08), 0 18px 40px -16px rgba(28, 34, 30, 0.32);
 
-  /* Type scale by role, in rem so it follows the reader's browser setting.
-     Apple HIG and Material 3 put body text at 16-17px; nothing people read is
-     under 13px, and 11px is only for numbers in small badges. */
-  --text-display: 1.5rem; /* 24px: detail and form titles */
-  --text-title: 1.25rem; /* 20px: dialog and section titles */
-  --text-lead: 1.125rem; /* 18px: hero headings, action date and time */
-  --text-heading: 1rem; /* 16px: card titles, form sections */
-  --text-body: 1rem; /* 16px: descriptions and other long text, text fields */
-  --text-ui: 0.875rem; /* 14px: buttons, labels, hints, notices, errors */
-  --text-meta: 0.8125rem; /* 13px: card details, bylines, small buttons */
-  --text-label: 0.75rem; /* 12px: overlines, badges, counters, chips */
-  --text-micro: 0.6875rem; /* 11px: numbers in small badges */
-
   --font-display: 'Space Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
     system-ui, sans-serif;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui,
@@ -95,9 +78,6 @@
   --header-h: 60px;
   --panel-w: 372px;
   --drawer-w: 428px;
-  /* Side insets for the notch and Dynamic Island in landscape (viewport-fit=cover). */
-  --safe-l: env(safe-area-inset-left, 0px);
-  --safe-r: env(safe-area-inset-right, 0px);
   --tabbar-h: 60px;
 
   --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
@@ -123,14 +103,12 @@
   --cat-other: #64748b;
 }
 
-/* Category identity is carried by a distinct colour plus an icon. --cat-ink is the
-   same hue, dark enough for small text and for white text on it (4.5:1). */
+/* Category identity is carried by a distinct colour plus an icon. */
 [data-category='unwanted_graffiti'],
 .pin--unwanted_graffiti,
 .legend-swatch--unwanted_graffiti {
   --cat: var(--cat-unwanted_graffiti);
   --cat-tint: #ecebfb;
-  --cat-ink: #5b5bd6;
 }
 
 [data-category='fan_graffiti'],
@@ -138,7 +116,6 @@
 .legend-swatch--fan_graffiti {
   --cat: var(--cat-fan_graffiti);
   --cat-tint: #f9e8f1;
-  --cat-ink: #b8327f;
 }
 
 [data-category='stickers_posters'],
@@ -146,7 +123,6 @@
 .legend-swatch--stickers_posters {
   --cat: var(--cat-stickers_posters);
   --cat-tint: #e5f2e7;
-  --cat-ink: #317843;
 }
 
 [data-category='illegal_dump'],
@@ -154,7 +130,6 @@
 .legend-swatch--illegal_dump {
   --cat: var(--cat-illegal_dump);
   --cat-tint: #fbf0dc;
-  --cat-ink: #936016;
 }
 
 [data-category='damaged_infrastructure'],
@@ -162,7 +137,6 @@
 .legend-swatch--damaged_infrastructure {
   --cat: var(--cat-damaged_infrastructure);
   --cat-tint: #fbe9e5;
-  --cat-ink: #b64531;
 }
 
 [data-category='other'],
@@ -170,5 +144,4 @@
 .legend-swatch--other {
   --cat: var(--cat-other);
   --cat-tint: #eceff3;
-  --cat-ink: #5d6c82;
 }

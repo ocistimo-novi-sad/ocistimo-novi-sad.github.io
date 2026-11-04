@@ -104,7 +104,7 @@
   margin: 12px 0 6px;
   color: var(--ink);
   font-family: var(--font-display);
-  font-size: var(--text-display);
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.028em;
   line-height: 1.15;
@@ -117,7 +117,7 @@
   gap: 4px;
   margin-bottom: 14px;
   color: var(--muted);
-  font-size: var(--text-meta);
+  font-size: 12px;
 }
 
 .demo-pill {
@@ -127,7 +127,7 @@
   background: var(--amber-tint);
   color: var(--amber);
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   border-radius: var(--radius-pill);
@@ -172,7 +172,7 @@
   background: rgba(20, 28, 22, 0.72);
   color: #fff;
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 11px;
   border-radius: var(--radius-pill);
 }
 
@@ -184,7 +184,7 @@
   gap: 6px;
   height: 100%;
   color: var(--muted);
-  font-size: var(--text-meta);
+  font-size: 12.5px;
 }
 
 .gallery__thumbs {
@@ -235,13 +235,13 @@
 
 .photo-empty p {
   color: var(--ink-2);
-  font-size: var(--text-ui);
+  font-size: 13px;
   font-weight: 500;
 }
 
 .photo-empty span {
   color: var(--muted);
-  font-size: var(--text-ui);
+  font-size: 12px;
 }
 
 /* --- Detail sections ----------------------------------------------------- */
@@ -253,16 +253,15 @@
 }
 
 .detail-prose {
-  max-width: 34em;
   color: var(--ink-2);
-  font-size: var(--text-body);
-  line-height: 1.55;
+  font-size: 13px;
+  line-height: 1.62;
   white-space: pre-line;
 }
 
 .detail-prose--muted {
   color: var(--muted);
-  font-size: var(--text-body);
+  font-size: 13px;
 }
 
 .location-box {
@@ -278,7 +277,7 @@
   gap: 6px;
   margin-bottom: 5px;
   color: var(--ink);
-  font-size: var(--text-ui);
+  font-size: 12.5px;
   font-weight: 500;
 }
 
@@ -292,14 +291,14 @@
   margin-bottom: 9px;
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 11px;
   letter-spacing: 0.02em;
 }
 
 .location-box__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 5px;
 }
 
 .related-action {
@@ -330,14 +329,14 @@
 .related-action__eyebrow {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 11px;
   letter-spacing: 0.13em;
   text-transform: uppercase;
 }
 
 .related-action strong {
   color: var(--ink);
-  font-size: var(--text-ui);
+  font-size: 13px;
   font-weight: 600;
   line-height: 1.35;
 }
@@ -347,7 +346,7 @@
   align-items: center;
   gap: 5px;
   color: var(--muted);
-  font-size: var(--text-meta);
+  font-size: 12px;
   line-height: 1.4;
 }
 
@@ -361,7 +360,7 @@
   gap: 3px;
   margin-top: 3px;
   color: var(--forest);
-  font-size: var(--text-meta);
+  font-size: 12.5px;
   font-weight: 600;
 }
 
@@ -370,7 +369,7 @@
   padding-top: 12px;
   border-top: 1px solid var(--line);
   color: var(--muted-2);
-  font-size: var(--text-meta);
+  font-size: 12px;
   line-height: 1.55;
 }
 
@@ -381,7 +380,7 @@
   padding-top: 10px;
   border-top: 1px solid var(--line);
   color: var(--muted-2);
-  font-size: var(--text-meta);
+  font-size: 12px;
 }
 
 .detail-meta a {
@@ -399,7 +398,7 @@
 .detail-foot__hint {
   color: var(--muted-2);
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -421,7 +420,7 @@
   margin-bottom: 8px;
   color: var(--forest);
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 11px;
   letter-spacing: 0.11em;
   text-transform: uppercase;
 }
@@ -440,7 +439,7 @@
 .admin-box__hint {
   margin-top: 7px;
   color: var(--muted-2);
-  font-size: var(--text-meta);
+  font-size: 12px;
   line-height: 1.45;
 }
 
@@ -448,7 +447,7 @@
   margin: -8px 0 16px;
   color: var(--muted-2);
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 11px;
   letter-spacing: 0.04em;
 }
 
@@ -473,7 +472,7 @@
   gap: 6px;
   color: var(--forest);
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -499,7 +498,7 @@
 
 .delete-confirm__text {
   color: var(--alert-ink);
-  font-size: var(--text-meta);
+  font-size: 12.5px;
   font-weight: 500;
 }
 
@@ -523,7 +522,7 @@
   border-radius: var(--radius-md);
   background: var(--leaf-tint);
   color: var(--leaf-3);
-  font-size: var(--text-meta);
+  font-size: 12.5px;
 }
 
 .resolved-banner svg {
@@ -544,7 +543,7 @@
   border-radius: var(--radius-md);
   background: var(--surface-2);
   color: var(--ink-2);
-  font-size: var(--text-meta);
+  font-size: 13px;
   line-height: 1.5;
 }
 
@@ -604,7 +603,7 @@
   background: rgba(28, 34, 30, 0.72);
   color: #fff;
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 10.5px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -622,7 +621,7 @@
   border-radius: var(--radius-pill);
   background: rgba(28, 34, 30, 0.72);
   color: #fff;
-  font-size: var(--text-meta);
+  font-size: 12px;
 }
 
 .before-after__empty {
@@ -633,7 +632,7 @@
   gap: 5px;
   aspect-ratio: 4 / 3;
   color: var(--muted);
-  font-size: var(--text-meta);
+  font-size: 12.5px;
   text-align: center;
 }
 
@@ -668,7 +667,7 @@
   gap: 6px;
   margin-bottom: 5px;
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -683,7 +682,7 @@
 
 .report-plan__text {
   color: var(--ink-2);
-  font-size: var(--text-meta);
+  font-size: 12px;
   line-height: 1.55;
   white-space: pre-line;
 }
@@ -703,14 +702,14 @@
   margin-bottom: 3px;
   color: var(--alert-strong);
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .reject-note__reason {
   color: var(--alert-ink);
-  font-size: var(--text-meta);
+  font-size: 12px;
   line-height: 1.5;
 }
 
@@ -721,14 +720,14 @@
 }
 
 .reject-form__title {
-  font-size: var(--text-meta);
+  font-size: 12.5px;
   font-weight: 600;
 }
 
 .reject-form__hint {
   margin-top: -5px;
   color: var(--muted);
-  font-size: var(--text-meta);
+  font-size: 12.5px;
 }
 
 .reject-form .field {
@@ -744,7 +743,7 @@
 .admin-confirm p {
   margin-bottom: 8px;
   color: var(--ink-2);
-  font-size: var(--text-meta);
+  font-size: 13px;
 }
 
 .admin-confirm__actions {
@@ -791,33 +790,33 @@
 
 .action-hero__weekday {
   color: var(--muted);
-  font-size: var(--text-ui);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .action-hero__date strong {
   font-family: var(--font-display);
-  font-size: var(--text-lead);
+  font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.015em;
 }
 
-/* The start time matters as much as the date, so it is set the same way. */
 .action-hero__time {
   display: inline-flex;
   align-items: center;
   gap: 4px;
   color: var(--ink-2);
-  font-family: var(--font-display);
-  font-size: var(--text-lead);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+  font-size: 11px;
 }
 
 .action-hero__state {
   padding-top: 8px;
   border-top: 1px solid var(--line);
   color: var(--muted);
-  font-size: var(--text-ui);
+  font-size: 12px;
   line-height: 1.5;
 }
 
@@ -836,7 +835,7 @@
   align-items: center;
   gap: 7px;
   color: var(--ink-2);
-  font-size: var(--text-meta);
+  font-size: 12px;
 }
 
 .supply-list svg {
@@ -862,14 +861,14 @@
 }
 
 .organizer__name {
-  font-size: var(--text-meta);
+  font-size: 12.5px;
   font-weight: 600;
 }
 
 .organizer__note {
   margin-top: 3px;
   color: var(--muted);
-  font-size: var(--text-body);
+  font-size: 13px;
   line-height: 1.5;
 }
 
@@ -882,7 +881,7 @@
 .section-count {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 11px;
 }
 
 .linked-reports {
@@ -933,7 +932,7 @@
 
 .linked-report__title {
   overflow: hidden;
-  font-size: var(--text-meta);
+  font-size: 12px;
   font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -953,17 +952,19 @@
   padding-right: 34px;
 }
 
-/* A short sentence, so sentence case: capitals are kept for one- or two-word labels. */
 .compose-head__hint {
   color: var(--muted-2);
-  font-size: var(--text-meta);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
 }
 
 .compose-title {
   margin: 9px 0 5px;
   color: var(--ink);
   font-family: var(--font-display);
-  font-size: var(--text-display);
+  font-size: 23px;
   font-weight: 700;
   letter-spacing: -0.028em;
   line-height: 1.18;
@@ -972,7 +973,7 @@
 .compose-sub {
   margin-bottom: 14px;
   color: var(--muted);
-  font-size: var(--text-ui);
+  font-size: 13px;
   line-height: 1.55;
 }
 
@@ -983,7 +984,7 @@
   margin-bottom: 14px;
   padding: 9px 10px;
   border: 1px solid;
-  font-size: var(--text-ui);
+  font-size: 12px;
   line-height: 1.5;
   border-radius: var(--radius);
 }
@@ -1029,14 +1030,14 @@
   border: 1px solid var(--line);
   color: var(--muted-2);
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 11px;
   letter-spacing: 0.06em;
   border-radius: var(--radius-pill);
 }
 
 .form-section__head h3 {
   font-family: var(--font-display);
-  font-size: var(--text-heading);
+  font-size: 15px;
   font-weight: 650;
   letter-spacing: -0.015em;
 }
@@ -1057,7 +1058,7 @@
   margin-left: auto;
   color: var(--muted-2);
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -1103,15 +1104,17 @@
 }
 
 .location-pick__body strong {
-  font-size: var(--text-ui);
+  font-size: 13px;
   font-weight: 600;
 }
 
-/* An instruction, so it wraps instead of being cut off on a narrow phone. */
 .location-pick__body span {
+  overflow: hidden;
   color: var(--muted);
-  font-size: var(--text-meta);
-  line-height: 1.4;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .location-actions {
@@ -1121,8 +1124,6 @@
   justify-content: space-between;
   gap: 8px;
   margin-top: 7px;
-  /* Room below, so the button's touch area does not cover the next label. */
-  margin-bottom: 12px;
 }
 
 .field--fieldset .field__label {
@@ -1145,7 +1146,7 @@
   border: 1px solid var(--line);
   background: var(--surface);
   color: var(--ink-2);
-  font-size: var(--text-meta);
+  font-size: 12px;
   font-weight: 500;
   line-height: 1.25;
   cursor: pointer;
@@ -1221,7 +1222,7 @@
   padding: 2px 0;
   background: rgba(20, 28, 22, 0.62);
   color: #fff;
-  font-size: var(--text-label);
+  font-size: 11px;
   text-align: center;
 }
 
@@ -1267,27 +1268,20 @@
   border-radius: 50%;
 }
 
-/* The dot stays 18px; the button around it is a 32px target in the corner
-   (WCAG 2.5.8), 40px on touch screens. */
 .photo-draft__remove {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 3px;
+  right: 3px;
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  color: #fff;
-}
-
-.photo-draft__remove svg {
-  box-sizing: content-box;
-  padding: 3px;
-  border-radius: 50%;
+  width: 18px;
+  height: 18px;
   background: rgba(28, 34, 30, 0.72);
+  color: #fff;
+  border-radius: 50%;
 }
 
-.photo-draft__remove:hover svg {
+.photo-draft__remove:hover {
   background: var(--alert);
 }
 
@@ -1302,7 +1296,7 @@
   border: 1px dashed var(--line-strong);
   background: var(--surface-2);
   color: var(--muted);
-  font-size: var(--text-meta);
+  font-size: 12px;
   transition:
     border-color 0.12s var(--ease),
     background-color 0.12s var(--ease),
@@ -1319,7 +1313,7 @@
 .photo-add__count {
   color: var(--muted-2);
   font-family: var(--font-mono);
-  font-size: var(--text-label);
+  font-size: 11px;
 }
 
 .compose-foot {
@@ -1343,7 +1337,7 @@
 
 .compose-foot__note {
   color: var(--muted-2);
-  font-size: var(--text-meta);
+  font-size: 12px;
   line-height: 1.45;
   text-align: center;
 }
@@ -1356,7 +1350,7 @@
   border: 1px solid var(--alert-line);
   background: var(--alert-tint);
   color: var(--alert-ink);
-  font-size: var(--text-ui);
+  font-size: 12.5px;
   line-height: 1.45;
   border-radius: var(--radius);
 }
@@ -1397,7 +1391,7 @@
 
 .confirm-sheet__title {
   font-family: var(--font-display);
-  font-size: var(--text-title);
+  font-size: 18px;
   font-weight: 650;
 }
 
@@ -1442,7 +1436,7 @@
 .form-section__intro {
   margin: -4px 0 12px;
   color: var(--muted);
-  font-size: var(--text-meta);
+  font-size: 13px;
   line-height: 1.5;
 }
 
@@ -1463,11 +1457,11 @@
   border-radius: var(--radius-pill);
   background: var(--surface);
   color: var(--ink-2);
-  font-size: var(--text-meta);
+  font-size: 12px;
   text-align: left;
 }
 
-.preset-chip:hover:not(:disabled, [aria-disabled='true']) {
+.preset-chip:hover:not(:disabled) {
   border-style: solid;
   border-color: var(--leaf);
   background: var(--leaf-tint);
@@ -1480,7 +1474,7 @@
   color: var(--leaf-3);
 }
 
-.preset-chip:is(:disabled, [aria-disabled='true']):not(.is-used) {
+.preset-chip:disabled:not(.is-used) {
   opacity: 0.55;
 }
 
@@ -1524,7 +1518,7 @@
   padding: 9px 11px;
   border-bottom: 1px solid var(--line);
   color: var(--muted);
-  font-size: var(--text-meta);
+  font-size: 12px;
 }
 
 .submit-success__steps li:last-child {
@@ -1550,7 +1544,7 @@
 
 .submit-success__note {
   color: var(--muted);
-  font-size: var(--text-meta);
+  font-size: 12.5px;
   line-height: 1.55;
 }
 
@@ -1564,7 +1558,7 @@
 .compose-review p:last-child {
   margin-top: 5px;
   color: var(--muted);
-  font-size: var(--text-meta);
+  font-size: 12px;
   line-height: 1.5;
 }
 
@@ -1584,7 +1578,7 @@
   justify-items: center;
   gap: 6px;
   color: var(--muted);
-  font-size: var(--text-meta);
+  font-size: 12.5px;
   font-weight: 500;
   line-height: 1.25;
   text-align: center;
@@ -1640,16 +1634,4 @@
 
 .progress li.is-rejected::before {
   background: var(--alert-line);
-}
-
-/* Always in the page, so screen readers hear it when text appears; no gap while empty. */
-.location-note:empty {
-  margin: 0;
-}
-
-/* Comfortable line length for sentences on wide panels and tablets. */
-.compose-sub,
-.form-section__intro,
-.detail-note {
-  max-width: 65ch;
 }
