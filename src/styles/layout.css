@@ -44,7 +44,7 @@
 .brand__name {
   color: var(--ink);
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.12em;
 }
@@ -53,7 +53,7 @@
   margin-top: 4px;
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: var(--text-2xs);
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
@@ -72,7 +72,7 @@
   background: var(--amber-tint);
   color: var(--amber);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -120,7 +120,7 @@
   background: var(--sun-tint);
   color: var(--amber-ink);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 600;
 }
 
@@ -148,7 +148,7 @@
   border-color: var(--forest);
   background: var(--forest);
   color: #f4f3ed;
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.04em;
 }
@@ -181,14 +181,14 @@
 }
 
 .account__name {
-  font-size: 12.5px;
+  font-size: var(--text-xs);
   font-weight: 600;
 }
 
 .account__email {
   overflow: hidden;
   color: var(--muted);
-  font-size: 10.5px;
+  font-size: var(--text-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -202,7 +202,7 @@
   background: var(--forest-tint);
   color: var(--forest);
   font-family: var(--font-mono);
-  font-size: 9.5px;
+  font-size: var(--text-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -221,7 +221,7 @@
   height: 32px;
   padding: 0 8px;
   border-radius: var(--radius);
-  font-size: 12.5px;
+  font-size: var(--text-xs);
   text-align: left;
 }
 
@@ -652,7 +652,7 @@ button.impact-stat:hover {
   border-radius: var(--radius-md);
   background: var(--surface-2);
   color: var(--ink-2);
-  font-size: 12.5px;
+  font-size: var(--text-xs);
   font-weight: 500;
 }
 
@@ -673,7 +673,7 @@ button.impact-stat:hover {
   background: var(--leaf-2);
   color: #fff;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   line-height: 1.6;
   text-align: center;
 }
@@ -1039,7 +1039,7 @@ button.impact-stat:hover {
   border: 1px solid transparent;
   border-radius: var(--radius);
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 500;
   transition:
     background-color 0.14s var(--ease),
@@ -1049,7 +1049,7 @@ button.impact-stat:hover {
 .segmented__item span {
   color: var(--muted-2);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .segmented__item:hover {
@@ -1065,7 +1065,7 @@ button.impact-stat:hover {
 
 /* Reports vs. actions: filled so it never reads as a sub-filter. */
 .segmented--layer .segmented__item {
-  font-size: 13px;
+  font-size: var(--text-md);
   font-weight: 600;
 }
 
@@ -1294,7 +1294,7 @@ button.impact-stat:hover {
     gap: 2px;
     padding-top: 2px;
     color: var(--muted);
-    font-size: 11px;
+    font-size: var(--text-xs);
     font-weight: 500;
     letter-spacing: 0.01em;
   }
@@ -1360,7 +1360,7 @@ button.impact-stat:hover {
     padding: 0 12px;
     border-radius: var(--radius);
     color: var(--ink);
-    font-size: 13px;
+    font-size: var(--text-md);
     font-weight: 500;
     text-align: left;
   }
@@ -1381,7 +1381,7 @@ button.impact-stat:hover {
     background: var(--leaf-2);
     color: #fff;
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: var(--text-xs);
     font-weight: 500;
     line-height: 1.4;
     text-align: center;
@@ -1413,7 +1413,7 @@ button.impact-stat:hover {
   border-radius: var(--radius-pill);
   background: var(--forest-tint);
   color: var(--forest-2);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
