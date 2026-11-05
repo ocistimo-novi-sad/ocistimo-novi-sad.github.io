@@ -81,7 +81,9 @@ function PlanField({
   return (
     <div className={`field${error ? ' has-error' : ''}`}>
       <div className="field__top">
-        <label htmlFor={id}>{label}</label>
+        <label htmlFor={id}>
+          {label} <span className="field__optional">opciono</span>
+        </label>
         <span className="field__counter">
           {value.length}/{COMMUNITY_MAX}
         </span>
@@ -226,15 +228,14 @@ export function ComposeDrawer() {
       next.description = `Opis mora imati najmanje ${DESC_MIN} znakova.`;
     }
 
-    if (communityCan.trim().length < COMMUNITY_MIN) {
-      next.communityCan = communityCan.trim()
-        ? `Napiši bar ${COMMUNITY_MIN} znakova ili izaberi ponuđeno.`
-        : 'Napiši šta zajednica može sama ili izaberi ponuđeno.';
+    // Both plan fields are optional (#38); if filled, they still need a few words.
+    const community = communityCan.trim();
+    if (community && community.length < COMMUNITY_MIN) {
+      next.communityCan = `Napiši bar ${COMMUNITY_MIN} znakova ili ostavi prazno.`;
     }
-    if (helpNeeded.trim().length < COMMUNITY_MIN) {
-      next.helpNeeded = helpNeeded.trim()
-        ? `Napiši bar ${COMMUNITY_MIN} znakova ili izaberi ponuđeno.`
-        : 'Napiši za šta je potrebna pomoć ili izaberi ponuđeno.';
+    const help = helpNeeded.trim();
+    if (help && help.length < COMMUNITY_MIN) {
+      next.helpNeeded = `Napiši bar ${COMMUNITY_MIN} znakova ili ostavi prazno.`;
     }
 
     if (photos.length > LIMITS.imagesMax) {
@@ -589,29 +590,28 @@ export function ComposeDrawer() {
           ) : null}
         </div>
 
-        <div className={`location-pick${composeLocation ? ' is-set' : ''}${outsideArea ? ' is-error' : ''}`}>
+        {/* The whole card opens the map, so the form needs no extra button (#38). */}
+        <button
+          type="button"
+          id="compose-map-button"
+          className={`location-pick${composeLocation ? ' is-set' : ''}${outsideArea ? ' is-error' : ''}`}
+          onClick={focusMap}
+          disabled={submitting}
+        >
           <span className="location-pick__icon" aria-hidden="true">
             <Crosshair size={16} />
           </span>
-          <div className="location-pick__body">
+          <span className="location-pick__body">
             <strong>
               {composeLocation ? 'Lokacija je izabrana' : 'Lokacija nije izabrana'}
             </strong>
             <span>
               {composeLocation
                 ? formatCoordinates(composeLocation.latitude, composeLocation.longitude)
-                : 'Klikni na mapu da postaviš marker.'}
+                : 'Klikni na mapu da postaviš lokaciju'}
             </span>
-          </div>
-          <button
-            type="button"
-            id="compose-map-button"
-            className="btn btn--quiet btn--sm"
-            onClick={focusMap}
-          >
-            {composeLocation ? 'Pomeri' : 'Izaberi'}
-          </button>
-        </div>
+          </span>
+        </button>
 
         <div className="location-actions">
           <button
@@ -623,7 +623,6 @@ export function ComposeDrawer() {
             {locating ? <Spinner size={13} /> : <Navigation size={13} aria-hidden="true" />}
             {locating ? 'Traženje lokacije…' : 'Koristi moju lokaciju'}
           </button>
-          <span className="location-actions__hint">Tačka se postavlja klikom na mapu.</span>
         </div>
 
         {errors.location ? (
