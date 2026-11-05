@@ -5,7 +5,6 @@ import {
   Check,
   CheckCircle2,
   Clock3,
-  Copy,
   ExternalLink,
   Flag,
   MapPin,
@@ -320,16 +319,13 @@ export function ReportDetail() {
     openModal,
     selectAction,
     showReportOnMap,
-    notify,
   } = useApp();
 
   const [adminStatus, setAdminStatus] = useState<ReportStatus>('new');
   const [saving, setSaving] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (report) setAdminStatus(report.status);
-    setCopied(false);
   }, [report?.id, report?.status, report]);
 
   if (!report) return null;
@@ -347,17 +343,6 @@ export function ReportDetail() {
     report.moderatedByName && report.moderatedAt
       ? `${published ? 'Odobrio' : 'Pregledao'}: ${report.moderatedByName} · ${formatDateTime(report.moderatedAt)}`
       : null;
-
-  const copyCoordinates = async () => {
-    const text = formatCoordinates(report.latitude, report.longitude);
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2200);
-    } catch {
-      notify('error', 'Kopiranje nije uspelo. Označi koordinate ručno.');
-    }
-  };
 
   const saveStatus = async () => {
     setSaving(true);
@@ -573,10 +558,6 @@ export function ReportDetail() {
             >
               <ExternalLink size={13} aria-hidden="true" /> OpenStreetMap
             </a>
-            <button type="button" className="btn btn--quiet btn--sm" onClick={copyCoordinates}>
-              {copied ? <Check size={13} aria-hidden="true" /> : <Copy size={13} aria-hidden="true" />}
-              {copied ? 'Kopirano' : 'Kopiraj koordinate'}
-            </button>
             <button
               type="button"
               className="btn btn--quiet btn--sm"
