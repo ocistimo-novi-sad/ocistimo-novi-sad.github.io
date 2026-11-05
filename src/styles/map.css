@@ -185,7 +185,8 @@
 
 .pick-banner__text span {
   color: rgba(244, 243, 237, 0.72);
-  font-family: var(--font-mono);
+  /* Sans at 14px, so the hint reads below the bold title (#92). */
+  font-family: var(--font-sans);
   font-size: var(--text-xs);
   line-height: 1.4;
   white-space: normal;
@@ -209,7 +210,8 @@
   bottom: 14px;
   left: 14px;
   z-index: 400;
-  width: 206px;
+  /* Wide enough for the longest category at 14px (#92). */
+  width: 240px;
   padding: 11px 12px 11px;
   border: 1px solid rgba(28, 34, 30, 0.1);
   border-radius: var(--radius-lg);
@@ -835,7 +837,8 @@
 
 .leaflet-tooltip.ns-tooltip--rich {
   width: max-content;
-  max-width: 260px;
+  /* Room for category · status on one line at 14px (#92). */
+  max-width: 340px;
   padding: 6px 10px 6px 6px;
   white-space: normal;
 }
@@ -865,7 +868,7 @@
 
 .ns-tooltip__title {
   overflow: hidden;
-  font-size: var(--text-xs);
+  font-size: var(--text-md);
   font-weight: 600;
   line-height: 1.35;
   text-overflow: ellipsis;

@@ -118,6 +118,12 @@
     left: 10px;
   }
 
+  /* With 14px chips the row no longer fits; wrap so "Očisti sve" stays visible (#92). */
+  .map-mobile-bar .active-filters {
+    flex-wrap: wrap;
+    overflow-x: visible;
+  }
+
   .map-area-toggle,
   .map-readout,
   .map-legend,
