@@ -405,6 +405,7 @@ Moderator ima sve što i član zajednice, plus stavku **Moderacija** u meniju na
 - **Gde:** detalji objavljene, nerešene prijave → okvir „Moderacija“ → status „Rešeno“ → „Sačuvaj“. Ispod liste piše „Prijava se označava kao rešena bez dokaza. Autor dobija zahvalnicu.“
 - **Kada:** moderator zna da je problem rešen (npr. sa akcije), a autor nije poslao fotografiju.
 - **Preduslov:** nema dokaza koji čeka potvrdu (ako ga ima, isti izbor potvrđuje dokaz, vidi UC-16).
+- **Odbijen dokaz:** ako je autorov dokaz ranije odbijen, njegove fotografije i napomena se brišu, jer odbijen dokaz ne postaje „Pre i posle“. Ispod liste tada piše „Prijava se označava kao rešena bez dokaza, a odbijeni dokaz sanacije se briše. Autor dobija zahvalnicu.“
 - **E-pošta:** autoru **„Problem je rešen“** u varijanti „Vaša prijava … je označena kao rešena.“ (E-8).
 - **Izuzetak:** ako je prijava već jednom bila rešena, pa joj je status ručno vraćen, ponovni izbor „Rešeno“ šalje **„Promenjen status prijave“** sa statusom „Rešeno“ (E-12), a ne E-8.
 

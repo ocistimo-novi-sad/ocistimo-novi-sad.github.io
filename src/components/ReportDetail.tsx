@@ -28,6 +28,7 @@ import { useApp } from '../state/app-context';
 import { Drawer } from './Drawer';
 import { PhotoGallery } from './PhotoGallery';
 import { imagesEnabled } from '../services/images';
+import { resolveKind } from '../services/reports';
 import { CategoryTag } from './ui/CategoryGlyph';
 import { SectionLabel, Spinner } from './ui/EmptyState';
 import { BeforeAfter } from './ui/BeforeAfter';
@@ -274,9 +275,7 @@ export function ReportDetail() {
     closeSelection,
     requestFlag,
     auth,
-    moderateReport,
-    markReportResolved,
-    approveReportResolution,
+    setReportStatus,
     editReport,
     openModal,
     selectAction,
@@ -320,28 +319,22 @@ export function ReportDetail() {
     }
   };
 
-  // "Rešeno" from the list resolves the report the same way as confirming a fix:
-  // it records the resolution and the author gets the "Problem je rešen" email.
-  // A report that was already resolved once keeps its resolution (and photos),
-  // so going back to "Rešeno" only changes the status.
-  const resolvingNow =
-    adminStatus === 'resolved' && !resolved && resolution?.state !== 'approved';
-  const statusHint = !resolvingNow
-    ? 'Promena se beleži uz tvoj nalog i vreme izmene. Status menjaj tek kada je proveren.'
-    : resolutionPending
+  // "Rešeno" resolves the report by the shared rule (resolveKind), so the hint
+  // says what saving will do with the author's proof.
+  const resolveAs = adminStatus === 'resolved' && !resolved ? resolveKind(report) : null;
+  const statusHint =
+    resolveAs === 'confirm-proof'
       ? 'Ovim se potvrđuje i dokaz sanacije koji je autor poslao.'
-      : 'Prijava se označava kao rešena bez dokaza. Autor dobija zahvalnicu.';
+      : resolveAs === 'without-proof'
+        ? resolution?.state === 'rejected'
+          ? 'Prijava se označava kao rešena bez dokaza, a odbijeni dokaz sanacije se briše. Autor dobija zahvalnicu.'
+          : 'Prijava se označava kao rešena bez dokaza. Autor dobija zahvalnicu.'
+        : 'Promena se beleži uz tvoj nalog i vreme izmene. Status menjaj tek kada je proveren.';
 
   const saveStatus = async () => {
     setSaving(true);
     try {
-      if (resolvingNow && resolutionPending) {
-        await approveReportResolution(report);
-      } else if (resolvingNow) {
-        await markReportResolved(report);
-      } else {
-        await moderateReport(report.id, adminStatus);
-      }
+      await setReportStatus(report, adminStatus);
     } catch {
       // The provider already surfaced the error.
     } finally {
