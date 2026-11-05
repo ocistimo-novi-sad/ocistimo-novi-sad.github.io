@@ -68,7 +68,8 @@ export function AdminPanel() {
     setBusy(true);
     try {
       await updateActionStatus(actionId, 'cancelled');
-      await reloadActions();
+      // Cancelling also puts its reports back to their earlier status.
+      await Promise.all([reloadActions(), reloadReports()]);
       notify('success', 'Akcija je otkazana.');
       setConfirming(null);
     } catch (error) {

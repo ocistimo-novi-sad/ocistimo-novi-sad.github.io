@@ -267,6 +267,8 @@ export async function updateReportStatus(
   const user = currentUser();
   await updateDoc(doc(requireDb(), 'reports', reportId), {
     status,
+    // A status set by hand is the moderator's, not an action's to undo.
+    statusActionId: deleteField(),
     ...moderationStamp(user),
   });
 }
@@ -566,7 +568,10 @@ export function resolveDroppedImages(report: ResolvableReport, kind: ResolveKind
   return kind === 'without-proof' ? (report.resolution?.imageUrls ?? []) : [];
 }
 
-/** The fields that resolve a report, for an update or a batch. */
+/**
+ * The fields that resolve a report, for an update or a batch. Resolving by hand
+ * clears statusActionId, so cancelling an action later leaves the report alone.
+ */
 export function resolveChanges(
   kind: ResolveKind,
   user: { uid: string; displayName: string | null },
@@ -591,7 +596,12 @@ export function resolveChanges(
             },
           }
         : {};
-  return { status: 'resolved', ...proof, ...moderationStamp(user) };
+  return {
+    status: 'resolved',
+    statusActionId: deleteField(),
+    ...proof,
+    ...moderationStamp(user),
+  };
 }
 
 export async function resolveReport(reportId: string, kind: ResolveKind): Promise<void> {

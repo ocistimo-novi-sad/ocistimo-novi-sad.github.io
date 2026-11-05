@@ -34,6 +34,7 @@ export function ActionDetail() {
     auth,
     openModal,
     reloadActions,
+    reloadReports,
     deleteAction,
     notify,
   } = useApp();
@@ -50,7 +51,8 @@ export function ActionDetail() {
     setBusy(true);
     try {
       await updateActionStatus(action.id, 'cancelled');
-      await reloadActions();
+      // Cancelling also puts its reports back to their earlier status.
+      await Promise.all([reloadActions(), reloadReports()]);
       setConfirming(null);
       notify('success', 'Akcija je otkazana.');
     } catch (error) {
