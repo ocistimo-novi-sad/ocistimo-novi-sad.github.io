@@ -6,7 +6,7 @@ Kuka i Motika je zamišljen kao praktičan alat za građane koji žele da prijav
 
 Ideja projekta je jednostavna: umesto da informacije o zapuštenim mestima ostanu rasute po porukama i društvenim mrežama, sve prijave mogu da budu pregledno prikazane na jednoj mapi. Tako zajednica lakše može da proceni gde je pomoć potrebna i da organizuje konkretnu akciju.
 
-Detaljan opis rada aplikacije — uloge, slučajevi korišćenja, životni ciklus prijava i akcija i sva obaveštenja e-poštom — nalazi se u dokumentu [Kako aplikacija radi](docs/use-cases.md).
+Detaljan opis rada aplikacije — uloge, slučajevi korišćenja, životni ciklus prijava i akcija i sva obaveštenja e-poštom — nalazi se u dokumentu [Kako aplikacija radi](docs/use-cases.md). Kako se predlažu i objavljuju izmene (grane, pregled, staging, Release Notes) opisano je u [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Sadržaj
 
@@ -43,7 +43,7 @@ Glavni deo aplikacije je interaktivna mapa Novog Sada (OpenStreetMap podloga). N
 
 Mapa i lista prijava rade zajedno: izbor prijave u listi usmerava mapu na njenu lokaciju, dok izbor oznake na mapi otvara detalje odgovarajuće prijave.
 
-Na vrhu liste nalazi se kratak pregled napretka zajednice: ukupan broj prijava, broj rešenih, udeo rešenih prijava i broj predstojećih akcija.
+Na vrhu liste nalazi se kratak pregled napretka zajednice: broj učitanih prijava, broj rešenih, udeo rešenih prijava i broj predstojećih akcija. Broj uz „Prijave“ na prekidaču „Prijave | Akcije“ računa samo prijave koje nisu rešene ni označene kao „Nije za akciju“, a broj uz „Akcije“ samo predstojeće akcije.
 
 ### 2. Prijavljivanje problema
 
@@ -51,11 +51,14 @@ Korisnik bira lokaciju na mapi (ili koristi svoju trenutnu lokaciju) i popunjava
 
 - naslov (5–90 znakova) i opis problema (20–1200 znakova);
 - kategoriju;
+- „Šta zajednica može sama“ i „Za šta nam treba pomoć“ (obavezno, 10–600 znakova; mogu se popuniti brzim izborom ponuđenih odgovora);
 - lokaciju označenu na mapi, unutar područja Novog Sada;
 - adresu ili orijentir, opciono;
 - do tri fotografije (JPG, PNG ili WebP, do 20 MB po fotografiji).
 
 Pre slanja, korisnik može da proveri podatke i prilagodi lokaciju oznake. Aplikacija proverava obavezna polja, prikazuje napredak otpremanja fotografija i poruku o uspešnom slanju ili objašnjenje greške. Ako korisnik zatvori formu sa unetim podacima, aplikacija traži potvrdu pre odbacivanja.
+
+Poslata prijava ide na pregled: dok je moderator ne odobri, vide je samo autor i moderatori. Autor svoje prijave prati u meniju naloga, u delu „Moje prijave“. Odbijenu prijavu može da ispravi i ponovo pošalje, a za objavljenu može da pošalje dokaz da je problem rešen (fotografiju „posle“).
 
 **Fotografije.** Fotografije sa telefona mogu da se dodaju onakve kakve jesu, jer ih aplikacija pre slanja sama obrađuje u pregledaču:
 - smanjuje ih na najviše 1600 px po dužoj strani i pravi sličicu za liste i mapu;
@@ -78,7 +81,7 @@ Taster `/` prebacuje fokus na polje za pretragu. Prijave se učitavaju u delovim
 
 ### 4. Detalji i praćenje statusa
 
-Svaka prijava ima prikaz sa opisom, fotografijama (sa uvećanim prikazom), lokacijom i trenutnim statusom. Lokaciju je moguće otvoriti i na OpenStreetMap mapi, a koordinate kopirati radi lakšeg deljenja. Ako je prijava uključena u akciju čišćenja, detalji prikazuju i povezanu akciju.
+Svaka prijava ima prikaz sa opisom, fotografijama (sa uvećanim prikazom), lokacijom i trenutnim statusom. Ispod naslova je tok prijave: Prijavljena → Objavljena → Akcija planirana (ili u toku) → Rešena, sa označenim korakom na kom je prijava. Lokaciju je moguće otvoriti i na OpenStreetMap mapi, a koordinate kopirati radi lakšeg deljenja. Ako je prijava uključena u akciju čišćenja, detalji prikazuju i povezanu akciju.
 
 Statusi pomažu da se razlikuje tek prijavljen problem od potvrđenog problema ili onog koji je već uključen u plan akcije.
 
@@ -131,17 +134,19 @@ Sama prijava ne znači da je problem zvanično potvrđen, niti da je nadležna s
 
 Prijave i akcije može da pregleda svako, bez naloga. Za slanje prijave i prijavljivanje neprikladnog sadržaja potrebno je prijavljivanje Google nalogom (kada je aplikacija povezana sa Firebaseom). Uz prijavu se javno prikazuje ime iz naloga, ali ne i adresa e-pošte.
 
-Svaki prijavljeni korisnik može da označi prijavu kao sporan sadržaj, jednom po prijavi, uz jedan od razloga: spam ili reklama, dupla prijava, netačna ili obmanjujuća prijava, neprimeren sadržaj ili drugo.
+Svaki prijavljeni korisnik može da označi objavljenu prijavu kao sporan sadržaj, jednom po prijavi, uz jedan od razloga: spam ili reklama, dupla prijava, netačna ili obmanjujuća prijava, neprimeren sadržaj ili drugo.
 
-Administratori u panelu „Administracija“ mogu da:
+Moderatori (koordinatori zajednice) u panelu „Moderacija“ mogu da:
 
-- menjaju statuse prijava;
-- pregledaju označen sadržaj i odbace ga ili zatvore kao rešen;
-- kreiraju, uređuju i otkazuju akcije čišćenja i povezuju ih sa prijavama.
+- odobre ili odbiju nove prijave (uz razlog);
+- prihvate izmenu objavljene prijave ili vrate prethodnu verziju;
+- potvrde ili odbiju dokaz da je problem rešen;
+- menjaju statuse prijava i uređuju ili brišu bilo koju prijavu;
+- pregledaju označen sadržaj i odbace ga ili zatvore kao rešen.
 
-Akcije čišćenja mogu da kreiraju, uređuju i otkazuju i moderatori (koordinatori zajednica). Njima se isti panel u meniju naloga zove „Akcije čišćenja“ i nema deo „Korisnici i uloge“.
+Moderatori takođe kreiraju, uređuju, otkazuju i brišu akcije čišćenja i povezuju ih sa prijavama, u panelu „Akcije čišćenja“ u meniju naloga. Administratori imaju sva prava moderatora; njihov panel se zove „Administracija“ i ima još deo „Korisnici i uloge“, gde dodeljuju i oduzimaju ulogu moderatora.
 
-Time se smanjuje mogućnost da neprimeren sadržaj ili netačne prijave ostanu bez reakcije. Ova pravila nisu samo u interfejsu — sprovode ih Firestore Security Rules (vidi [Bezbednost i pravila pristupa](#bezbednost-i-pravila-pristupa)).
+Time se smanjuje mogućnost da neprimeren sadržaj ili netačne prijave ostanu bez reakcije. Ova pravila nisu samo u interfejsu — sprovode ih Firestore i Storage Security Rules (`firestore.rules`, `storage.rules`). Šta tačno koja uloga može opisano je u [Kako aplikacija radi → Uloge](docs/use-cases.md#2-uloge).
 
 ### Obaveštenja e-poštom
 
@@ -153,7 +158,7 @@ Aplikacija šalje kratka obaveštenja na adresu Google naloga:
 Niko ne dobija obaveštenje o sopstvenoj radnji. Potpun spisak poruka, sa tačnim uslovima kada se šalju i kada ne, nalazi se u [Kako aplikacija radi → Obaveštenja e-poštom](docs/use-cases.md#10-obaveštenja-e-poštom). Obaveštenja pravi Cloud Function iz foldera `functions/` i upisuje ih u kolekciju `mail`, a ekstenzija Trigger Email ih šalje preko Gmail SMTP-a. Upisani zapisi se brišu posle nedelju dana. Funkcije, ekstenzija i pravila se objavljuju ručno, jer GitHub Actions objavljuje samo sajt:
 
 ```sh
-firebase deploy --only functions,extensions,firestore --project ocistimo-novi-sad
+firebase deploy --only functions,extensions,firestore,storage --project ocistimo-novi-sad
 ```
 
 Pri prvom objavljivanju ekstenzije Firebase CLI traži Gmail app password i čuva ga u Secret Manager-u. Lozinka se nikada ne upisuje u repozitorijum.
@@ -162,7 +167,7 @@ Korisnici treba da objavljuju samo informacije relevantne za problem na javnom p
 
 ## Pristupačnost i korišćenje na različitim uređajima
 
-Interfejs je na srpskom jeziku, latinicom, i prilagođava se desktop računarima, tabletima i mobilnim telefonima. Na manjim ekranima donja navigacija (Mapa, Prijave, Akcije) omogućava brz prelazak između prikaza, dok se detalji i forma za prijavu prikazuju u panelima prilagođenim mobilnom uređaju.
+Interfejs je na srpskom jeziku, latinicom, i prilagođava se desktop računarima, tabletima i mobilnim telefonima. Na manjim ekranima donja traka (Mapa, ＋ Prijavi, Lista) omogućava brz prelazak između mape i liste, a prekidač „Prijave | Akcije“ bira šta one prikazuju, dok se detalji i forma za prijavu prikazuju u panelima prilagođenim mobilnom uređaju. Pri prvom dolasku na telefonu kratak vodič u tri koraka pokazuje dugme za prijavu, prekidač „Prijave | Akcije“ i listu; može se ponovo pokrenuti iz „O projektu“.
 
 Dizajn je usmeren na preglednost i brzo korišćenje: mapa ostaje u prvom planu, kontrole su jasno grupisane, a boje i ikonice pomažu u razlikovanju kategorija i statusa. Kontrole imaju opisne oznake za čitače ekrana, a dijalozi i paneli se mogu zatvoriti tasterom `Esc`.
 

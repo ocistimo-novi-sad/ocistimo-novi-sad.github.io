@@ -1,0 +1,99 @@
+name: PR labela
+
+on:
+  pull_request:
+    branches: [staging]
+    types: [opened, edited, reopened, synchronize, labeled, unlabeled, converted_to_draft, ready_for_review]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  # The ruleset for staging requires this check by its job name.
+  labela:
+    runs-on: ubuntu-latest
+    steps:
+      # Mark the PR's issues as ready for review (CONTRIBUTING.md, rule 1); a draft PR removes the label.
+      - name: Label issues ready for review
+        if: contains(fromJSON('["opened", "reopened", "edited", "converted_to_draft", "ready_for_review"]'), github.event.action)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BODY: ${{ github.event.pull_request.body }}
+          BRANCH: ${{ github.head_ref }}
+          DRAFT: ${{ github.event.pull_request.draft }}
+        run: |
+          # Only lines that start with "Closes #N", so "#N" mentioned in the text does not count.
+          issues=$( { printf '%s\n' "$BODY" | grep -oiE '^[[:space:]]*(closes|fixes|resolves)[[:space:]]+#[0-9]+' | grep -oE '[0-9]+'; printf '%s\n' "$BRANCH" | grep -oE '^[0-9]+'; } | sort -un || true)
+
+          for n in $issues; do
+            # Skip numbers that are PRs or do not exist.
+            if [ -z "$(gh api "repos/$GH_REPO/issues/$n" --jq 'select(.pull_request == null) | .number' 2>/dev/null || true)" ]; then
+              continue
+            fi
+
+            if [ "$DRAFT" = "true" ]; then
+              # 404 when the issue does not have the label.
+              gh api -X DELETE "repos/$GH_REPO/issues/$n/labels/ready%20for%20review" > /dev/null 2>&1 || true
+              echo "::notice::PR je draft, issue #$n nema labelu „ready for review“."
+            else
+              gh api "repos/$GH_REPO/issues/$n/labels" -f "labels[]=ready for review" > /dev/null
+              echo "::notice::Issue #$n ima labelu „ready for review“."
+            fi
+          done
+
+      # Release notes are grouped by these labels (.github/release.yml).
+      # Copy one from the linked issue or the branch name; fail if there is none.
+      - name: Check or add label
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          BODY: ${{ github.event.pull_request.body }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          categories='^(enhancement|bug|accessibility|documentation)$'
+
+          if gh pr view "$PR" --json labels --jq '.labels[].name' | grep -qE "$categories"; then
+            exit 0
+          fi
+
+          # Parse "Closes #N" lines and the branch name here; GitHub's own issue links ignore the branch name.
+          issues=$( { printf '%s\n' "$BODY" | grep -oiE '^[[:space:]]*(closes|fixes|resolves)[[:space:]]+#[0-9]+' | grep -oE '[0-9]+'; printf '%s\n' "$BRANCH" | grep -oE '^[0-9]+'; } | sort -un || true)
+
+          labels=""
+          source=""
+          for n in $issues; do
+            found=$(gh api "repos/$GH_REPO/issues/$n" --jq '.labels[].name' 2>/dev/null | grep -E "$categories" || true)
+            if [ -n "$found" ]; then
+              labels="$found"
+              source="#$n"
+              break
+            fi
+          done
+
+          if [ -z "$labels" ]; then
+            if printf '%s\n' "$BODY" | grep -qiE 'ispravka za[[:space:]]+#[0-9]+'; then
+              labels=bug
+              source="„Ispravka za #…“ u opisu"
+            else
+              case "$BRANCH" in
+                bug-*|fix-*) labels=bug ;;
+                docs-*|doc-*) labels=documentation ;;
+                feat-*|feature-*) labels=enhancement ;;
+              esac
+              source="ime grane $BRANCH"
+            fi
+          fi
+
+          if [ -z "$labels" ]; then
+            echo "::error::PR nema labelu za Release Notes. Dodaj jednu: enhancement, bug, accessibility ili documentation."
+            exit 1
+          fi
+
+          args=()
+          for label in $labels; do args+=(-f "labels[]=$label"); done
+          gh api "repos/$GH_REPO/issues/$PR/labels" "${args[@]}" > /dev/null
+          echo "::notice::Dodata labela $(echo $labels) (iz $source)."

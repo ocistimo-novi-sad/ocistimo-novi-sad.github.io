@@ -8,10 +8,6 @@ import type {
   UserRole,
 } from './types';
 
-/**
- * Application identity. Rename the project here (and in index.html / README)
- * if the name ever changes again.
- */
 export const APP = {
   name: 'Kuka i Motika',
   wordmark: 'KUKA I MOTIKA',
@@ -20,7 +16,6 @@ export const APP = {
   center: { latitude: 45.2671, longitude: 19.8335 } satisfies Coordinates,
   initialZoom: 13,
   focusZoom: 16,
-  /** Novi Sad municipality with a small margin (also enforced in Firestore Rules). */
   bounds: { south: 45.05, west: 19.55, north: 45.45, east: 20.05 },
   openStreetMap: 'https://www.openstreetmap.org',
 } as const;
@@ -64,7 +59,6 @@ export const CATEGORIES: CategoryMeta[] = [
   },
 ];
 
-/** Category preselected when a new report is opened. */
 export const DEFAULT_CATEGORY: Category = 'unwanted_graffiti';
 
 export const CATEGORY_MAP: Record<Category, CategoryMeta> = Object.fromEntries(
@@ -75,7 +69,6 @@ export interface StatusMeta {
   id: ReportStatus;
   label: string;
   description: string;
-  /** Lower value sorts first. */
   weight: number;
 }
 

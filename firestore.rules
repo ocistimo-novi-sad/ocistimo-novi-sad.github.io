@@ -358,8 +358,8 @@ service cloud.firestore {
 
     // ---------------------------------------------------------------------
     // Cleanup actions: public read; moderators (community coordinators) and
-    // admins create/edit/cancel; only admins delete. updatedBy names whoever
-    // made each write, so they are left out of its e-mails.
+    // admins create/edit/cancel/delete. updatedBy names whoever made each
+    // write, so they are left out of its e-mails.
     // ---------------------------------------------------------------------
     match /actions/{actionId} {
       allow read: if true;
@@ -382,7 +382,7 @@ service cloud.firestore {
         && request.resource.data.updatedBy == request.auth.uid
         && validActionFields(request.resource.data);
 
-      allow delete: if isAdmin();
+      allow delete: if isModerator();
     }
 
     // ---------------------------------------------------------------------

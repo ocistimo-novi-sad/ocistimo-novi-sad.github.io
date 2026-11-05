@@ -1,0 +1,23 @@
+# Categories for automatically generated release notes (see .github/workflows/release-notes.yml).
+changelog:
+  exclude:
+    labels:
+      - objava
+      - duplicate
+      - wontfix
+  categories:
+    - title: Novo
+      labels:
+        - enhancement
+    - title: Ispravke
+      labels:
+        - bug
+    - title: Pristupačnost
+      labels:
+        - accessibility
+    - title: Dokumentacija
+      labels:
+        - documentation
+    - title: Ostalo
+      labels:
+        - "*"

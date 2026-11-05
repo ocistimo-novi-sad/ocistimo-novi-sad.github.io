@@ -125,7 +125,9 @@ export function AdminPanel() {
     <Modal
       title={auth.isAdmin ? 'Administracija' : 'Akcije čišćenja'}
       description={
-        auth.isAdmin ? 'Akcije čišćenja, korisnici i uloge.' : 'Pravljenje i uređivanje akcija čišćenja.'
+        auth.isAdmin
+          ? 'Akcije čišćenja, korisnici i uloge.'
+          : 'Pravljenje, uređivanje i brisanje akcija čišćenja.'
       }
       size="lg"
       onClose={closeModal}
