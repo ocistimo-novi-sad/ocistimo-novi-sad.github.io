@@ -13,7 +13,7 @@ export function EmptyState({
 }: {
   icon: ReactNode;
   title: string;
-  description: string;
+  description?: string;
   action?: ReactNode;
 }) {
   return (
@@ -22,7 +22,7 @@ export function EmptyState({
         {icon}
       </div>
       <p className="empty-state__title">{title}</p>
-      <p className="empty-state__text">{description}</p>
+      {description ? <p className="empty-state__text">{description}</p> : null}
       {action ? <div className="empty-state__action">{action}</div> : null}
     </div>
   );
