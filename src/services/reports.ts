@@ -535,17 +535,67 @@ export async function countPendingResolutions(): Promise<number> {
   return snapshot.data().count;
 }
 
-/** Confirms the author's proof: the report becomes resolved. */
-export async function approveResolution(reportId: string): Promise<void> {
-  const user = currentUser();
-  await updateDoc(doc(requireDb(), 'reports', reportId), {
-    status: 'resolved',
-    'resolution.state': 'approved',
-    'resolution.rejectionReason': deleteField(),
-    'resolution.reviewedAt': serverTimestamp(),
-    'resolution.reviewedBy': user.uid,
-    ...moderationStamp(user),
-  });
+/**
+ * How a report that is not resolved yet becomes resolved, judged by its proof:
+ * a pending proof is confirmed; without a proof, or with a rejected one, the
+ * report is resolved without proof; a report that was resolved before and got
+ * another status keeps its resolution and photos, so only the status changes.
+ * Every place that resolves a report follows this rule, so they all record the
+ * same thing and the author gets the same email ("Problem je rešen", except for
+ * "status-only").
+ */
+export type ResolveKind = 'confirm-proof' | 'without-proof' | 'status-only';
+
+interface ResolvableReport {
+  resolution?: { state: string; imageUrls: string[] } | null;
+}
+
+export function resolveKind(report: ResolvableReport): ResolveKind {
+  switch (report.resolution?.state) {
+    case 'pending':
+      return 'confirm-proof';
+    case 'approved':
+      return 'status-only';
+    default:
+      return 'without-proof';
+  }
+}
+
+/** Photos that resolving drops: a rejected proof is not proof, so it goes. */
+export function resolveDroppedImages(report: ResolvableReport, kind: ResolveKind): string[] {
+  return kind === 'without-proof' ? (report.resolution?.imageUrls ?? []) : [];
+}
+
+/** The fields that resolve a report, for an update or a batch. */
+export function resolveChanges(
+  kind: ResolveKind,
+  user: { uid: string; displayName: string | null },
+): Record<string, unknown> {
+  const proof =
+    kind === 'confirm-proof'
+      ? {
+          'resolution.state': 'approved',
+          'resolution.rejectionReason': deleteField(),
+          'resolution.reviewedAt': serverTimestamp(),
+          'resolution.reviewedBy': user.uid,
+        }
+      : kind === 'without-proof'
+        ? {
+            resolution: {
+              state: 'approved',
+              imageUrls: [],
+              note: '',
+              byModerator: true,
+              reviewedAt: serverTimestamp(),
+              reviewedBy: user.uid,
+            },
+          }
+        : {};
+  return { status: 'resolved', ...proof, ...moderationStamp(user) };
+}
+
+export async function resolveReport(reportId: string, kind: ResolveKind): Promise<void> {
+  await updateDoc(doc(requireDb(), 'reports', reportId), resolveChanges(kind, currentUser()));
 }
 
 export async function rejectResolution(reportId: string, reason: string): Promise<void> {
@@ -555,23 +605,6 @@ export async function rejectResolution(reportId: string, reason: string): Promis
     'resolution.rejectionReason': reason,
     'resolution.reviewedAt': serverTimestamp(),
     'resolution.reviewedBy': user.uid,
-    ...moderationStamp(user),
-  });
-}
-
-/** Moderator marks a report resolved without the author's proof. */
-export async function markResolved(reportId: string): Promise<void> {
-  const user = currentUser();
-  await updateDoc(doc(requireDb(), 'reports', reportId), {
-    status: 'resolved',
-    resolution: {
-      state: 'approved',
-      imageUrls: [],
-      note: '',
-      byModerator: true,
-      reviewedAt: serverTimestamp(),
-      reviewedBy: user.uid,
-    },
     ...moderationStamp(user),
   });
 }
