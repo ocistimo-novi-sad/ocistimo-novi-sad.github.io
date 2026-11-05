@@ -27,7 +27,8 @@ export type ModalState =
   | { kind: 'auth'; intent: 'create' | 'flag' | 'generic' }
   | { kind: 'flag'; reportId: string }
   | { kind: 'info' }
-  | { kind: 'admin'; editActionId?: string }
+  | { kind: 'admin' }
+  | { kind: 'action-form'; editActionId?: string }
   | { kind: 'moderation' }
   | { kind: 'my-reports' }
   | { kind: 'resolve'; reportId: string }

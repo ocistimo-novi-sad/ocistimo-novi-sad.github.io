@@ -43,7 +43,7 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 |---|---|---|
 | **Posetilac** | Bilo ko ko otvori sajt, bez prijave | Nije potrebno ništa |
 | **Član zajednice** | Korisnik prijavljen Google nalogom | Klikom na „Prijava“ i izborom Google naloga. Registracija ne postoji. |
-| **Moderator** | Član koji pregleda i uređuje prijave i pravi, uređuje i briše akcije čišćenja (koordinator zajednice) | Dodeljuje ga administrator u aplikaciji (Administracija → Korisnici i uloge) |
+| **Moderator** | Član koji pregleda i uređuje prijave i pravi, uređuje i briše akcije čišćenja (koordinator zajednice) | Dodeljuje ga administrator u aplikaciji (Administracija) |
 | **Administrator** | Moderator koji uz to upravlja ulogama | Dodeljuje ga samo vlasnik projekta, van aplikacije. Iz aplikacije se ne može dodeliti ni oduzeti. |
 
 ### 2.1 Šta koja uloga može
@@ -95,7 +95,7 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 | Ime, e-pošta, oznaka uloge | Svi prijavljeni (oznaka samo za moderatora/administratora) | — |
 | **Moje prijave** | Svi prijavljeni | Lista sopstvenih prijava i njihovog stanja. Crveni broj = prijave koje treba ispraviti. |
 | **Moderacija** | Moderator, administrator | Redovi za pregled: Nove prijave, Izmene, Sanacije, Označen sadržaj. Broj = nove prijave, izmene i sanacije koje čekaju (označen sadržaj se ne broji). |
-| **Administracija** (moderatoru: „Akcije čišćenja“) | Moderator, administrator | Akcije čišćenja; Korisnici i uloge (samo administrator) |
+| **Administracija** | Administrator | Korisnici i uloge |
 | **Odjava** | Svi prijavljeni | Odjava sa naloga |
 
 Na avataru se pojavljuje **crvena tačka** kada nešto čeka korisnika: odbijena prijava ili odbijen dokaz sanacije koji treba ispraviti, a za moderatore i nove prijave, izmene i sanacije koje čekaju pregled.
@@ -438,11 +438,11 @@ Moderator ima sve što i član zajednice, plus stavku **Moderacija** u meniju na
 
 ## 9. Slučajevi korišćenja — administrator
 
-Administrator ima sva prava moderatora, plus tab „Korisnici i uloge“ u stavci **Administracija** u meniju naloga. Kreiranje, uređivanje, otkazivanje i brisanje akcija (UC-21 do UC-24) mogu i moderatori: njima se ista stavka zove „Akcije čišćenja“. I moderatori i administratori vide dugme „Nova akcija“ u prikazu Akcije i okvir „Upravljanje akcijom“ u detaljima akcije.
+Administrator ima sva prava moderatora, plus panel **Administracija** u meniju naloga, gde su korisnici i uloge. Kreiranje, uređivanje, otkazivanje i brisanje akcija (UC-21 do UC-24) mogu i moderatori: akcije se prave iz prikaza Akcije, a uređuju, otkazuju i brišu iz detalja akcije.
 
 ### UC-21 Kreiranje akcije čišćenja
 
-- **Gde:** Administracija → Akcije čišćenja → „Nova akcija“. Dugme „Nova akcija“ u prikazu Akcije i, na telefonu, „＋ Prijavi“ → „Nova akcija“ otvaraju taj isti panel.
+- **Gde:** Prikaz Akcije → „Nova akcija“. Na telefonu isto dugme je u „＋ Prijavi“ → „Nova akcija“. Forma se otvara direktno.
 - **Tok:**
   1. **Osnovno:** naziv, opis i plan rada, status (podrazumevano „Planirano“).
   2. **Fotografije:** naslovna slika (opciono); fotografije sa akcije (do 6) tek kada je status „Završeno“ ili kada akcija već ima takve fotografije.
@@ -454,7 +454,7 @@ Administrator ima sva prava moderatora, plus tab „Korisnici i uloge“ u stavc
 
 ### UC-22 Uređivanje akcije
 
-- **Gde:** Administracija → Akcije čišćenja → „Uredi“; ili detalji akcije → „Uredi akciju“
+- **Gde:** Detalji akcije → „Uredi akciju“
 - **Tok:** ista forma kao UC-21. Najčešće izmene: dodavanje prijava, pomeranje termina, promena statusa u „U toku“ / „Završeno“, dodavanje fotografija sa akcije. Sve povezane prijave dobijaju novi status akcije.
 - **E-pošta** se šalje samo dok je akcija „Planirano“:
 
@@ -477,19 +477,19 @@ Administrator ima sva prava moderatora, plus tab „Korisnici i uloge“ u stavc
 
 ### UC-23 Otkazivanje akcije
 
-- **Gde:** Administracija → Akcije čišćenja → „Otkaži“ → „Potvrdi“; ili detalji akcije → okvir „Upravljanje akcijom“ → „Otkaži akciju“ → „Otkazati ovu akciju? Povezane prijave ostaju sačuvane.“ → „Potvrdi otkazivanje“ (dugme postoji samo za akcije „Planirano“ i „U toku“); ili status „Otkazano“ u formi za uređivanje
+- **Gde:** Detalji akcije → okvir „Upravljanje akcijom“ → „Otkaži akciju“ → „Otkazati ovu akciju? Povezane prijave ostaju sačuvane.“ → „Potvrdi otkazivanje“ (dugme postoji samo za akcije „Planirano“ i „U toku“); ili status „Otkazano“ u formi za uređivanje
 - **Tok:** akcija prelazi u „Otkazano“ i seli se u „Završene“. Povezane prijave ostaju nepromenjene.
 - **E-pošta:** autorima **svih** povezanih prijava **„Akcija je otkazana“** (E-11). Ako akcija nema povezanih prijava, poruka se ne šalje.
 
 ### UC-24 Brisanje akcije
 
-- **Gde:** Administracija → Akcije čišćenja → „Obriši“ → „Trajno obrisati?“ → „Obriši“; ili detalji akcije → okvir „Upravljanje akcijom“ → „Obriši akciju“ → „Potvrdi brisanje“
+- **Gde:** Detalji akcije → okvir „Upravljanje akcijom“ → „Obriši akciju“ → „Potvrdi brisanje“
 - **Tok:** akcija se trajno uklanja sa mape i iz liste akcija, zajedno sa naslovnom slikom i fotografijama sa akcije. Povezane prijave ostaju nepromenjene. Brisanje se ne može poništiti; ako akcija samo neće biti održana, bolje je otkazati je (UC-23).
 - **E-pošta:** brisanje **ne šalje** poruku, ni autorima povezanih prijava.
 
 ### UC-25 Upravljanje korisnicima i ulogama
 
-- **Gde:** Administracija → **Korisnici i uloge**
+- **Gde:** Administracija
 - **Tok:**
   1. Spisak onih koji su se bar jednom prijavili (do 500, najskorije aktivni prvi): ime, e-pošta, „Član od“, poslednja aktivnost, uloga.
   2. Pretraga po imenu ili e-pošti; filter Svi / Moderatori / Administratori.

@@ -131,7 +131,7 @@ export function AccountMenu() {
               {reviewCount > 0 ? <span className="account__count">{reviewCount}</span> : null}
             </button>
           ) : null}
-          {auth.isModerator ? (
+          {auth.isAdmin ? (
             <button
               type="button"
               role="menuitem"
@@ -142,7 +142,7 @@ export function AccountMenu() {
               }}
             >
               <Settings size={15} aria-hidden="true" />
-              {auth.isAdmin ? 'Administracija' : 'Akcije čišćenja'}
+              Administracija
             </button>
           ) : null}
           <button

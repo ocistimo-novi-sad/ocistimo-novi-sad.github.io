@@ -357,26 +357,12 @@
     flex: 1;
   }
 
-  .form-row,
-  .coord-row {
+  .form-row {
     grid-template-columns: 1fr;
   }
 
   .info-steps {
     grid-template-columns: 1fr;
-  }
-
-  .admin-action-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .admin-action-row__actions {
-    justify-content: flex-start;
-  }
-
-  .admin-action-row__actions .btn {
-    flex: 1;
   }
 
   .review {

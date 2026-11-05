@@ -1,6 +1,7 @@
 import { ActionsPanel } from './components/ActionsPanel';
 import { ActionDetail } from './components/ActionDetail';
 import { AdminPanel } from './components/admin/AdminPanel';
+import { ActionDialog } from './components/admin/ActionDialog';
 import { ComposeDrawer } from './components/ComposeDrawer';
 import { DiscoveryPanel } from './components/DiscoveryPanel';
 import { FirstVisitGuide } from './components/FirstVisitGuide';
@@ -32,6 +33,8 @@ function ModalHost() {
       return <InfoDialog />;
     case 'admin':
       return <AdminPanel />;
+    case 'action-form':
+      return <ActionDialog editActionId={modal.editActionId} />;
     case 'moderation':
       return <ModerationPanel />;
     case 'my-reports':

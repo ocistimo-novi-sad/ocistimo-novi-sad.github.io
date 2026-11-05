@@ -146,7 +146,7 @@ export function ActionsPanel() {
           <button
             type="button"
             className="btn btn--quiet btn--sm btn--block"
-            onClick={() => openModal({ kind: 'admin' })}
+            onClick={() => openModal({ kind: 'action-form' })}
           >
             <Plus size={14} aria-hidden="true" /> Nova akcija
           </button>

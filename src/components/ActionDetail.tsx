@@ -4,7 +4,6 @@ import {
   CalendarDays,
   Check,
   Clock,
-  ExternalLink,
   HandHeart,
   MapPin,
   Pencil,
@@ -13,8 +12,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
-import { formatCoordinates, formatDate, formatTime, formatWeekday, plural } from '../lib/format';
-import { openStreetMapUrl } from '../lib/geo';
+import { formatDate, formatTime, formatWeekday, plural } from '../lib/format';
 import { updateActionStatus } from '../services/actions';
 import { toSerbianError } from '../services/errors';
 import { optimizedImageUrl } from '../services/images';
@@ -166,9 +164,6 @@ export function ActionDetail() {
             <MapPin size={14} aria-hidden="true" />
             <span>{action.meetingPoint || 'Novi Sad'}</span>
           </div>
-          <code className="location-box__coords">
-            {formatCoordinates(action.latitude, action.longitude)}
-          </code>
           <div className="location-box__actions">
             <button
               type="button"
@@ -177,14 +172,6 @@ export function ActionDetail() {
             >
               Prikaži na mapi
             </button>
-            <a
-              className="btn btn--quiet btn--sm"
-              href={openStreetMapUrl(action)}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <ExternalLink size={13} aria-hidden="true" /> OpenStreetMap
-            </a>
           </div>
         </div>
       </section>
@@ -319,7 +306,7 @@ export function ActionDetail() {
               <button
                 type="button"
                 className="btn btn--quiet btn--sm"
-                onClick={() => openModal({ kind: 'admin', editActionId: action.id })}
+                onClick={() => openModal({ kind: 'action-form', editActionId: action.id })}
               >
                 <Pencil size={13} aria-hidden="true" /> Uredi akciju
               </button>
