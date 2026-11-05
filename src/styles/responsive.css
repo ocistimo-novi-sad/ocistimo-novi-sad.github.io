@@ -511,7 +511,7 @@
   }
 
   .impact__title {
-    font-size: 18px;
+    font-size: 1.125rem;
   }
 
   .impact-stat {
@@ -519,7 +519,7 @@
   }
 
   .impact-stat__value {
-    font-size: 21px;
+    font-size: 1.3125rem;
   }
 
   .drawer {
