@@ -22,7 +22,7 @@ export function PhotoGallery({
       <div className="photo-empty">
         <ImageOff size={18} aria-hidden="true" />
         <div>
-          <p>Prijava nema fotografija.</p>
+          <p>Prijava nema fotografiju.</p>
           <span>Fotografija bi pomogla drugima da prepoznaju problem.</span>
         </div>
       </div>

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import {
-  ArrowUpRight,
   CalendarDays,
   Check,
   CheckCircle2,
+  ChevronRight,
   Clock3,
   Copy,
   ExternalLink,
@@ -15,7 +15,7 @@ import {
   UserRound,
   X,
 } from 'lucide-react';
-import { APP, REJECT_REASONS, REPORT_STATUSES, RESOLUTION_REJECT_REASONS } from '../config';
+import { REJECT_REASONS, REPORT_STATUSES, RESOLUTION_REJECT_REASONS } from '../config';
 import {
   formatCoordinates,
   formatDate,
@@ -29,7 +29,6 @@ import { Drawer } from './Drawer';
 import { PhotoGallery } from './PhotoGallery';
 import { imagesEnabled } from '../services/images';
 import { CategoryTag } from './ui/CategoryGlyph';
-import { ActionStatusBadge } from './ui/ActionStatusBadge';
 import { SectionLabel, Spinner } from './ui/EmptyState';
 import { BeforeAfter } from './ui/BeforeAfter';
 import { DeleteReportButton } from './ui/DeleteReportButton';
@@ -38,7 +37,15 @@ import { ReportPlan } from './ui/ReportPlan';
 import { ReportProgress } from './ui/ReportProgress';
 import { StatusBadge } from './ui/StatusBadge';
 import { RejectForm } from './moderation/RejectForm';
-import type { Report, ReportStatus } from '../types';
+import type { ActionStatus, Report, ReportStatus } from '../types';
+
+/** Eyebrow on the linked-action card, e.g. "Akcija planirana". */
+const RELATED_ACTION_LABEL: Record<ActionStatus, string> = {
+  planned: 'Akcija planirana',
+  in_progress: 'Akcija u toku',
+  completed: 'Akcija završena',
+  cancelled: 'Akcija otkazana',
+};
 
 /** Confirm or reject the author's proof that the problem was fixed. */
 function ResolutionReviewBox({ report }: { report: Report }) {
@@ -475,7 +482,28 @@ export function ReportDetail() {
         {report.source === 'demo' ? <span className="demo-pill">demo</span> : null}
       </p>
 
-      <ReportProgress report={report} />
+      {relatedAction ? (
+        <button
+          type="button"
+          className="related-action"
+          onClick={() => selectAction(relatedAction)}
+        >
+          <CalendarDays size={18} aria-hidden="true" className="related-action__icon" />
+          <span className="related-action__body">
+            <span className="related-action__eyebrow">
+              {RELATED_ACTION_LABEL[relatedAction.status]}
+            </span>
+            <strong>{relatedAction.title}</strong>
+            <span className="related-action__date">
+              {formatWeekday(relatedAction.date)}, {formatDate(relatedAction.date)} u{' '}
+              {formatTime(relatedAction.date)}
+            </span>
+          </span>
+          <ChevronRight size={18} aria-hidden="true" className="related-action__chevron" />
+        </button>
+      ) : (
+        <ReportProgress report={report} />
+      )}
 
       {resolved ? (
         <div className="resolved-banner" role="status">
@@ -561,22 +589,32 @@ export function ReportDetail() {
             <MapPin size={14} aria-hidden="true" />
             <span>{report.address ?? 'Novi Sad'}</span>
           </div>
-          <code className="location-box__coords">
-            {formatCoordinates(report.latitude, report.longitude)}
-          </code>
+          {auth.isModerator ? (
+            <code className="location-box__coords">
+              {formatCoordinates(report.latitude, report.longitude)}
+            </code>
+          ) : null}
           <div className="location-box__actions">
-            <a
-              className="btn btn--quiet btn--sm"
-              href={openStreetMapUrl(report)}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <ExternalLink size={13} aria-hidden="true" /> OpenStreetMap
-            </a>
-            <button type="button" className="btn btn--quiet btn--sm" onClick={copyCoordinates}>
-              {copied ? <Check size={13} aria-hidden="true" /> : <Copy size={13} aria-hidden="true" />}
-              {copied ? 'Kopirano' : 'Kopiraj koordinate'}
-            </button>
+            {auth.isModerator ? (
+              <>
+                <a
+                  className="btn btn--quiet btn--sm"
+                  href={openStreetMapUrl(report)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <ExternalLink size={13} aria-hidden="true" /> OpenStreetMap
+                </a>
+                <button type="button" className="btn btn--quiet btn--sm" onClick={copyCoordinates}>
+                  {copied ? (
+                    <Check size={13} aria-hidden="true" />
+                  ) : (
+                    <Copy size={13} aria-hidden="true" />
+                  )}
+                  {copied ? 'Kopirano' : 'Kopiraj koordinate'}
+                </button>
+              </>
+            ) : null}
             <button
               type="button"
               className="btn btn--quiet btn--sm"
@@ -587,40 +625,6 @@ export function ReportDetail() {
           </div>
         </div>
       </section>
-
-      {relatedAction ? (
-        <section className="detail-section">
-          <SectionLabel>Povezana akcija</SectionLabel>
-          <button
-            type="button"
-            className="related-action"
-            onClick={() => selectAction(relatedAction)}
-          >
-            <span className="related-action__top">
-              <span className="related-action__eyebrow">Akcija čišćenja</span>
-              <ActionStatusBadge status={relatedAction.status} />
-            </span>
-            <strong>{relatedAction.title}</strong>
-            <span className="related-action__meta">
-              <CalendarDays size={12} aria-hidden="true" />
-              {formatWeekday(relatedAction.date)}, {formatDate(relatedAction.date)} u{' '}
-              {formatTime(relatedAction.date)}
-            </span>
-            <span className="related-action__meta">
-              <MapPin size={12} aria-hidden="true" />
-              {relatedAction.meetingPoint}
-            </span>
-            <span className="related-action__link">
-              Pogledaj akciju <ArrowUpRight size={13} aria-hidden="true" />
-            </span>
-          </button>
-        </section>
-      ) : null}
-
-      <p className="detail-note">
-        Ovo je prijava iz zajednice. Status „Nova prijava” znači da problem još nije proveren, a ne da je
-        rešen. Za tačnost opisa odgovoran je autor prijave.
-      </p>
 
       {auth.isModerator && report.source === 'firestore' ? (
         published ? (
@@ -667,13 +671,6 @@ export function ReportDetail() {
       {auth.isModerator && moderatedLine ? (
         <p className="detail-moderated">{moderatedLine}</p>
       ) : null}
-
-      <div className="detail-meta">
-        <span>Koordinate su numeričke i javne.</span>
-        <a href={`${APP.openStreetMap}?mlat=${report.latitude}&mlon=${report.longitude}`} target="_blank" rel="noreferrer">
-          Podaci o mapi
-        </a>
-      </div>
     </Drawer>
   );
 }
