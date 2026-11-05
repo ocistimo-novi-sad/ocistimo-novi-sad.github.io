@@ -11,7 +11,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { formatCoordinates, formatDate, formatTime, formatWeekday, plural } from '../lib/format';
+import { formatCoordinates, formatDateTime, formatWeekday, plural } from '../lib/format';
 import { openStreetMapUrl } from '../lib/geo';
 import { updateActionStatus } from '../services/actions';
 import { toSerbianError } from '../services/errors';
@@ -124,7 +124,8 @@ export function ActionDetail() {
         <div className="action-hero__row">
           <CalendarDays size={16} aria-hidden="true" />
           <strong>
-            {formatWeekday(action.date)}, {formatDate(action.date)} u {formatTime(action.date)}
+            <span className="visually-hidden">Datum i vreme: </span>
+            {formatWeekday(action.date)}, {formatDateTime(action.date)}
           </strong>
         </div>
         <p className={`action-hero__state${isPast && action.status !== 'completed' ? ' is-muted' : ''}`}>
@@ -139,7 +140,10 @@ export function ActionDetail() {
         <div className="action-hero__place">
           <div className="action-hero__row">
             <MapPin size={16} aria-hidden="true" />
-            <strong>{action.meetingPoint || 'Novi Sad'}</strong>
+            <strong>
+              <span className="visually-hidden">Mesto okupljanja: </span>
+              {action.meetingPoint || 'Novi Sad'}
+            </strong>
           </div>
           {auth.isModerator ? (
             <code className="location-box__coords">
@@ -154,16 +158,14 @@ export function ActionDetail() {
             >
               Prikaži na mapi
             </button>
-            {auth.isModerator ? (
-              <a
-                className="btn btn--quiet btn--sm"
-                href={openStreetMapUrl(action)}
-                target="_blank"
-                rel="noreferrer"
-              >
-                <ExternalLink size={13} aria-hidden="true" /> OpenStreetMap
-              </a>
-            ) : null}
+            <a
+              className="btn btn--quiet btn--sm"
+              href={openStreetMapUrl(action)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <ExternalLink size={13} aria-hidden="true" /> OpenStreetMap
+            </a>
           </div>
         </div>
       </div>

@@ -779,13 +779,15 @@
 
 .action-hero__row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   color: var(--ink);
 }
 
+/* Top-aligned so the icon stays with the first line when the text wraps. */
 .action-hero__row svg {
   flex: 0 0 auto;
+  margin-top: 1px;
   color: var(--forest);
 }
 

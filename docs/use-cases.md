@@ -241,7 +241,7 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
   4. Detalji, redom:
      - status, naslov, organizator i njegova napomena;
      - naslovna fotografija;
-     - kartica sa datumom i vremenom, stanjem akcije, mestom okupljanja i dugmetom „Prikaži na mapi“ (moderator vidi i koordinate i „OpenStreetMap“);
+     - kartica sa datumom i vremenom, stanjem akcije, mestom okupljanja i dugmadima „Prikaži na mapi“ i „OpenStreetMap“ (moderator vidi i koordinate);
      - opis, a za završene akcije i fotografije sa akcije;
      - šta poneti;
      - povezane prijave (klik vodi na prijavu).
