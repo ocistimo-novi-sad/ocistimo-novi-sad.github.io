@@ -232,14 +232,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [actions, selectedActionId],
   );
 
+  // The action shown on the report: the nearest active one, else the latest
+  // completed one. A cancelled action is never shown, so the report keeps its
+  // progress steps instead.
   const relatedAction = useMemo(() => {
     if (!selectedReport) return null;
     const linked = actions.filter((action) => action.reportIds.includes(selectedReport.id));
-    if (linked.length === 0) return null;
-    const active = linked.find(
-      (action) => action.status === 'planned' || action.status === 'in_progress',
-    );
-    return active ?? linked[0];
+    const active = linked
+      .filter((action) => action.status === 'planned' || action.status === 'in_progress')
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+    if (active.length) return active[0];
+    const completed = linked
+      .filter((action) => action.status === 'completed')
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
+    return completed[0] ?? null;
   }, [actions, selectedReport]);
 
   const actionReports = useMemo(() => {
