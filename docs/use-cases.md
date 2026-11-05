@@ -238,7 +238,13 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
   1. Lista je podeljena na **Predstojeće** i **Završene**. Mapa prikazuje isti period kao lista (na telefonu se bira u panelu **Filteri**).
   2. Pretraga po nazivu, opisu, mestu okupljanja i organizatoru sužava i listu i mapu. **Blizu mene** ređa akcije po udaljenosti mesta okupljanja (umesto po datumu), uz isto ponašanje kao kod prijava (UC-02).
   3. Klik na akciju otvara detalje i prikazuje mesto okupljanja na mapi.
-  4. Detalji: naslovna fotografija, datum i vreme, opis, mesto okupljanja, organizator i napomena, šta poneti, povezane prijave (klik vodi na prijavu), a za završene i fotografije sa akcije.
+  4. Detalji, redom:
+     - status, naslov, organizator i njegova napomena;
+     - naslovna fotografija;
+     - kartica sa datumom i vremenom, stanjem akcije, mestom okupljanja i dugmetom „Prikaži na mapi“ (moderator vidi i koordinate i „OpenStreetMap“);
+     - opis, a za završene akcije i fotografije sa akcije;
+     - šta poneti;
+     - povezane prijave (klik vodi na prijavu).
 
 ### UC-05 Prijava Google nalogom
 
