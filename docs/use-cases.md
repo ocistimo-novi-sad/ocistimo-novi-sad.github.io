@@ -233,7 +233,7 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
   4. fotografije (klik = uvećan prikaz);
   5. opis i plan („Šta zajednica može sama“, „Za šta nam treba pomoć“);
   6. lokaciju (adresa). Moderator vidi i koordinate.
-- **Radnje:** „Prikaži na mapi“, „Prijavi sadržaj“ (vidi UC-12). Moderator ima i „OpenStreetMap“ i „Kopiraj koordinate“.
+- **Radnje:** „Prikaži na mapi“, „OpenStreetMap“, „Prijavi sadržaj“ (vidi UC-12).
 - **Deljenje:** dok je prijava otvorena, adresa u pregledaču sadrži `?prijava=…`. Taj link otvara istu prijavu. Ako prijava nije javna, a korisnik nije njen autor ni moderator, aplikacija javlja „Ova prijava još nije javna. Prijavi se ako si njen autor.“ (prijavljenom korisniku samo „Ova prijava još nije javna.“) Ako je obrisana: „Prijava nije pronađena. Možda je obrisana.“
 
 ### UC-04 Pregled akcija čišćenja
@@ -244,7 +244,13 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
   1. Lista je podeljena na **Predstojeće** i **Završene**. Mapa prikazuje isti period kao lista (na telefonu se bira u panelu **Filteri**).
   2. Pretraga po nazivu, opisu, mestu okupljanja i organizatoru sužava i listu i mapu. **Blizu mene** ređa akcije po udaljenosti mesta okupljanja (umesto po datumu), uz isto ponašanje kao kod prijava (UC-02).
   3. Klik na akciju otvara detalje i prikazuje mesto okupljanja na mapi.
-  4. Detalji: naslovna fotografija, datum i vreme, opis, mesto okupljanja, organizator i napomena, šta poneti, povezane prijave (klik vodi na prijavu), a za završene i fotografije sa akcije.
+  4. Detalji, redom:
+     - status, naslov, organizator i njegova napomena;
+     - naslovna fotografija;
+     - kartica sa datumom i vremenom, stanjem akcije, mestom okupljanja i dugmadima „Prikaži na mapi“ i „OpenStreetMap“ (moderator vidi i koordinate);
+     - opis, a za završene akcije i fotografije sa akcije;
+     - šta poneti;
+     - povezane prijave (klik vodi na prijavu).
 
 ### UC-05 Prijava Google nalogom
 
