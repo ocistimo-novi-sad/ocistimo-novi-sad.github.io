@@ -468,10 +468,6 @@
   margin-top: 8px;
 }
 
-.delete-confirm__text--ok {
-  color: var(--leaf-3);
-}
-
 /* --- Resolution ---------------------------------------------------------- */
 
 .resolved-banner {
@@ -732,10 +728,11 @@
   object-fit: cover;
 }
 
+/* "When and where" card: date, state, then meeting point and map button. */
 .action-hero {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   margin: 12px 0 16px;
   padding: 12px;
   border: 1px solid var(--line);
@@ -743,43 +740,45 @@
   border-radius: var(--radius-md);
 }
 
-.action-hero__date {
+.action-hero__row {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
+  align-items: flex-start;
   gap: 8px;
+  color: var(--ink);
 }
 
-.action-hero__weekday {
-  color: var(--muted);
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+/* Top-aligned so the icon stays with the first line when the text wraps. */
+.action-hero__row svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--forest);
 }
 
-.action-hero__date strong {
-  font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-}
-
-.action-hero__time {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--ink-2);
-  font-family: var(--font-mono);
-  font-size: 10px;
+.action-hero__row strong {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
 }
 
 .action-hero__state {
-  padding-top: 8px;
-  border-top: 1px solid var(--line);
+  padding-left: 24px;
   color: var(--muted);
   font-size: 10.5px;
   line-height: 1.5;
+}
+
+.action-hero__place {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+
+.action-hero__place .location-box__coords {
+  margin-bottom: 0;
+  padding-left: 24px;
 }
 
 .action-hero__state.is-muted {
@@ -805,30 +804,9 @@
   color: var(--forest);
 }
 
-.organizer {
-  display: flex;
-  align-items: flex-start;
-  gap: 9px;
-}
-
-.organizer__icon {
-  display: grid;
-  flex: 0 0 auto;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border: 1px solid var(--line);
-  color: var(--forest);
-  border-radius: 50%;
-}
-
-.organizer__name {
-  font-size: 12.5px;
-  font-weight: 600;
-}
-
+/* Organizer's note, right under the "Organizator: …" byline. */
 .organizer__note {
-  margin-top: 3px;
+  margin: -8px 0 14px;
   color: var(--muted);
   font-size: 11.5px;
   line-height: 1.5;
