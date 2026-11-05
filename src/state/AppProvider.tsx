@@ -21,21 +21,23 @@ import { droppedImages, removeImages } from '../services/images';
 import {
   acceptEdit,
   approveReport as approveReportRecord,
-  approveResolution,
   countEditedReports,
   countPendingReports,
   countPendingResolutions,
   deleteReportRecord,
   fetchMyReports,
   fetchReport,
-  markResolved,
   rejectReport as rejectReportRecord,
   rejectResolution,
+  resolveDroppedImages,
+  resolveKind,
+  resolveReport,
   revertEdit,
   submitResolution,
   updateOwnReport,
   updateReportAsModerator,
   updateReportStatus,
+  type ResolveKind,
 } from '../services/reports';
 import {
   AppContext,
@@ -59,6 +61,21 @@ import type {
 } from '../types';
 
 type PendingIntent = { kind: 'create' } | { kind: 'flag'; reportId: string };
+
+const RESOLVE_MESSAGES: Record<ResolveKind, { error: string; success: string }> = {
+  'confirm-proof': {
+    error: 'Sanaciju nije moguće potvrditi.',
+    success: 'Sanacija je potvrđena. Prijava je rešena.',
+  },
+  'without-proof': {
+    error: 'Prijavu nije moguće označiti kao rešenu.',
+    success: 'Prijava je označena kao rešena.',
+  },
+  'status-only': {
+    error: 'Status nije moguće sačuvati.',
+    success: 'Status prijave je ažuriran.',
+  },
+};
 
 function fold(value: string): string {
   return value
@@ -818,32 +835,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [applyReport, notify],
   );
 
-  const approveReportResolution = useCallback(
-    async (report: Report) => {
+  /** Resolves a report by the shared rule (resolveKind in services/reports). */
+  const resolveReportAs = useCallback(
+    async (report: Report, kind: ResolveKind) => {
+      const messages = RESOLVE_MESSAGES[kind];
       try {
-        await approveResolution(report.id);
+        await resolveReport(report.id, kind);
       } catch (error) {
-        notify('error', toSerbianError(error, 'Sanaciju nije moguće potvrditi.'));
+        notify('error', toSerbianError(error, messages.error));
         throw error;
       }
-      applyReport({
-        ...report,
-        status: 'resolved',
-        resolution: report.resolution
-          ? {
-              ...report.resolution,
-              state: 'approved',
-              rejectionReason: undefined,
-              reviewedAt: new Date(),
-              reviewedBy: auth.user?.uid,
-            }
-          : undefined,
-        ...moderatorStamp(),
-      });
-      setResolutionCount((count) => Math.max(0, count - 1));
-      notify('success', 'Sanacija je potvrđena. Prijava je rešena.');
+
+      // Mirrors resolveChanges, so the drawer updates without a reload.
+      const reviewed = { reviewedAt: new Date(), reviewedBy: auth.user?.uid };
+      let resolution = report.resolution;
+      if (kind === 'confirm-proof' && resolution) {
+        resolution = { ...resolution, state: 'approved', rejectionReason: undefined, ...reviewed };
+      } else if (kind === 'without-proof') {
+        resolution = {
+          state: 'approved',
+          imageUrls: [],
+          note: '',
+          byModerator: true,
+          submittedAt: null,
+          ...reviewed,
+        };
+      }
+      applyReport({ ...report, status: 'resolved', resolution, ...moderatorStamp() });
+
+      if (kind === 'confirm-proof') {
+        setResolutionCount((count) => Math.max(0, count - 1));
+      }
+      void removeImages(resolveDroppedImages(report, kind));
+      notify('success', messages.success);
     },
     [applyReport, auth.user, moderatorStamp, notify],
+  );
+
+  const approveReportResolution = useCallback(
+    (report: Report) => resolveReportAs(report, 'confirm-proof'),
+    [resolveReportAs],
   );
 
   const rejectReportResolution = useCallback(
@@ -873,34 +904,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [applyReport, auth.user, moderatorStamp, notify],
   );
 
-  const markReportResolved = useCallback(
-    async (report: Report) => {
-      try {
-        await markResolved(report.id);
-      } catch (error) {
-        notify('error', toSerbianError(error, 'Prijavu nije moguće označiti kao rešenu.'));
-        throw error;
+  const setReportStatus = useCallback(
+    async (report: Report, status: ReportStatus) => {
+      if (status === 'resolved' && report.status !== 'resolved') {
+        await resolveReportAs(report, resolveKind(report));
+      } else {
+        await moderateReport(report.id, status);
       }
-      applyReport({
-        ...report,
-        status: 'resolved',
-        resolution: {
-          state: 'approved',
-          imageUrls: [],
-          note: '',
-          byModerator: true,
-          submittedAt: null,
-          reviewedAt: new Date(),
-          reviewedBy: auth.user?.uid,
-        },
-        ...moderatorStamp(),
-      });
-      if (report.resolution?.state === 'pending') {
-        setResolutionCount((count) => Math.max(0, count - 1));
-      }
-      notify('success', 'Prijava je označena kao rešena.');
     },
-    [applyReport, auth.user, moderatorStamp, notify],
+    [moderateReport, resolveReportAs],
   );
 
   // Deep link (?prijava=<id>) from shared links. Waits for auth so
@@ -1103,7 +1115,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       submitReportResolution,
       approveReportResolution,
       rejectReportResolution,
-      markReportResolved,
+      setReportStatus,
       mapRef,
       flyTo,
       userPosition,
@@ -1182,7 +1194,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       submitReportResolution,
       approveReportResolution,
       rejectReportResolution,
-      markReportResolved,
+      setReportStatus,
       flyTo,
       userPosition,
       locating,

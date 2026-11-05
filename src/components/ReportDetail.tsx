@@ -28,6 +28,7 @@ import { useApp } from '../state/app-context';
 import { Drawer } from './Drawer';
 import { PhotoGallery } from './PhotoGallery';
 import { imagesEnabled } from '../services/images';
+import { resolveKind } from '../services/reports';
 import { CategoryTag } from './ui/CategoryGlyph';
 import { SectionLabel, Spinner } from './ui/EmptyState';
 import { BeforeAfter } from './ui/BeforeAfter';
@@ -101,54 +102,6 @@ function ResolutionReviewBox({ report }: { report: Report }) {
         </div>
       )}
     </div>
-  );
-}
-
-/** Moderator shortcut: resolved without waiting for the author's proof. */
-function MarkResolvedButton({ report }: { report: Report }) {
-  const { markReportResolved } = useApp();
-  const [confirming, setConfirming] = useState(false);
-  const [busy, setBusy] = useState(false);
-
-  if (!confirming) {
-    return (
-      <button type="button" className="btn btn--quiet btn--sm" onClick={() => setConfirming(true)}>
-        <CheckCircle2 size={12} aria-hidden="true" /> Označi kao rešeno
-      </button>
-    );
-  }
-
-  return (
-    <span className="delete-confirm" role="group" aria-label="Potvrda">
-      <span className="delete-confirm__text delete-confirm__text--ok">Rešeno bez dokaza?</span>
-      <button
-        type="button"
-        className="btn btn--primary btn--sm"
-        onClick={() => {
-          setBusy(true);
-          void markReportResolved(report)
-            .catch(() => {
-              // The provider already surfaced the error.
-            })
-            .finally(() => {
-              setBusy(false);
-              setConfirming(false);
-            });
-        }}
-        disabled={busy}
-      >
-        {busy ? <Spinner size={12} /> : <Check size={12} aria-hidden="true" />}
-        Da
-      </button>
-      <button
-        type="button"
-        className="btn btn--quiet btn--sm"
-        onClick={() => setConfirming(false)}
-        disabled={busy}
-      >
-        Ne
-      </button>
-    </span>
   );
 }
 
@@ -270,12 +223,14 @@ function AdminStatusBox({
   currentStatus,
   saving,
   value,
+  hint,
   onChange,
   onSave,
 }: {
   currentStatus: ReportStatus;
   saving: boolean;
   value: ReportStatus;
+  hint: string;
   onChange: (status: ReportStatus) => void;
   onSave: () => void;
 }) {
@@ -308,9 +263,7 @@ function AdminStatusBox({
           {saving ? <Spinner size={14} /> : 'Sačuvaj'}
         </button>
       </div>
-      <p className="admin-box__hint">
-        Promena se beleži uz tvoj nalog i vreme izmene. Status menjaj tek kada je proveren.
-      </p>
+      <p className="admin-box__hint">{hint}</p>
     </div>
   );
 }
@@ -322,7 +275,7 @@ export function ReportDetail() {
     closeSelection,
     requestFlag,
     auth,
-    moderateReport,
+    setReportStatus,
     editReport,
     openModal,
     selectAction,
@@ -366,10 +319,22 @@ export function ReportDetail() {
     }
   };
 
+  // "Rešeno" resolves the report by the shared rule (resolveKind), so the hint
+  // says what saving will do with the author's proof.
+  const resolveAs = adminStatus === 'resolved' && !resolved ? resolveKind(report) : null;
+  const statusHint =
+    resolveAs === 'confirm-proof'
+      ? 'Ovim se potvrđuje i dokaz sanacije koji je autor poslao.'
+      : resolveAs === 'without-proof'
+        ? resolution?.state === 'rejected'
+          ? 'Prijava se označava kao rešena bez dokaza, a odbijeni dokaz sanacije se briše. Autor dobija zahvalnicu.'
+          : 'Prijava se označava kao rešena bez dokaza. Autor dobija zahvalnicu.'
+        : 'Promena se beleži uz tvoj nalog i vreme izmene. Status menjaj tek kada je proveren.';
+
   const saveStatus = async () => {
     setSaving(true);
     try {
-      await moderateReport(report.id, adminStatus);
+      await setReportStatus(report, adminStatus);
     } catch {
       // The provider already surfaced the error.
     } finally {
@@ -632,6 +597,7 @@ export function ReportDetail() {
             currentStatus={report.status}
             saving={saving}
             value={adminStatus}
+            hint={statusHint}
             onChange={setAdminStatus}
             onSave={() => void saveStatus()}
           />
@@ -648,23 +614,16 @@ export function ReportDetail() {
         <ResolutionReviewBox key={`resolution-${report.id}`} report={report} />
       ) : null}
 
-      {canManage && (!isOwner || auth.isModerator) ? (
+      {canManage && !isOwner ? (
         <div className="detail-tools">
-          {auth.isModerator && published && !resolved && !resolutionPending ? (
-            <MarkResolvedButton key={`resolve-${report.id}`} report={report} />
-          ) : null}
-          {!isOwner ? (
-            <>
-              <button
-                type="button"
-                className="btn btn--quiet btn--sm"
-                onClick={() => editReport(report)}
-              >
-                <Pencil size={12} aria-hidden="true" /> Izmeni prijavu
-              </button>
-              <DeleteReportButton report={report} />
-            </>
-          ) : null}
+          <button
+            type="button"
+            className="btn btn--quiet btn--sm"
+            onClick={() => editReport(report)}
+          >
+            <Pencil size={12} aria-hidden="true" /> Izmeni prijavu
+          </button>
+          <DeleteReportButton report={report} />
         </div>
       ) : null}
 

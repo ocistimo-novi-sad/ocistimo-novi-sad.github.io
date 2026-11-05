@@ -59,7 +59,7 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 | Pregled neobjavljenih prijava drugih korisnika | — | — | ✓ | ✓ |
 | Odobravanje i odbijanje novih prijava | — | — | ✓ | ✓ |
 | Pregled izmena objavljenih prijava (prihvati / vrati) | — | — | ✓ | ✓ |
-| Potvrda ili odbijanje dokaza sanacije, „Označi kao rešeno“ | — | — | ✓ | ✓ |
+| Potvrda ili odbijanje dokaza sanacije, rešeno bez dokaza | — | — | ✓ | ✓ |
 | Promena statusa prijave | — | — | ✓ | ✓ |
 | Izmena i brisanje bilo čije prijave | — | — | ✓ | ✓ |
 | Obrada označenog (spornog) sadržaja | — | — | ✓ | ✓ |
@@ -142,7 +142,7 @@ stateDiagram-v2
 
 ### 4.2 Status (samo za objavljene prijave)
 
-Status opisuje stanje problema na terenu. Menja ga moderator ručno; automatski se menja i kada moderator potvrdi dokaz sanacije ili klikne „Označi kao rešeno“, kao i kada se promeni status akcije kojoj je prijava povezana (vidi napomenu ispod).
+Status opisuje stanje problema na terenu. Menja ga moderator ručno; automatski se menja i kada moderator potvrdi dokaz sanacije, kao i kada se promeni status akcije kojoj je prijava povezana (vidi napomenu ispod).
 
 | Status | Značenje |
 |---|---|
@@ -174,7 +174,7 @@ stateDiagram-v2
     CekaPotvrdu --> Reseno: Moderator potvrdi
     CekaPotvrdu --> Odbijen: Moderator odbije (uz razlog)
     Odbijen --> CekaPotvrdu: Autor pošalje novi dokaz
-    BezDokaza --> Reseno: Moderator „Označi kao rešeno“ (bez dokaza)
+    BezDokaza --> Reseno: Moderator izabere status „Rešeno“ (bez dokaza)
 ```
 
 Kada je prijava rešena uz dokaz, u detaljima se prikazuje poređenje **„Pre i posle“** i napomena autora.
@@ -390,7 +390,7 @@ Moderator ima sve što i član zajednice, plus stavku **Moderacija** u meniju na
 - **Gde:** Moderacija → **Sanacije** (najstarije prvo); ili detalji prijave → „Sanacija čeka potvrdu“
 - **Tok:**
   1. Moderator vidi „Pre i posle“ i napomenu autora.
-  2. **Potvrdi sanaciju** → prijava dobija status „Rešeno“ i zeleni natpis „Rešeno ‹datum› · hvala zajednici“.
+  2. **Potvrdi sanaciju** → prijava dobija status „Rešeno“ i zeleni natpis „Rešeno ‹datum› · hvala zajednici“. Isto se dešava i kada moderator u okviru „Moderacija“ izabere status „Rešeno“ i klikne „Sačuvaj“ (napomena ispod liste: „Ovim se potvrđuje i dokaz sanacije koji je autor poslao.“).
      **E-pošta:** autoru **„Problem je rešen“** (E-8).
   3. **Odbij…** → razlog (najmanje 10 znakova) ili čest razlog:
      - Fotografija ne prikazuje isto mesto.
@@ -400,19 +400,21 @@ Moderator ima sve što i član zajednice, plus stavku **Moderacija** u meniju na
 
      **E-pošta:** autoru **„Dokaz sanacije nije prihvaćen“** sa razlogom (E-9).
 
-### UC-17 Označi kao rešeno bez dokaza
+### UC-17 Rešeno bez dokaza
 
-- **Gde:** detalji objavljene, nerešene prijave → „Označi kao rešeno“ → „Rešeno bez dokaza?“ → „Da“
+- **Gde:** detalji objavljene, nerešene prijave → okvir „Moderacija“ → status „Rešeno“ → „Sačuvaj“. Ispod liste piše „Prijava se označava kao rešena bez dokaza. Autor dobija zahvalnicu.“
 - **Kada:** moderator zna da je problem rešen (npr. sa akcije), a autor nije poslao fotografiju.
-- **Preduslov:** nema dokaza koji čeka potvrdu (tada se koristi UC-16).
+- **Preduslov:** nema dokaza koji čeka potvrdu (ako ga ima, isti izbor potvrđuje dokaz, vidi UC-16).
+- **Odbijen dokaz:** ako je autorov dokaz ranije odbijen, njegove fotografije i napomena se brišu, jer odbijen dokaz ne postaje „Pre i posle“. Ispod liste tada piše „Prijava se označava kao rešena bez dokaza, a odbijeni dokaz sanacije se briše. Autor dobija zahvalnicu.“
 - **E-pošta:** autoru **„Problem je rešen“** u varijanti „Vaša prijava … je označena kao rešena.“ (E-8).
-- **Izuzetak:** ako je prijava već jednom bila rešena, pa joj je status ručno vraćen, ponovno „Označi kao rešeno“ šalje **„Promenjen status prijave“** sa statusom „Rešeno“ (E-12), a ne E-8.
+- **Izuzetak:** ako je prijava već jednom bila rešena, pa joj je status ručno vraćen, ponovni izbor „Rešeno“ šalje **„Promenjen status prijave“** sa statusom „Rešeno“ (E-12), a ne E-8.
 
 ### UC-18 Promena statusa prijave
 
 - **Gde:** detalji objavljene prijave → okvir „Moderacija“ → izbor statusa → „Sačuvaj“
 - **Tok:** moderator bira bilo koji od pet statusa (npr. „Akcija planirana“, „Akcija u toku“, „Nije za akciju“).
-- **E-pošta:** autoru **„Promenjen status prijave“** sa novim statusom i njegovim značenjem (E-12). Važi za svaki status, uključujući „Rešeno“ izabrano iz liste. Kada prijava postane rešena preko UC-16 ili UC-17, autor umesto toga dobija E-8, ne obe poruke.
+- **Rešeno:** izbor „Rešeno“ ne menja samo status. Ako dokaz sanacije čeka potvrdu, važi UC-16, a inače UC-17.
+- **E-pošta:** autoru **„Promenjen status prijave“** sa novim statusom i njegovim značenjem (E-12). Za „Rešeno“ autor umesto toga dobija E-8 (UC-16 ili UC-17), ne obe poruke.
 
 ### UC-19 Izmena i brisanje bilo koje prijave
 
