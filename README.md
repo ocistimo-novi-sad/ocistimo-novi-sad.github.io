@@ -2,11 +2,13 @@
 
 **Mapa problema u javnim prostorima Novog Sada i mesto za organizovanje zajedničkih akcija čišćenja i uređenja grada.**
 
+👉 **[ocistimo-novi-sad.github.io](https://ocistimo-novi-sad.github.io/)**
+
 Kuka i Motika je zamišljen kao praktičan alat za građane koji žele da prijave smeće, oštećen javni inventar, grafite i druge probleme u svom okruženju. Cilj je da se takvi problemi lakše uoče, dokumentuju i povežu sa ljudima koji žele da pomognu u njihovom rešavanju.
 
 Ideja projekta je jednostavna: umesto da informacije o zapuštenim mestima ostanu rasute po porukama i društvenim mrežama, sve prijave mogu da budu pregledno prikazane na jednoj mapi. Tako zajednica lakše može da proceni gde je pomoć potrebna i da organizuje konkretnu akciju.
 
-Detaljan opis rada aplikacije — uloge, slučajevi korišćenja, životni ciklus prijava i akcija i sva obaveštenja e-poštom — nalazi se u dokumentu [Kako aplikacija radi](docs/use-cases.md). Kako se predlažu i objavljuju izmene (grane, pregled, staging, Release Notes) opisano je u [CONTRIBUTING.md](CONTRIBUTING.md).
+Detaljan opis rada aplikacije — uloge, slučajevi korišćenja, životni ciklus prijava i akcija i sva obaveštenja e-poštom — nalazi se u dokumentu [Kako aplikacija radi](docs/use-cases.md). Kako se aplikacija pokreće lokalno i kako se predlažu i objavljuju izmene (grane, pregled, staging, Release Notes) opisano je u [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Sadržaj
 
