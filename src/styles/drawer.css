@@ -468,10 +468,6 @@
   margin-top: 8px;
 }
 
-.delete-confirm__text--ok {
-  color: var(--leaf-3);
-}
-
 /* --- Resolution ---------------------------------------------------------- */
 
 .resolved-banner {
