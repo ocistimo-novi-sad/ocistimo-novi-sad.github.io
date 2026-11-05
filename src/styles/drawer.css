@@ -405,12 +405,11 @@
   line-height: 1.45;
 }
 
+/* Same font as the byline: mono at 14px split the date from the time on a phone (#92). */
 .detail-moderated {
   margin: -8px 0 16px;
   color: var(--muted-2);
-  font-family: var(--font-mono);
   font-size: var(--text-xs);
-  letter-spacing: 0.04em;
 }
 
 /* --- Owner and moderator tools ------------------------------------------- */
