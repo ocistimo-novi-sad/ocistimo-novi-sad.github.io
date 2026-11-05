@@ -84,12 +84,19 @@ export function reportEvents(
     }
   }
 
-  // A confirmed fix already tells the author the report is resolved.
+  // A confirmed fix already tells the author the report is resolved. An action
+  // that plans the report sends "planned", one that is cancelled sends
+  // "cancelled", and a deleted one tells no one, so neither of those status
+  // changes needs its own mail. statusActionId names the action that set the
+  // status; a moderator's own change removes it.
   const status = asString(after.status);
+  const coveredByAction =
+    asString(after.statusActionId) !== '' && (status === 'planned' || status === 'new');
   if (
     before &&
     moderation === 'approved' &&
     status !== asString(before.status) &&
+    !coveredByAction &&
     !events.some((item) => item.kind === 'proof-approved')
   ) {
     events.push({ kind: 'status-changed', status });

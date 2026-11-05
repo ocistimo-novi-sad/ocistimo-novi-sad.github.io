@@ -591,10 +591,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ...(action.resultImageUrls ?? []),
         ]),
       ]);
-      await loadActions();
+      // Deleting also puts its reports back to their earlier status.
+      await Promise.all([loadActions(), loadReports()]);
       notify('success', 'Akcija je obrisana.');
     },
-    [loadActions, notify],
+    [loadActions, loadReports, notify],
   );
 
   const moderateReport = useCallback(

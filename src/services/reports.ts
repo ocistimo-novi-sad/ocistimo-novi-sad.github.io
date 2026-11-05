@@ -267,6 +267,8 @@ export async function updateReportStatus(
   const user = currentUser();
   await updateDoc(doc(requireDb(), 'reports', reportId), {
     status,
+    // A status set by hand is the moderator's, not an action's to undo.
+    statusActionId: deleteField(),
     ...moderationStamp(user),
   });
 }
@@ -540,6 +542,7 @@ export async function approveResolution(reportId: string): Promise<void> {
   const user = currentUser();
   await updateDoc(doc(requireDb(), 'reports', reportId), {
     status: 'resolved',
+    statusActionId: deleteField(),
     'resolution.state': 'approved',
     'resolution.rejectionReason': deleteField(),
     'resolution.reviewedAt': serverTimestamp(),
@@ -564,6 +567,7 @@ export async function markResolved(reportId: string): Promise<void> {
   const user = currentUser();
   await updateDoc(doc(requireDb(), 'reports', reportId), {
     status: 'resolved',
+    statusActionId: deleteField(),
     resolution: {
       state: 'approved',
       imageUrls: [],

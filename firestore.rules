@@ -314,8 +314,10 @@ service cloud.firestore {
              .hasOnly(contentKeys().concat([
                'status', 'moderation', 'rejectionReason', 'editedAt',
                'editReview', 'previousVersion', 'resolution',
-               'moderatedAt', 'moderatedBy', 'moderatedByName'
+               'moderatedAt', 'moderatedBy', 'moderatedByName',
+               'statusActionId'
              ]))
+        && request.resource.data.get('statusActionId', '') is string
         && validResolution(request.resource.data)
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(contentKeys())
             || (validReportCore(request.resource.data)

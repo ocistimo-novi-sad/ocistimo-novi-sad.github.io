@@ -99,7 +99,7 @@ Aplikacija sadrži poseban prikaz za akcije čišćenja, podeljen na **predstoje
 
 Povezivanje više prijava sa jednom akcijom olakšava planiranje rada na nekoliko problema u istom delu grada.
 
-Status akcije se automatski prenosi na sve povezane prijave: **Planirano → Akcija planirana**, **U toku → Akcija u toku**, **Završeno → Rešeno**. Otkazivanje akcije ne menja status prijava.
+Status akcije se automatski prenosi na sve povezane prijave: **Planirano → Akcija planirana**, **U toku → Akcija u toku**, **Završeno → Rešeno**. Kada se akcija otkaže ili obriše, ili se prijava ukloni iz nje, prijava se vraća na **Nova prijava**, osim ako je u drugoj aktivnoj akciji (tada dobija njen status) ili joj je moderator ručno menjao status.
 
 ## Kategorije problema
 
