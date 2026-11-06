@@ -451,9 +451,9 @@ export function ReportDetail() {
           </span>
           <ChevronRight size={18} aria-hidden="true" className="related-action__chevron" />
         </button>
-      ) : (
-        <ReportProgress report={report} />
-      )}
+      ) : null}
+
+      <ReportProgress report={report} />
 
       {resolved ? (
         <div className="resolved-banner" role="status">
