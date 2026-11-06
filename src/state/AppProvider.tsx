@@ -727,7 +727,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const changes = await updateOwnReport(report, content);
         next = { ...report, ...changes };
         message =
-          report.moderation === 'approved'
+          changes.moderation === 'approved'
             ? 'Izmena je sačuvana i vidljiva. Moderator će je pregledati.'
             : 'Prijava je ispravljena i ponovo poslata na pregled.';
       }
