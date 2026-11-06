@@ -14,7 +14,6 @@ import { useApp } from '../state/app-context';
 export function AccountMenu() {
   const { auth, openModal, notify, pendingCount, editCount, resolutionCount, myReports } =
     useApp();
-  // Author's reports that need a fix: a rejected report or a rejected proof.
   const rejectedCount = myReports.filter(
     (report) =>
       report.moderation === 'rejected' ||
