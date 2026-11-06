@@ -454,7 +454,7 @@ Administrator ima sva prava moderatora, plus tab „Korisnici i uloge“ u stavc
   2. **Fotografije:** naslovna slika (opciono); fotografije sa akcije (do 6) tek kada je status „Završeno“ ili kada akcija već ima takve fotografije.
   3. **Termin i mesto:** datum i vreme (podrazumevano za nedelju dana u 10:00), mesto okupljanja, tačka na mapi (mora biti u Novom Sadu).
   4. **Povezane prijave:** izbor do 50 objavljenih prijava koje akcija rešava. Sve izabrane prijave dobijaju status akcije, osim prijava „Rešeno“ i „Nije za akciju“ (vidi napomenu u 4.2).
-  5. **Oprema i organizator:** šta poneti (jedna stavka po redu, do 20), naziv organizatora, napomena za učesnike (opciono).
+  5. **Oprema i organizator:** šta poneti (jedna stavka po redu, do 20 stavki, svaka do 80 karaktera), naziv organizatora, napomena za učesnike (opciono).
   6. „Objavi akciju“ → akcija je odmah javna.
 - **E-pošta:** ako je status **„Planirano“** i povezane su prijave → autorima tih prijava **„Akcija čišćenja za tvoju prijavu“** (E-10). Ako je akcija napravljena odmah kao „U toku“ ili „Završeno“, poruka se ne šalje. Prelazak prijava u „Akcija planirana“ ne šalje E-12, jer to već javlja E-10. Prelazak u „Akcija u toku“ šalje E-12, a u „Rešeno“ E-8 (osim za prijavu koja je već bila rešena, pa joj je status vraćen: tada E-12, kao u UC-17).
 
