@@ -784,6 +784,14 @@ label.popover__row:hover {
   margin-top: 8px;
 }
 
+/* Shown instead of the app when it fails to render (ErrorBoundary). */
+.app-error {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: 24px;
+}
+
 .section-label {
   margin-bottom: 7px;
   color: var(--muted);
