@@ -254,7 +254,7 @@
   .btn--sm {
     height: 32px;
     padding: 0 10px;
-    font-size: 12px;
+    font-size: var(--text-xs);
   }
 
   .btn--icon {
@@ -271,16 +271,16 @@
   .chip {
     height: 32px;
     padding: 0 10px;
-    font-size: 12px;
+    font-size: var(--text-xs);
   }
 
   .select-field {
     height: 32px;
-    font-size: 12px;
+    font-size: var(--text-xs);
   }
 
   .select-field select {
-    font-size: 12px;
+    font-size: var(--text-md);
   }
 
   .popover__row {

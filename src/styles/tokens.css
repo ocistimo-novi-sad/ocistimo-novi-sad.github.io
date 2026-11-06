@@ -75,6 +75,11 @@
   --font-mono: 'JetBrains Mono', 'SFMono-Regular', ui-monospace, 'Cascadia Mono', 'Roboto Mono',
     Menlo, Consolas, monospace;
 
+  /* Type scale (#92): rem, so text follows the browser and phone font setting. */
+  --text-2xs: 0.75rem; /* 12px: only non-essential text (map attribution, key hints) */
+  --text-xs: 0.875rem; /* 14px: secondary text (labels, badges, hints, counters) */
+  --text-md: 1rem; /* 16px: body text, buttons, inputs */
+
   --header-h: 60px;
   --panel-w: 372px;
   --drawer-w: 428px;
