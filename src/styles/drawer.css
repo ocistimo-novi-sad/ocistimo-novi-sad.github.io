@@ -276,6 +276,7 @@
   color: var(--ink);
   font-size: var(--text-xs);
   font-weight: 500;
+  overflow-wrap: anywhere;
 }
 
 .location-box__head svg {
@@ -329,6 +330,7 @@
   flex-direction: column;
   gap: 3px;
   min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .related-action__eyebrow {
@@ -645,6 +647,7 @@
   font-size: var(--text-xs);
   line-height: 1.55;
   white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 /* --- Rejection ----------------------------------------------------------- */
@@ -760,6 +763,7 @@
   font-size: var(--text-md);
   font-weight: 600;
   line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .action-hero__state {
@@ -812,6 +816,7 @@
   color: var(--muted);
   font-size: var(--text-xs);
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .section-head-row {
