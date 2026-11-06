@@ -103,6 +103,7 @@
   font-weight: 700;
   letter-spacing: -0.028em;
   line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 
 .detail-byline {
@@ -252,6 +253,7 @@
   font-size: var(--text-md);
   line-height: 1.62;
   white-space: pre-line;
+  overflow-wrap: anywhere;
 }
 
 .detail-prose--muted {
