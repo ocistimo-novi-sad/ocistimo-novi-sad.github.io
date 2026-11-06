@@ -223,8 +223,9 @@ export async function createReportRecord(
   const payload: Record<string, unknown> = {
     title: input.title,
     description: input.description,
-    communityCan: input.communityCan,
-    helpNeeded: input.helpNeeded,
+    // Optional since #38: an empty plan field is left out, not saved as ''.
+    ...(input.communityCan ? { communityCan: input.communityCan } : {}),
+    ...(input.helpNeeded ? { helpNeeded: input.helpNeeded } : {}),
     category: input.category,
     status: 'new',
     moderation: 'pending',
@@ -267,6 +268,8 @@ export async function updateReportStatus(
   const user = currentUser();
   await updateDoc(doc(requireDb(), 'reports', reportId), {
     status,
+    // A status set by hand is the moderator's, not an action's to undo.
+    statusActionId: deleteField(),
     ...moderationStamp(user),
   });
 }
@@ -361,14 +364,22 @@ function pickStoredContent(data: DocumentData): Record<string, unknown> {
  * Author edit. Before publication it goes back to the review queue. After
  * publication it stays live and waits for a moderator's look, keeping the
  * last approved version so a moderator can restore it.
+ *
+ * The rules pick the case from the stored report, and a moderator may have
+ * approved it or closed an edit review since this page loaded it, so the
+ * report is read from the server first.
  */
 export async function updateOwnReport(
   report: Report,
   content: ReportContent,
 ): Promise<Partial<Report>> {
   const reference = doc(requireDb(), 'reports', report.id);
+  const snapshot = await getDoc(reference);
+  const data = snapshot.data();
+  if (!data) throw new AppError('not-found', 'Prijava više ne postoji.');
 
-  if (report.moderation !== 'approved') {
+  // Same defaults as the rules: no moderation state means approved.
+  if ((data.moderation ?? 'approved') !== 'approved') {
     await updateDoc(reference, {
       ...contentWrite(content),
       moderation: 'pending',
@@ -383,21 +394,28 @@ export async function updateOwnReport(
     editedAt: serverTimestamp(),
     editReview: 'pending',
   };
-  let previousVersion = report.previousVersion;
+  let previousVersion: ReportContent | undefined;
 
-  // Rules require previousVersion to match the stored content exactly, so it
-  // is taken from the server rather than from the (normalised) local copy.
-  if (report.editReview !== 'pending') {
-    const snapshot = await getDoc(reference);
-    const data = snapshot.data();
-    if (!data) throw new AppError('not-found', 'Prijava više ne postoji.');
+  // While an edit waits, the rules keep its previousVersion untouched.
+  // Otherwise it must match the stored content exactly, so it is taken as
+  // stored rather than from the (normalised) mapped copy.
+  if (data.editReview === 'pending') {
+    const kept = data.previousVersion;
+    previousVersion = kept && typeof kept === 'object' ? (mapContent(kept) ?? undefined) : undefined;
+  } else {
     const stored = pickStoredContent(data);
     changes.previousVersion = stored;
     previousVersion = mapContent(stored) ?? undefined;
   }
 
   await updateDoc(reference, changes);
-  return { ...content, editedAt: new Date(), editReview: 'pending', previousVersion };
+  return {
+    ...content,
+    moderation: 'approved',
+    editedAt: new Date(),
+    editReview: 'pending',
+    previousVersion,
+  };
 }
 
 /** Moderator edit: applied directly and attributed, no further review. */
@@ -566,7 +584,10 @@ export function resolveDroppedImages(report: ResolvableReport, kind: ResolveKind
   return kind === 'without-proof' ? (report.resolution?.imageUrls ?? []) : [];
 }
 
-/** The fields that resolve a report, for an update or a batch. */
+/**
+ * The fields that resolve a report, for an update or a batch. Resolving by hand
+ * clears statusActionId, so cancelling an action later leaves the report alone.
+ */
 export function resolveChanges(
   kind: ResolveKind,
   user: { uid: string; displayName: string | null },
@@ -591,7 +612,12 @@ export function resolveChanges(
             },
           }
         : {};
-  return { status: 'resolved', ...proof, ...moderationStamp(user) };
+  return {
+    status: 'resolved',
+    statusActionId: deleteField(),
+    ...proof,
+    ...moderationStamp(user),
+  };
 }
 
 export async function resolveReport(reportId: string, kind: ResolveKind): Promise<void> {

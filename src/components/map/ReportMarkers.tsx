@@ -1,12 +1,13 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import type { LatLng } from 'leaflet';
-import { Marker, Polyline, Tooltip, useMap } from 'react-leaflet';
+import { Polyline, Tooltip, useMap } from 'react-leaflet';
 import Supercluster from 'supercluster';
 import { CATEGORIES, CATEGORY_MAP, MODERATION_LABELS, STATUS_MAP } from '../../config';
 import { formatRelativeTime, plural } from '../../lib/format';
 import { optimizedImageUrl } from '../../services/images';
 import type { Category, Report } from '../../types';
 import { clusterIcon, draftIcon, reportIcon, type CategoryCounts } from './map-icons';
+import { NamedMarker } from './NamedMarker';
 
 interface PointProps {
   reportId: string;
@@ -111,6 +112,10 @@ export function ReportMarkers({
     };
   }, [map]);
 
+  // The open report is drawn once, on its own (below), so it stays out of the
+  // groups. Otherwise its group was drawn under it as well (#61).
+  const selectedId = selectedReport?.id ?? null;
+
   const index = useMemo(() => {
     // Counts stay flat (one key per category) because Supercluster only
     // shallow-clones properties before reducing.
@@ -128,18 +133,20 @@ export function ReportMarkers({
     });
 
     cluster.load(
-      reports.map((report) => ({
-        type: 'Feature' as const,
-        properties: { reportId: report.id, category: report.category },
-        geometry: {
-          type: 'Point' as const,
-          coordinates: [report.longitude, report.latitude],
-        },
-      })),
+      reports
+        .filter((report) => report.id !== selectedId)
+        .map((report) => ({
+          type: 'Feature' as const,
+          properties: { reportId: report.id, category: report.category },
+          geometry: {
+            type: 'Point' as const,
+            coordinates: [report.longitude, report.latitude],
+          },
+        })),
     );
 
     return cluster;
-  }, [reports]);
+  }, [reports, selectedId]);
 
   const features = useMemo(
     () => index.getClusters(viewport.bbox, Math.min(viewport.zoom, CLUSTER_MAX_ZOOM)),
@@ -205,8 +212,9 @@ export function ReportMarkers({
         if (properties.cluster && typeof properties.cluster_id === 'number') {
           const count = properties.point_count ?? 0;
           return (
-            <Marker
+            <NamedMarker
               key={`cluster-${properties.cluster_id}`}
+              label={`${count} ${plural(count, 'prijava', 'prijave', 'prijava')} u ovoj oblasti`}
               position={[latitude, longitude]}
               icon={clusterIcon(count, properties)}
               zIndexOffset={200}
@@ -233,7 +241,7 @@ export function ReportMarkers({
                 <br />
                 <span className="ns-tooltip__meta">{categoryBreakdown(properties)}</span>
               </Tooltip>
-            </Marker>
+            </NamedMarker>
           );
         }
 
@@ -241,8 +249,9 @@ export function ReportMarkers({
         if (!report) return null;
 
         return (
-          <Marker
+          <NamedMarker
             key={report.id}
+            label={report.title}
             position={[report.latitude, report.longitude]}
             icon={reportIcon(report)}
             zIndexOffset={300}
@@ -257,7 +266,7 @@ export function ReportMarkers({
             <Tooltip direction="top" offset={[0, -18]} className="ns-tooltip ns-tooltip--rich">
               <ReportTooltipContent report={report} />
             </Tooltip>
-          </Marker>
+          </NamedMarker>
         );
       })}
 
@@ -269,7 +278,8 @@ export function ReportMarkers({
                 pathOptions={{ color: '#234c3b', weight: 1.5, opacity: 0.7 }}
                 interactive={false}
               />
-              <Marker
+              <NamedMarker
+                label={report.title}
                 position={position}
                 icon={reportIcon(report)}
                 zIndexOffset={1000}
@@ -284,14 +294,15 @@ export function ReportMarkers({
                 <Tooltip direction="top" offset={[0, -18]} className="ns-tooltip ns-tooltip--rich">
                   <ReportTooltipContent report={report} />
                 </Tooltip>
-              </Marker>
+              </NamedMarker>
             </Fragment>
           ))
         : null}
 
       {selectedReport ? (
-        <Marker
+        <NamedMarker
           key={`selected-${selectedReport.id}`}
+          label={selectedReport.title}
           position={[selectedReport.latitude, selectedReport.longitude]}
           icon={
             selectedReport.moderation === 'approved'
@@ -328,8 +339,9 @@ export function DraftMarkers({
       {reports
         .filter((report) => report.id !== selectedReportId)
         .map((report) => (
-          <Marker
+          <NamedMarker
             key={`draft-${report.id}`}
+            label={report.title}
             position={[report.latitude, report.longitude]}
             icon={draftIcon(report.category)}
             zIndexOffset={250}
@@ -348,7 +360,7 @@ export function DraftMarkers({
               <br />
               <span className="ns-tooltip__meta">Vidiš je samo ti i moderatori.</span>
             </Tooltip>
-          </Marker>
+          </NamedMarker>
         ))}
     </>
   );

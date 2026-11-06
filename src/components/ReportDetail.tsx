@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock3,
-  Copy,
   ExternalLink,
   Flag,
   MapPin,
@@ -280,16 +279,13 @@ export function ReportDetail() {
     openModal,
     selectAction,
     showReportOnMap,
-    notify,
   } = useApp();
 
   const [adminStatus, setAdminStatus] = useState<ReportStatus>('new');
   const [saving, setSaving] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (report) setAdminStatus(report.status);
-    setCopied(false);
   }, [report?.id, report?.status, report]);
 
   if (!report) return null;
@@ -307,17 +303,6 @@ export function ReportDetail() {
     report.moderatedByName && report.moderatedAt
       ? `${published ? 'Odobrio' : 'Pregledao'}: ${report.moderatedByName} · ${formatDateTime(report.moderatedAt)}`
       : null;
-
-  const copyCoordinates = async () => {
-    const text = formatCoordinates(report.latitude, report.longitude);
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2200);
-    } catch {
-      notify('error', 'Kopiranje nije uspelo. Označi koordinate ručno.');
-    }
-  };
 
   // "Rešeno" resolves the report by the shared rule (resolveKind), so the hint
   // says what saving will do with the author's proof.
@@ -466,9 +451,9 @@ export function ReportDetail() {
           </span>
           <ChevronRight size={18} aria-hidden="true" className="related-action__chevron" />
         </button>
-      ) : (
-        <ReportProgress report={report} />
-      )}
+      ) : null}
+
+      <ReportProgress report={report} />
 
       {resolved ? (
         <div className="resolved-banner" role="status">
@@ -560,26 +545,14 @@ export function ReportDetail() {
             </code>
           ) : null}
           <div className="location-box__actions">
-            {auth.isModerator ? (
-              <>
-                <a
-                  className="btn btn--quiet btn--sm"
-                  href={openStreetMapUrl(report)}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <ExternalLink size={13} aria-hidden="true" /> OpenStreetMap
-                </a>
-                <button type="button" className="btn btn--quiet btn--sm" onClick={copyCoordinates}>
-                  {copied ? (
-                    <Check size={13} aria-hidden="true" />
-                  ) : (
-                    <Copy size={13} aria-hidden="true" />
-                  )}
-                  {copied ? 'Kopirano' : 'Kopiraj koordinate'}
-                </button>
-              </>
-            ) : null}
+            <a
+              className="btn btn--quiet btn--sm"
+              href={openStreetMapUrl(report)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <ExternalLink size={13} aria-hidden="true" /> OpenStreetMap
+            </a>
             <button
               type="button"
               className="btn btn--quiet btn--sm"

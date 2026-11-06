@@ -23,6 +23,7 @@ const ORGANIZER_MAX = 80;
 const NOTE_MAX = 600;
 const MAX_REPORTS = 50;
 const MAX_SUPPLIES = 20;
+const SUPPLY_MAX = 80;
 
 type ErrorKey =
   | 'title'
@@ -128,6 +129,8 @@ export function ActionForm({
       .filter(Boolean);
     if (supplies.length > MAX_SUPPLIES) {
       next.supplies = `Najviše ${MAX_SUPPLIES} stavki opreme.`;
+    } else if (supplies.some((line) => line.length > SUPPLY_MAX)) {
+      next.supplies = `Svaka stavka može da ima najviše ${SUPPLY_MAX} karaktera.`;
     }
     return next;
   };
@@ -430,7 +433,9 @@ export function ActionForm({
               placeholder={'Rukavice\nVreće za otpad\nGrablje i metle'}
               disabled={saving}
             />
-            <p className="field__hint">Jedna stavka po redu. Najviše {MAX_SUPPLIES} stavki.</p>
+            <p className="field__hint">
+              Jedna stavka po redu, do {SUPPLY_MAX} karaktera. Najviše {MAX_SUPPLIES} stavki.
+            </p>
             {errors.supplies ? <p className="field__error">{errors.supplies}</p> : null}
           </div>
 

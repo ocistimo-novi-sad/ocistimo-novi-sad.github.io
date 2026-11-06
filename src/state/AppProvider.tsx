@@ -399,7 +399,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // it also makes sure report markers (not action markers) are rendered.
       setLayerState('reports');
       setMobileTabState('map');
-      if (options?.fly !== false) flyTo(report, APP.focusZoom, { accountForDrawer: true });
+      // Never zoom out to open a report: a pin clicked up close would merge
+      // back into a group with its neighbours (#61).
+      const zoom = Math.max(mapRef.current?.getZoom() ?? 0, APP.focusZoom);
+      if (options?.fly !== false) flyTo(report, zoom, { accountForDrawer: true });
     },
     [flyTo],
   );
@@ -608,10 +611,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ...(action.resultImageUrls ?? []),
         ]),
       ]);
-      await loadActions();
+      // Deleting also puts its reports back to their earlier status.
+      await Promise.all([loadActions(), loadReports()]);
       notify('success', 'Akcija je obrisana.');
     },
-    [loadActions, notify],
+    [loadActions, loadReports, notify],
   );
 
   const moderateReport = useCallback(
@@ -723,7 +727,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const changes = await updateOwnReport(report, content);
         next = { ...report, ...changes };
         message =
-          report.moderation === 'approved'
+          changes.moderation === 'approved'
             ? 'Izmena je sačuvana i vidljiva. Moderator će je pregledati.'
             : 'Prijava je ispravljena i ponovo poslata na pregled.';
       }

@@ -1,7 +1,8 @@
-import { Marker, Tooltip } from 'react-leaflet';
+import { Tooltip } from 'react-leaflet';
 import type { CleanupAction } from '../../types';
 import { formatDate, formatTime } from '../../lib/format';
 import { actionIcon } from './map-icons';
+import { NamedMarker } from './NamedMarker';
 
 export function ActionMarkers({
   actions,
@@ -15,8 +16,9 @@ export function ActionMarkers({
   return (
     <>
       {actions.map((action) => (
-        <Marker
+        <NamedMarker
           key={action.id}
+          label={`Akcija: ${action.title}`}
           position={[action.latitude, action.longitude]}
           icon={actionIcon(action.id === selectedActionId)}
           zIndexOffset={action.id === selectedActionId ? 950 : 400}
@@ -30,7 +32,7 @@ export function ActionMarkers({
             <br />
             {formatDate(action.date)} u {formatTime(action.date)}
           </Tooltip>
-        </Marker>
+        </NamedMarker>
       ))}
     </>
   );
