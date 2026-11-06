@@ -399,7 +399,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // it also makes sure report markers (not action markers) are rendered.
       setLayerState('reports');
       setMobileTabState('map');
-      if (options?.fly !== false) flyTo(report, APP.focusZoom, { accountForDrawer: true });
+      // Never zoom out to open a report: a pin clicked up close would merge
+      // back into a group with its neighbours (#61).
+      const zoom = Math.max(mapRef.current?.getZoom() ?? 0, APP.focusZoom);
+      if (options?.fly !== false) flyTo(report, zoom, { accountForDrawer: true });
     },
     [flyTo],
   );

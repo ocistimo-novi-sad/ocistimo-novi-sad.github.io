@@ -111,6 +111,10 @@ export function ReportMarkers({
     };
   }, [map]);
 
+  // The open report is drawn once, on its own (below), so it stays out of the
+  // groups. Otherwise its group was drawn under it as well (#61).
+  const selectedId = selectedReport?.id ?? null;
+
   const index = useMemo(() => {
     // Counts stay flat (one key per category) because Supercluster only
     // shallow-clones properties before reducing.
@@ -128,18 +132,20 @@ export function ReportMarkers({
     });
 
     cluster.load(
-      reports.map((report) => ({
-        type: 'Feature' as const,
-        properties: { reportId: report.id, category: report.category },
-        geometry: {
-          type: 'Point' as const,
-          coordinates: [report.longitude, report.latitude],
-        },
-      })),
+      reports
+        .filter((report) => report.id !== selectedId)
+        .map((report) => ({
+          type: 'Feature' as const,
+          properties: { reportId: report.id, category: report.category },
+          geometry: {
+            type: 'Point' as const,
+            coordinates: [report.longitude, report.latitude],
+          },
+        })),
     );
 
     return cluster;
-  }, [reports]);
+  }, [reports, selectedId]);
 
   const features = useMemo(
     () => index.getClusters(viewport.bbox, Math.min(viewport.zoom, CLUSTER_MAX_ZOOM)),
