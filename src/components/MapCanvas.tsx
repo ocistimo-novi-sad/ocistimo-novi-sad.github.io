@@ -131,14 +131,13 @@ export function MapCanvas() {
     notify,
     userPosition,
     locateUser,
+    locateForCompose,
     locating,
-    flyTo,
   } = app;
 
   const [zoom, setZoom] = useState<number>(APP.initialZoom);
   const [pointer, setPointer] = useState<{ lat: number; lng: number } | null>(null);
   const [legendOpen, setLegendOpen] = useState(true);
-  const [locatingDraft, setLocatingDraft] = useState(false);
   const pointerThrottle = useRef(0);
 
   const categoryCounts = useMemo(() => {
@@ -194,46 +193,12 @@ export function MapCanvas() {
   // While the report form is open, this button places the report marker at the
   // user's position instead of only moving the map.
   const handleMyLocation = useCallback(() => {
-    if (!composeOpen) {
-      void locateUser();
+    if (composeOpen) {
+      void locateForCompose();
       return;
     }
-    if (!('geolocation' in navigator)) {
-      notify('error', 'Tvoj pregledač ne podržava određivanje lokacije.');
-      return;
-    }
-    if (userPosition) {
-      setComposeLocation({
-        latitude: userPosition.latitude,
-        longitude: userPosition.longitude,
-      });
-      flyTo(userPosition, 17, { accountForDrawer: true });
-      return;
-    }
-
-    setLocatingDraft(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocatingDraft(false);
-        const point = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        };
-        setComposeLocation(point);
-        flyTo(point, 17, { accountForDrawer: true });
-        if (!isInServiceArea(point)) {
-          notify('error', 'Tvoja lokacija je izvan Novog Sada.');
-        }
-      },
-      () => {
-        setLocatingDraft(false);
-        notify('error', 'Lokaciju nije moguće odrediti. Izaberi tačku na mapi.');
-      },
-      { enableHighAccuracy: true, timeout: 12_000 },
-    );
-  }, [composeOpen, flyTo, locateUser, notify, setComposeLocation, userPosition]);
-
-  const locatingAction = composeOpen ? locating || locatingDraft : locating;
+    void locateUser();
+  }, [composeOpen, locateForCompose, locateUser]);
 
   const toggleViewport = () => {
     if (filters.viewportOnly) {
@@ -430,10 +395,10 @@ export function MapCanvas() {
           onClick={handleMyLocation}
           aria-label="Moja lokacija"
           title="Moja lokacija"
-          aria-busy={locatingAction}
-          disabled={locatingAction}
+          aria-busy={locating}
+          disabled={locating}
         >
-          {locatingAction ? <Spinner size={15} /> : <Navigation size={16} aria-hidden="true" />}
+          {locating ? <Spinner size={15} /> : <Navigation size={16} aria-hidden="true" />}
         </button>
       </div>
 
