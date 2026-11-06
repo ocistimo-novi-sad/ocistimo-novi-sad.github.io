@@ -275,7 +275,7 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
 - **Tok:**
   1. **Lokacija:** korisnik klikne na mapu ili koristi svoju lokaciju. Tačka mora biti u Novom Sadu.
   2. **Detalji:** naslov, kategorija, opis, adresa ili orijentir (opciono).
-  3. **Kako možemo da rešimo:** „Šta zajednica može sama“ i „Za šta nam treba pomoć“ — oba obavezna, mogu se popuniti brzim izborom ponuđenih odgovora.
+  3. **Kako možemo da rešimo:** „Šta zajednica može sama“ i „Za šta nam treba pomoć“ — oba opciona, mogu se popuniti brzim izborom ponuđenih odgovora.
   4. **Fotografije:** do 3, opciono. Aplikacija ih smanjuje i uklanja podatke iz fotografije (uključujući GPS lokaciju telefona) pre slanja.
   5. „Pošalji na pregled“.
 - **Rezultat:** ekran „Hvala! Prijava je na pregledu.“ Prijava ima stanje „Na pregledu“ i vide je samo autor i moderatori.
@@ -611,8 +611,8 @@ sequenceDiagram
 | Kategorija | Obavezna: Nepoželjni grafiti, Navijački grafiti, Nalepnice i posteri, Divlja deponija, Oštećena infrastruktura, Ostalo |
 | Opis | Obavezan, 20–1200 znakova |
 | Adresa ili orijentir | Opciono, do 160 znakova |
-| Šta zajednica može sama | Obavezno, 10–600 znakova |
-| Za šta nam treba pomoć | Obavezno, 10–600 znakova |
+| Šta zajednica može sama | Opciono; ako je popunjeno, 10–600 znakova |
+| Za šta nam treba pomoć | Opciono; ako je popunjeno, 10–600 znakova |
 | Fotografije | Opciono, do 3; JPG, PNG ili WebP; do 20 MB po originalnoj fotografiji |
 
 ### 11.2 Ostalo
