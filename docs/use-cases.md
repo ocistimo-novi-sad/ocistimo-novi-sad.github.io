@@ -229,7 +229,7 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
 - **Prikazuje, redom:**
   1. kategoriju, status, naslov, autora (ime) i vreme;
   2. povezanu akciju, ako postoji: status akcije, naziv, datum i vreme (klik otvara akciju). Ako je prijava u više akcija, prikazuje se najbliža planirana ili akcija u toku, a ako takve nema, poslednja završena. Otkazana akcija se ne prikazuje;
-  3. tok prijave, ako nema povezane akcije (Prijavljena → Objavljena → Akcija planirana ili u toku → Rešena; prijava na pregledu umesto „Objavljena“ ima „Na pregledu“, odbijena ima samo „Prijavljena → Odbijena“, a prijava „Nije za akciju“ završava tim korakom);
+  3. tok prijave, i kada prijava ima povezanu akciju (Prijavljena → Objavljena → Akcija planirana ili u toku → Rešena; prijava na pregledu umesto „Objavljena“ ima „Na pregledu“, odbijena ima samo „Prijavljena → Odbijena“, a prijava „Nije za akciju“ završava tim korakom);
   4. fotografije (klik = uvećan prikaz);
   5. opis i plan („Šta zajednica može sama“, „Za šta nam treba pomoć“);
   6. lokaciju (adresa). Moderator vidi i koordinate.
