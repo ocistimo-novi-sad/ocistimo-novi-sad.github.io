@@ -238,7 +238,7 @@
   .field textarea,
   .field select {
     min-height: 42px;
-    font-size: 16px;
+    font-size: var(--text-md);
   }
 
   .field textarea {
@@ -299,7 +299,7 @@
 
   .category-option {
     min-height: 44px;
-    font-size: 12px;
+    font-size: var(--text-xs);
   }
 
   .photo-draft,
@@ -520,11 +520,11 @@
   }
 
   .detail-title {
-    font-size: 21px;
+    font-size: 1.3125rem;
   }
 
   .compose-title {
-    font-size: 20px;
+    font-size: 1.25rem;
   }
 
   .impact {
