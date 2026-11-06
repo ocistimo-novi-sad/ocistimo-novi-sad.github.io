@@ -117,12 +117,15 @@ service cloud.firestore {
     }
 
     // `snapshot` holds exactly the content fields of `data`, unchanged.
+    // In a.diff(b), addedKeys() are keys only in a and removedKeys() keys
+    // only in b. `data` is the whole report, so it may hold keys the snapshot
+    // lacks, but never content ones.
     function isContentOf(snapshot, data) {
       return snapshot is map
         && snapshot.keys().hasOnly(contentKeys())
         && snapshot.diff(data).changedKeys().size() == 0
-        && snapshot.diff(data).removedKeys().size() == 0
-        && !snapshot.diff(data).addedKeys().hasAny(contentKeys());
+        && snapshot.diff(data).addedKeys().size() == 0
+        && !snapshot.diff(data).removedKeys().hasAny(contentKeys());
     }
 
     // Reports created before pre-moderation have no state and count as
