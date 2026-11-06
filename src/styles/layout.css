@@ -336,6 +336,11 @@
   color: #fff;
 }
 
+.near-btn.is-active:hover:not(:disabled) {
+  border-color: var(--leaf);
+  background: var(--leaf);
+}
+
 .near-btn:disabled {
   cursor: progress;
 }
