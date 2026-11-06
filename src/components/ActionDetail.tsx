@@ -1,19 +1,17 @@
 import { useState } from 'react';
 import {
-  ArrowUpRight,
   CalendarDays,
   Check,
-  Clock,
+  ChevronRight,
   ExternalLink,
   HandHeart,
   MapPin,
   Pencil,
   ShieldCheck,
   Trash2,
-  Users,
   X,
 } from 'lucide-react';
-import { formatCoordinates, formatDate, formatTime, formatWeekday, plural } from '../lib/format';
+import { formatCoordinates, formatDateTime, formatWeekday, plural } from '../lib/format';
 import { openStreetMapUrl } from '../lib/geo';
 import { updateActionStatus } from '../services/actions';
 import { toSerbianError } from '../services/errors';
@@ -36,6 +34,7 @@ export function ActionDetail() {
     auth,
     openModal,
     reloadActions,
+    reloadReports,
     deleteAction,
     notify,
   } = useApp();
@@ -52,7 +51,8 @@ export function ActionDetail() {
     setBusy(true);
     try {
       await updateActionStatus(action.id, 'cancelled');
-      await reloadActions();
+      // Cancelling also puts its reports back to their earlier status.
+      await Promise.all([reloadActions(), reloadReports()]);
       setConfirming(null);
       notify('success', 'Akcija je otkazana.');
     } catch (error) {
@@ -98,12 +98,16 @@ export function ActionDetail() {
     >
       <div className="detail-head">
         <div className="detail-tags">
-          <span className="eyebrow">Akcija čišćenja</span>
           <ActionStatusBadge status={action.status} />
         </div>
       </div>
 
       <h2 className="detail-title">{action.title}</h2>
+
+      <p className="detail-byline">
+        Organizator: {action.organizerName || 'Administracija Kuka i Motika'}
+      </p>
+      {action.organizerNote ? <p className="organizer__note">{action.organizerNote}</p> : null}
 
       {action.coverUrl ? (
         <button
@@ -119,13 +123,12 @@ export function ActionDetail() {
       ) : null}
 
       <div className="action-hero">
-        <div className="action-hero__date">
-          <span className="action-hero__weekday">{formatWeekday(action.date)}</span>
-          <strong>{formatDate(action.date)}</strong>
-          <span className="action-hero__time">
-            <Clock size={13} aria-hidden="true" />
-            {formatTime(action.date)}
-          </span>
+        <div className="action-hero__row">
+          <CalendarDays size={16} aria-hidden="true" />
+          <strong>
+            <span className="visually-hidden">Datum i vreme: </span>
+            {formatWeekday(action.date)}, {formatDateTime(action.date)}
+          </strong>
         </div>
         <p className={`action-hero__state${isPast && action.status !== 'completed' ? ' is-muted' : ''}`}>
           {action.status === 'completed'
@@ -136,6 +139,37 @@ export function ActionDetail() {
                 ? 'Predviđeni termin je prošao. Proveri sa organizatorom.'
                 : 'Okupljanje je zakazano. Dolazak nije potrebno najavljivati osim ako organizator traži drugačije.'}
         </p>
+        <div className="action-hero__place">
+          <div className="action-hero__row">
+            <MapPin size={16} aria-hidden="true" />
+            <strong>
+              <span className="visually-hidden">Mesto okupljanja: </span>
+              {action.meetingPoint || 'Novi Sad'}
+            </strong>
+          </div>
+          {auth.isModerator ? (
+            <code className="location-box__coords">
+              {formatCoordinates(action.latitude, action.longitude)}
+            </code>
+          ) : null}
+          <div className="location-box__actions">
+            <button
+              type="button"
+              className="btn btn--quiet btn--sm"
+              onClick={() => flyTo(action, undefined, { accountForDrawer: true })}
+            >
+              Prikaži na mapi
+            </button>
+            <a
+              className="btn btn--quiet btn--sm"
+              href={openStreetMapUrl(action)}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <ExternalLink size={13} aria-hidden="true" /> OpenStreetMap
+            </a>
+          </div>
+        </div>
       </div>
 
       <section className="detail-section">
@@ -160,50 +194,21 @@ export function ActionDetail() {
       ) : null}
 
       <section className="detail-section">
-        <SectionLabel>Mesto okupljanja</SectionLabel>
-        <div className="location-box">
-          <div className="location-box__head">
-            <MapPin size={14} aria-hidden="true" />
-            <span>{action.meetingPoint || 'Novi Sad'}</span>
-          </div>
-          <code className="location-box__coords">
-            {formatCoordinates(action.latitude, action.longitude)}
-          </code>
-          <div className="location-box__actions">
-            <button
-              type="button"
-              className="btn btn--quiet btn--sm"
-              onClick={() => flyTo(action, undefined, { accountForDrawer: true })}
-            >
-              Prikaži na mapi
-            </button>
-            <a
-              className="btn btn--quiet btn--sm"
-              href={openStreetMapUrl(action)}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <ExternalLink size={13} aria-hidden="true" /> OpenStreetMap
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <section className="detail-section">
-        <SectionLabel>Organizator</SectionLabel>
-        <div className="organizer">
-          <span className="organizer__icon">
-            <Users size={15} aria-hidden="true" />
-          </span>
-          <div>
-            <p className="organizer__name">
-              {action.organizerName || 'Administracija Kuka i Motika'}
-            </p>
-            {action.organizerNote ? (
-              <p className="organizer__note">{action.organizerNote}</p>
-            ) : null}
-          </div>
-        </div>
+        <SectionLabel>Šta je potrebno poneti</SectionLabel>
+        {action.supplies.length > 0 ? (
+          <ul className="supply-list">
+            {action.supplies.map((supply) => (
+              <li key={supply}>
+                <Check size={13} aria-hidden="true" />
+                {supply}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="detail-prose detail-prose--muted">
+            Organizator nije naveo posebnu opremu. Dođi u udobnoj odeći i obući.
+          </p>
+        )}
       </section>
 
       <section className="detail-section">
@@ -228,7 +233,7 @@ export function ActionDetail() {
                     <span className="linked-report__title">{report.title}</span>
                     <StatusBadge status={report.status} compact />
                   </span>
-                  <ArrowUpRight size={14} aria-hidden="true" />
+                  <ChevronRight size={16} aria-hidden="true" />
                 </button>
               </li>
             ))}
@@ -236,24 +241,6 @@ export function ActionDetail() {
         ) : (
           <p className="detail-prose detail-prose--muted">
             Ova akcija još nema povezane prijave.
-          </p>
-        )}
-      </section>
-
-      <section className="detail-section">
-        <SectionLabel>Šta je potrebno poneti</SectionLabel>
-        {action.supplies.length > 0 ? (
-          <ul className="supply-list">
-            {action.supplies.map((supply) => (
-              <li key={supply}>
-                <Check size={13} aria-hidden="true" />
-                {supply}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="detail-prose detail-prose--muted">
-            Organizator nije naveo posebnu opremu. Dođi u udobnoj odeći i obući.
           </p>
         )}
       </section>

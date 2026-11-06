@@ -137,8 +137,11 @@ export interface AppContextValue {
   submitReportResolution: (report: Report, imageUrls: string[], note: string) => Promise<void>;
   approveReportResolution: (report: Report) => Promise<void>;
   rejectReportResolution: (report: Report, reason: string) => Promise<void>;
-  /** Moderator marks a report resolved without the author's proof. */
-  markReportResolved: (report: Report) => Promise<void>;
+  /**
+   * Moderator sets a published report's status. "Rešeno" resolves the report
+   * by the shared rule: it confirms a pending proof, or resolves without one.
+   */
+  setReportStatus: (report: Report, status: ReportStatus) => Promise<void>;
 
   mapRef: React.RefObject<LeafletMap | null>;
   flyTo: (

@@ -53,7 +53,7 @@ Korisnik bira lokaciju na mapi (ili koristi svoju trenutnu lokaciju) i popunjava
 
 - naslov (5–90 znakova) i opis problema (20–1200 znakova);
 - kategoriju;
-- „Šta zajednica može sama“ i „Za šta nam treba pomoć“ (obavezno, 10–600 znakova; mogu se popuniti brzim izborom ponuđenih odgovora);
+- „Šta zajednica može sama“ i „Za šta nam treba pomoć“ (opciono; ako su popunjena, 10–600 znakova; mogu se popuniti brzim izborom ponuđenih odgovora);
 - lokaciju označenu na mapi, unutar područja Novog Sada;
 - adresu ili orijentir, opciono;
 - do tri fotografije (JPG, PNG ili WebP, do 20 MB po fotografiji).
@@ -101,7 +101,7 @@ Aplikacija sadrži poseban prikaz za akcije čišćenja, podeljen na **predstoje
 
 Povezivanje više prijava sa jednom akcijom olakšava planiranje rada na nekoliko problema u istom delu grada.
 
-Status akcije se automatski prenosi na sve povezane prijave: **Planirano → Akcija planirana**, **U toku → Akcija u toku**, **Završeno → Rešeno**. Otkazivanje akcije ne menja status prijava.
+Status akcije se automatski prenosi na sve povezane prijave: **Planirano → Akcija planirana**, **U toku → Akcija u toku**, **Završeno → Rešeno**. Kada se akcija otkaže ili obriše, ili se prijava ukloni iz nje, prijava se vraća na **Nova prijava**, osim ako je u drugoj aktivnoj akciji (tada dobija njen status) ili joj je moderator ručno menjao status.
 
 ## Kategorije problema
 

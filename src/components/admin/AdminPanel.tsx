@@ -21,6 +21,7 @@ export function AdminPanel() {
     reloadActions,
     deleteAction,
     reloadReports,
+    refreshModerationCounts,
     notify,
   } = useApp();
 
@@ -68,7 +69,8 @@ export function AdminPanel() {
     setBusy(true);
     try {
       await updateActionStatus(actionId, 'cancelled');
-      await reloadActions();
+      // Cancelling also puts its reports back to their earlier status.
+      await Promise.all([reloadActions(), reloadReports()]);
       notify('success', 'Akcija je otkazana.');
       setConfirming(null);
     } catch (error) {
@@ -112,9 +114,11 @@ export function AdminPanel() {
           onSaved={() => {
             setFormOpen(false);
             setEditing(null);
-            // Saving an action also rewrites the status of its linked reports.
+            // Saving an action also rewrites the status of its linked reports,
+            // and a completed one confirms pending proofs ("Sanacije").
             void reloadActions();
             void reloadReports();
+            void refreshModerationCounts();
           }}
         />
       </Modal>

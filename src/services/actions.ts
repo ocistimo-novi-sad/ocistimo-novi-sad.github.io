@@ -1,6 +1,5 @@
 import {
   collection,
-  deleteDoc,
   deleteField,
   doc,
   getDoc,
@@ -10,6 +9,7 @@ import {
   query,
   serverTimestamp,
   Timestamp,
+  where,
   writeBatch,
   type DocumentData,
   type Firestore,
@@ -18,6 +18,8 @@ import {
 import { ACTION_REPORT_STATUS } from '../config';
 import { requireAuth, requireDb } from './firebase';
 import { AppError } from './errors';
+import { removeImages } from './images';
+import { resolveChanges, resolveDroppedImages, resolveKind } from './reports';
 import type { ActionStatus, CleanupAction, NewActionInput, ReportStatus } from '../types';
 
 const STATUS_VALUES: ActionStatus[] = [
@@ -111,46 +113,124 @@ interface ActionUser {
   displayName: string | null;
 }
 
-/**
- * Reports that must receive a status: existing documents whose status differs.
- * Skipping unchanged ones keeps unrelated action edits from rewriting reports.
- */
-async function reportRefsToUpdate(
-  db: Firestore,
-  reportIds: string[],
-  status: ReportStatus,
-) {
+/** Report statuses an action gives while it is still ahead or under way. */
+const ACTIVE_REPORT_STATUSES: ReportStatus[] = ['planned', 'in_progress'];
+
+/** Report statuses that settle a report. An action changes them only if it set them. */
+const SETTLED_REPORT_STATUSES: ReportStatus[] = ['resolved', 'not_suitable'];
+
+function moderationStamp(user: ActionUser) {
+  return {
+    moderatedAt: serverTimestamp(),
+    moderatedBy: user.uid,
+    moderatedByName: (user.displayName ?? 'Administrator').slice(0, 80),
+  };
+}
+
+function reportSnapshots(db: Firestore, reportIds: string[]) {
   const unique = [...new Set(reportIds)];
-  const snapshots = await Promise.all(unique.map((id) => getDoc(doc(db, 'reports', id))));
-  return snapshots
-    .filter((snapshot) => snapshot.exists() && snapshot.data()?.status !== status)
-    .map((snapshot) => snapshot.ref);
+  return Promise.all(unique.map((id) => getDoc(doc(db, 'reports', id))));
 }
 
 /**
- * Stages the status change for every report linked to an action, so the action
- * and its reports are committed together by the caller's batch.
+ * Stages the status an action gives its linked reports, so the action and its
+ * reports are committed together by the caller's batch. statusActionId records
+ * which action set the status, so cancelling or deleting that action later
+ * undoes only its own changes. Reports that already have the status are left
+ * alone, which keeps unrelated action edits from rewriting them. So is a report
+ * that is "Rešeno" or "Nije za akciju", unless this action set that status (a
+ * completed action moved back to planned takes its reports along).
+ *
+ * A completed action resolves its reports by the same rule as a moderator
+ * (resolveKind in services/reports), so a pending proof is confirmed and the
+ * author gets "Problem je rešen". Returns the photos that resolving drops; the
+ * caller removes them once the batch is committed.
  */
 async function stageReportStatusUpdates(
   db: Firestore,
   batch: WriteBatch,
+  actionId: string,
   reportIds: string[],
   actionStatus: ActionStatus,
   user: ActionUser,
-): Promise<void> {
+): Promise<string[]> {
   const status = ACTION_REPORT_STATUS[actionStatus];
-  if (!status || reportIds.length === 0) return;
+  if (!status || reportIds.length === 0) return [];
 
-  const refs = await reportRefsToUpdate(db, reportIds, status);
-  const moderatedBy = user.uid;
-  const moderatedByName = (user.displayName ?? 'Administrator').slice(0, 80);
+  const dropped: string[] = [];
+  for (const snapshot of await reportSnapshots(db, reportIds)) {
+    const data = snapshot.data();
+    if (!data || data.status === status) continue;
+    if (
+      SETTLED_REPORT_STATUSES.includes(data.status as ReportStatus) &&
+      data.statusActionId !== actionId
+    ) {
+      continue;
+    }
 
-  for (const ref of refs) {
-    batch.update(ref, {
-      status,
-      moderatedAt: serverTimestamp(),
-      moderatedBy,
-      moderatedByName,
+    if (status === 'resolved') {
+      const kind = resolveKind(data);
+      batch.update(snapshot.ref, { ...resolveChanges(kind, user), statusActionId: actionId });
+      dropped.push(...resolveDroppedImages(data, kind));
+    } else {
+      batch.update(snapshot.ref, { status, statusActionId: actionId, ...moderationStamp(user) });
+    }
+  }
+  return dropped;
+}
+
+/** The nearest planned or ongoing action, other than `exceptId`, that links the report. */
+async function otherActiveAction(
+  db: Firestore,
+  reportId: string,
+  exceptId: string,
+): Promise<CleanupAction | null> {
+  const snapshot = await getDocs(
+    query(collection(db, 'actions'), where('reportIds', 'array-contains', reportId)),
+  );
+  const active = snapshot.docs
+    .filter((document) => document.id !== exceptId)
+    .map((document) => mapAction(document.id, document.data()))
+    .filter(
+      (action): action is CleanupAction =>
+        action !== null && (action.status === 'planned' || action.status === 'in_progress'),
+    )
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
+  return active[0] ?? null;
+}
+
+/**
+ * Stages the undo for reports an action no longer covers: it was cancelled or
+ * deleted, or the report was taken out of it. Only a planned or ongoing status
+ * that came from this action changes. The report moves to the nearest other
+ * active action that links it, or back to "new". A status a moderator set by
+ * hand is kept. Back on "new", statusActionId still names this action, so the
+ * mail function knows an action made the change.
+ */
+async function stageReportRelease(
+  db: Firestore,
+  batch: WriteBatch,
+  actionId: string,
+  reportIds: string[],
+  user: ActionUser,
+): Promise<void> {
+  if (reportIds.length === 0) return;
+
+  for (const snapshot of await reportSnapshots(db, reportIds)) {
+    const data = snapshot.data();
+    if (
+      !data ||
+      data.statusActionId !== actionId ||
+      !ACTIVE_REPORT_STATUSES.includes(data.status as ReportStatus)
+    ) {
+      continue;
+    }
+
+    const next = await otherActiveAction(db, snapshot.id, actionId);
+    batch.update(snapshot.ref, {
+      status: (next && ACTION_REPORT_STATUS[next.status]) ?? 'new',
+      statusActionId: next?.id ?? actionId,
+      ...moderationStamp(user),
     });
   }
 }
@@ -173,8 +253,16 @@ export async function createActionRecord(input: NewActionInput): Promise<void> {
 
   const batch = writeBatch(db);
   batch.set(actionRef, payload);
-  await stageReportStatusUpdates(db, batch, input.reportIds, input.status, user);
+  const dropped = await stageReportStatusUpdates(
+    db,
+    batch,
+    actionRef.id,
+    input.reportIds,
+    input.status,
+    user,
+  );
   await batch.commit();
+  void removeImages(dropped);
 }
 
 export async function updateActionRecord(
@@ -187,14 +275,34 @@ export async function updateActionRecord(
     throw new AppError('unauthenticated', 'Prijavi se kao administrator.');
   }
 
+  const actionRef = doc(db, 'actions', actionId);
+  const previous = await getDoc(actionRef);
+  const removed = asStringList(previous.data()?.reportIds).filter(
+    (id) => !input.reportIds.includes(id),
+  );
+
   const batch = writeBatch(db);
-  batch.update(doc(db, 'actions', actionId), {
+  batch.update(actionRef, {
     ...actionPayload(input),
     coverUrl: input.coverUrl || deleteField(),
     updatedBy: user.uid,
   });
-  await stageReportStatusUpdates(db, batch, input.reportIds, input.status, user);
+  let dropped: string[] = [];
+  if (input.status === 'cancelled') {
+    await stageReportRelease(db, batch, actionId, [...input.reportIds, ...removed], user);
+  } else {
+    dropped = await stageReportStatusUpdates(
+      db,
+      batch,
+      actionId,
+      input.reportIds,
+      input.status,
+      user,
+    );
+    await stageReportRelease(db, batch, actionId, removed, user);
+  }
   await batch.commit();
+  void removeImages(dropped);
 }
 
 export async function updateActionStatus(
@@ -208,25 +316,34 @@ export async function updateActionStatus(
   }
 
   const actionRef = doc(db, 'actions', actionId);
+  const snapshot = await getDoc(actionRef);
+  const reportIds = asStringList(snapshot.data()?.reportIds);
+
   const batch = writeBatch(db);
   batch.update(actionRef, { status, updatedBy: user.uid });
-
-  // Cancelling has no matching report status, so reports stay as they are.
-  if (ACTION_REPORT_STATUS[status]) {
-    const snapshot = await getDoc(actionRef);
-    const reportIds = asStringList(snapshot.data()?.reportIds);
-    await stageReportStatusUpdates(db, batch, reportIds, status, user);
+  let dropped: string[] = [];
+  if (status === 'cancelled') {
+    await stageReportRelease(db, batch, actionId, reportIds, user);
+  } else {
+    dropped = await stageReportStatusUpdates(db, batch, actionId, reportIds, status, user);
   }
-
   await batch.commit();
+  void removeImages(dropped);
 }
 
-/** Removes the action for good. Linked reports stay as they are. */
+/** Removes the action for good. Its reports are released as on cancelling. */
 export async function deleteActionRecord(actionId: string): Promise<void> {
   const db = requireDb();
-  if (!requireAuth().currentUser) {
+  const user = requireAuth().currentUser;
+  if (!user) {
     throw new AppError('unauthenticated', 'Prijavi se kao moderator ili administrator.');
   }
 
-  await deleteDoc(doc(db, 'actions', actionId));
+  const actionRef = doc(db, 'actions', actionId);
+  const snapshot = await getDoc(actionRef);
+
+  const batch = writeBatch(db);
+  batch.delete(actionRef);
+  await stageReportRelease(db, batch, actionId, asStringList(snapshot.data()?.reportIds), user);
+  await batch.commit();
 }
