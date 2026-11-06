@@ -21,6 +21,7 @@ export function AdminPanel() {
     reloadActions,
     deleteAction,
     reloadReports,
+    refreshModerationCounts,
     notify,
   } = useApp();
 
@@ -113,9 +114,11 @@ export function AdminPanel() {
           onSaved={() => {
             setFormOpen(false);
             setEditing(null);
-            // Saving an action also rewrites the status of its linked reports.
+            // Saving an action also rewrites the status of its linked reports,
+            // and a completed one confirms pending proofs ("Sanacije").
             void reloadActions();
             void reloadReports();
+            void refreshModerationCounts();
           }}
         />
       </Modal>

@@ -223,8 +223,9 @@ export async function createReportRecord(
   const payload: Record<string, unknown> = {
     title: input.title,
     description: input.description,
-    communityCan: input.communityCan,
-    helpNeeded: input.helpNeeded,
+    // Optional since #38: an empty plan field is left out, not saved as ''.
+    ...(input.communityCan ? { communityCan: input.communityCan } : {}),
+    ...(input.helpNeeded ? { helpNeeded: input.helpNeeded } : {}),
     category: input.category,
     status: 'new',
     moderation: 'pending',

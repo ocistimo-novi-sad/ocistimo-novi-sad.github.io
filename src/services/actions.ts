@@ -18,6 +18,8 @@ import {
 import { ACTION_REPORT_STATUS } from '../config';
 import { requireAuth, requireDb } from './firebase';
 import { AppError } from './errors';
+import { removeImages } from './images';
+import { resolveChanges, resolveDroppedImages, resolveKind } from './reports';
 import type { ActionStatus, CleanupAction, NewActionInput, ReportStatus } from '../types';
 
 const STATUS_VALUES: ActionStatus[] = [
@@ -133,6 +135,11 @@ function reportSnapshots(db: Firestore, reportIds: string[]) {
  * which action set the status, so cancelling or deleting that action later
  * undoes only its own changes. Reports that already have the status are left
  * alone, which keeps unrelated action edits from rewriting them.
+ *
+ * A completed action resolves its reports by the same rule as a moderator
+ * (resolveKind in services/reports), so a pending proof is confirmed and the
+ * author gets "Problem je rešen". Returns the photos that resolving drops; the
+ * caller removes them once the batch is committed.
  */
 async function stageReportStatusUpdates(
   db: Firestore,
@@ -141,14 +148,24 @@ async function stageReportStatusUpdates(
   reportIds: string[],
   actionStatus: ActionStatus,
   user: ActionUser,
-): Promise<void> {
+): Promise<string[]> {
   const status = ACTION_REPORT_STATUS[actionStatus];
-  if (!status || reportIds.length === 0) return;
+  if (!status || reportIds.length === 0) return [];
 
+  const dropped: string[] = [];
   for (const snapshot of await reportSnapshots(db, reportIds)) {
-    if (!snapshot.exists() || snapshot.data().status === status) continue;
-    batch.update(snapshot.ref, { status, statusActionId: actionId, ...moderationStamp(user) });
+    const data = snapshot.data();
+    if (!data || data.status === status) continue;
+
+    if (status === 'resolved') {
+      const kind = resolveKind(data);
+      batch.update(snapshot.ref, { ...resolveChanges(kind, user), statusActionId: actionId });
+      dropped.push(...resolveDroppedImages(data, kind));
+    } else {
+      batch.update(snapshot.ref, { status, statusActionId: actionId, ...moderationStamp(user) });
+    }
   }
+  return dropped;
 }
 
 /** The nearest planned or ongoing action, other than `exceptId`, that links the report. */
@@ -225,8 +242,16 @@ export async function createActionRecord(input: NewActionInput): Promise<void> {
 
   const batch = writeBatch(db);
   batch.set(actionRef, payload);
-  await stageReportStatusUpdates(db, batch, actionRef.id, input.reportIds, input.status, user);
+  const dropped = await stageReportStatusUpdates(
+    db,
+    batch,
+    actionRef.id,
+    input.reportIds,
+    input.status,
+    user,
+  );
   await batch.commit();
+  void removeImages(dropped);
 }
 
 export async function updateActionRecord(
@@ -251,13 +276,22 @@ export async function updateActionRecord(
     coverUrl: input.coverUrl || deleteField(),
     updatedBy: user.uid,
   });
+  let dropped: string[] = [];
   if (input.status === 'cancelled') {
     await stageReportRelease(db, batch, actionId, [...input.reportIds, ...removed], user);
   } else {
-    await stageReportStatusUpdates(db, batch, actionId, input.reportIds, input.status, user);
+    dropped = await stageReportStatusUpdates(
+      db,
+      batch,
+      actionId,
+      input.reportIds,
+      input.status,
+      user,
+    );
     await stageReportRelease(db, batch, actionId, removed, user);
   }
   await batch.commit();
+  void removeImages(dropped);
 }
 
 export async function updateActionStatus(
@@ -276,12 +310,14 @@ export async function updateActionStatus(
 
   const batch = writeBatch(db);
   batch.update(actionRef, { status, updatedBy: user.uid });
+  let dropped: string[] = [];
   if (status === 'cancelled') {
     await stageReportRelease(db, batch, actionId, reportIds, user);
   } else {
-    await stageReportStatusUpdates(db, batch, actionId, reportIds, status, user);
+    dropped = await stageReportStatusUpdates(db, batch, actionId, reportIds, status, user);
   }
   await batch.commit();
+  void removeImages(dropped);
 }
 
 /** Removes the action for good. Its reports are released as on cancelling. */

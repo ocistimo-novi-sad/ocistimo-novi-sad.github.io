@@ -95,8 +95,9 @@ service cloud.firestore {
     // Content an author writes, on create and on every edit.
     function validReportContent(data) {
       return validReportCore(data)
-        && validPlanField(data, 'communityCan', true)
-        && validPlanField(data, 'helpNeeded', true);
+        // Both plan fields are optional since #38.
+        && validPlanField(data, 'communityCan', false)
+        && validPlanField(data, 'helpNeeded', false);
     }
 
     // Proof of a fix, in any state a moderator may leave it in. A rejected
