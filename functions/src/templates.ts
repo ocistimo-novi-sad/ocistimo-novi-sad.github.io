@@ -96,7 +96,7 @@ export function reportMessage(event: ReportEvent, report: ReportSummary): Messag
         'Izmena objavljene prijave',
         [
           `Objavljena prijava ${title} je izmenjena.${author}`,
-          'Izmena je već vidljiva, a prethodna verzija je sačuvana dok je ne pregledate.',
+          'Izmena je već vidljiva, a prethodna verzija je sačuvana dok je ne pregledaš.',
         ],
         toReview,
       );
@@ -104,24 +104,24 @@ export function reportMessage(event: ReportEvent, report: ReportSummary): Messag
       return compose(
         'Izmena prijave nije prihvaćena',
         [
-          `Moderator je vratio prethodnu verziju vaše prijave ${title}.`,
-          'Ako je izmena bila potrebna, možete ponovo da je napravite iz detalja prijave.',
+          `Moderator je vratio prethodnu verziju tvoje prijave ${title}.`,
+          'Ako je izmena bila potrebna, možeš ponovo da je napraviš iz detalja prijave.',
         ],
         toReview,
       );
     case 'approved':
       return compose(
         'Prijava je objavljena',
-        [`Vaša prijava ${title} je odobrena i sada je vidljiva na mapi. Hvala što ste je poslali!`],
+        [`Tvoja prijava ${title} je odobrena i sada je vidljiva na mapi. Hvala na prijavi!`],
         toReview,
       );
     case 'rejected':
       return compose(
         'Prijava nije objavljena',
         [
-          `Vaša prijava ${title} nije odobrena.`,
+          `Tvoja prijava ${title} nije odobrena.`,
           `Razlog: ${event.reason || 'nije naveden'}`,
-          'Prijavu možete da ispravite u odeljku „Moje prijave” i ponovo pošaljete na pregled.',
+          'Prijavu možeš da ispraviš u odeljku „Moje prijave” i ponovo pošalješ na pregled.',
         ],
         toReview,
       );
@@ -130,7 +130,7 @@ export function reportMessage(event: ReportEvent, report: ReportSummary): Messag
       return compose(
         'Promenjen status prijave',
         [
-          `Status vaše prijave ${title} je sada: ${status?.label ?? event.status}.`,
+          `Status tvoje prijave ${title} je sada: ${status?.label ?? event.status}.`,
           ...(status ? [status.description] : []),
         ],
         toReview,
@@ -147,9 +147,9 @@ export function reportMessage(event: ReportEvent, report: ReportSummary): Messag
         'Problem je rešen',
         [
           event.byModerator
-            ? `Vaša prijava ${title} je označena kao rešena.`
-            : `Vaš dokaz sanacije je potvrđen i prijava ${title} je označena kao rešena.`,
-          'Hvala što pomažete da Novi Sad bude uredniji!',
+            ? `Tvoja prijava ${title} je označena kao rešena.`
+            : `Tvoj dokaz sanacije je potvrđen i prijava ${title} je označena kao rešena.`,
+          'Hvala što pomažeš da Novi Sad bude uredniji!',
         ],
         toReview,
       );
@@ -157,9 +157,9 @@ export function reportMessage(event: ReportEvent, report: ReportSummary): Messag
       return compose(
         'Dokaz sanacije nije prihvaćen',
         [
-          `Dokaz sanacije za vašu prijavu ${title} nije prihvaćen.`,
+          `Dokaz sanacije za tvoju prijavu ${title} nije prihvaćen.`,
           `Razlog: ${event.reason || 'nije naveden'}`,
-          'Možete da pošaljete novi dokaz iz detalja prijave.',
+          'Možeš da pošalješ novi dokaz iz detalja prijave.',
         ],
         toReview,
       );
@@ -197,7 +197,7 @@ export function actionMessage(kind: ActionEvent['kind'], action: ActionSummary):
     return compose(
       'Promenjen termin ili mesto akcije',
       [
-        `Akcija čišćenja ${title}, u koju je uključena vaša prijava, ima novi termin ili mesto okupljanja.`,
+        `Akcija čišćenja ${title}, u koju je uključena tvoja prijava, ima novi termin ili mesto okupljanja.`,
         `Kada: ${formatDate(action.date)}`,
         ...(action.meetingPoint ? [`Mesto okupljanja: ${action.meetingPoint}`] : []),
       ],
@@ -205,12 +205,12 @@ export function actionMessage(kind: ActionEvent['kind'], action: ActionSummary):
     );
   }
   return compose(
-    'Akcija čišćenja za vašu prijavu',
+    'Akcija čišćenja za tvoju prijavu',
     [
-      `Vaša prijava je uključena u akciju čišćenja ${title}.`,
+      `Tvoja prijava je uključena u akciju čišćenja ${title}.`,
       `Kada: ${formatDate(action.date)}`,
       ...(action.meetingPoint ? [`Mesto okupljanja: ${action.meetingPoint}`] : []),
-      'Pridružite se ako možete. Svaka pomoć je dobrodošla!',
+      'Pridruži se ako možeš. Svaka pomoć je dobrodošla!',
     ],
     toActions,
   );
