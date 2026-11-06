@@ -38,7 +38,7 @@
   background: rgba(255, 255, 255, 0.9) !important;
   color: var(--muted) !important;
   font-family: var(--font-mono) !important;
-  font-size: 10px !important;
+  font-size: var(--text-2xs) !important;
   line-height: 1.5 !important;
 }
 
@@ -113,7 +113,7 @@
   background: rgba(255, 255, 255, 0.92);
   box-shadow: var(--shadow-2);
   color: var(--ink-2);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 500;
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
@@ -189,15 +189,16 @@
 }
 
 .pick-banner__text strong {
-  font-size: 12.5px;
+  font-size: var(--text-xs);
   font-weight: 600;
   line-height: 1.35;
 }
 
 .pick-banner__text span {
   color: rgba(244, 243, 237, 0.72);
-  font-family: var(--font-mono);
-  font-size: 10px;
+  /* Sans at 14px, so the hint reads below the bold title (#92). */
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
   line-height: 1.4;
   white-space: normal;
 }
@@ -220,7 +221,8 @@
   bottom: 14px;
   left: 14px;
   z-index: 400;
-  width: 206px;
+  /* Wide enough for the longest category at 14px (#92). */
+  width: 240px;
   padding: 11px 12px 11px;
   border: 1px solid rgba(28, 34, 30, 0.1);
   border-radius: var(--radius-lg);
@@ -263,7 +265,7 @@
   box-sizing: content-box;
   border-radius: var(--radius);
   color: var(--ink-2);
-  font-size: 11.5px;
+  font-size: var(--text-xs);
   text-align: left;
   transition:
     background-color 0.12s var(--ease),
@@ -292,13 +294,13 @@
 .map-legend__count {
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .map-legend__reset {
   margin-top: 6px;
   color: var(--forest);
-  font-size: 10px;
+  font-size: var(--text-xs);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -320,7 +322,7 @@
   padding-top: 7px;
   border-top: 1px solid var(--line);
   color: var(--muted-2);
-  font-size: 10px;
+  font-size: var(--text-xs);
   line-height: 1.4;
 }
 
@@ -339,7 +341,7 @@
   box-shadow: var(--shadow-2);
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -360,7 +362,7 @@
   background: rgba(255, 255, 255, 0.9);
   color: var(--muted);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-2xs);
   letter-spacing: 0.03em;
   transform: translateX(-50%);
 }
@@ -392,7 +394,7 @@
   background: var(--surface);
   box-shadow: var(--shadow-2);
   color: var(--muted);
-  font-size: 11.5px;
+  font-size: var(--text-xs);
   transform: translateX(-50%);
 }
 
@@ -423,7 +425,7 @@
 .map-state__card h2 {
   color: var(--ink);
   font-family: var(--font-display);
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -431,7 +433,7 @@
 .map-state__card p {
   margin-bottom: 3px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--text-xs);
   line-height: 1.55;
 }
 
@@ -466,13 +468,13 @@
   border-radius: var(--radius-lg);
   background: var(--alert-tint);
   color: var(--alert-ink);
-  font-size: 11px;
+  font-size: var(--text-xs);
   transform: translateX(-50%);
 }
 
 .map-error-banner button {
   color: inherit;
-  font-size: 11px;
+  font-size: var(--text-xs);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -687,11 +689,11 @@
 }
 
 .cluster[data-size='sm'] {
-  font-size: 14px;
+  font-size: var(--text-xs);
 }
 
 .cluster[data-size='md'] {
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 
 .cluster[data-size='md'] .cluster__count {
@@ -699,7 +701,7 @@
 }
 
 .cluster[data-size='lg'] {
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 
 .cluster[data-size='lg'] .cluster__count {
@@ -821,7 +823,7 @@
   box-shadow: 0 8px 22px -6px rgba(20, 28, 22, 0.45);
   color: #f4f3ed;
   font-family: var(--font-sans);
-  font-size: 11.5px;
+  font-size: var(--text-xs);
   line-height: 1.4;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -834,19 +836,20 @@
 .ns-tooltip__label {
   color: var(--sun);
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .ns-tooltip__meta {
   color: rgba(244, 243, 237, 0.68);
-  font-size: 10px;
+  font-size: var(--text-xs);
 }
 
 .leaflet-tooltip.ns-tooltip--rich {
   width: max-content;
-  max-width: 260px;
+  /* Room for category · status on one line at 14px (#92). */
+  max-width: 340px;
   padding: 6px 10px 6px 6px;
   white-space: normal;
 }
@@ -876,7 +879,7 @@
 
 .ns-tooltip__title {
   overflow: hidden;
-  font-size: 12px;
+  font-size: var(--text-md);
   font-weight: 600;
   line-height: 1.35;
   text-overflow: ellipsis;

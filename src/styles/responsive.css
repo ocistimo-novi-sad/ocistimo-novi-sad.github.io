@@ -38,13 +38,13 @@
   }
 
   .brand__name {
-    font-size: 12.5px;
+    font-size: var(--text-xs);
     letter-spacing: 0.1em;
   }
 
   .brand__city {
     margin-top: 3px;
-    font-size: 7.5px;
+    font-size: var(--text-2xs);
   }
 
   /* The tab bar carries the report button on mobile. */
@@ -116,6 +116,12 @@
     top: 10px;
     right: 58px;
     left: 10px;
+  }
+
+  /* With 14px chips the row no longer fits; wrap so "Očisti sve" stays visible (#92). */
+  .map-mobile-bar .active-filters {
+    flex-wrap: wrap;
+    overflow-x: visible;
   }
 
   .map-area-toggle,
@@ -244,7 +250,7 @@
   }
 
   .search-field input {
-    font-size: 16px;
+    font-size: var(--text-md);
   }
 
   .btn {
@@ -488,7 +494,7 @@
   }
 
   .brand__name {
-    font-size: 11.5px;
+    font-size: var(--text-xs);
   }
 
   .detail-title {
@@ -560,7 +566,7 @@
   }
 
   .segmented__item {
-    font-size: 11px;
+    font-size: var(--text-xs);
   }
 
   .compose-foot__row .btn {
