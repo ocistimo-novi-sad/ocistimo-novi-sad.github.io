@@ -116,6 +116,9 @@ interface ActionUser {
 /** Report statuses an action gives while it is still ahead or under way. */
 const ACTIVE_REPORT_STATUSES: ReportStatus[] = ['planned', 'in_progress'];
 
+/** Report statuses that settle a report. An action changes them only if it set them. */
+const SETTLED_REPORT_STATUSES: ReportStatus[] = ['resolved', 'not_suitable'];
+
 function moderationStamp(user: ActionUser) {
   return {
     moderatedAt: serverTimestamp(),
@@ -134,7 +137,9 @@ function reportSnapshots(db: Firestore, reportIds: string[]) {
  * reports are committed together by the caller's batch. statusActionId records
  * which action set the status, so cancelling or deleting that action later
  * undoes only its own changes. Reports that already have the status are left
- * alone, which keeps unrelated action edits from rewriting them.
+ * alone, which keeps unrelated action edits from rewriting them. So is a report
+ * that is "Rešeno" or "Nije za akciju", unless this action set that status (a
+ * completed action moved back to planned takes its reports along).
  *
  * A completed action resolves its reports by the same rule as a moderator
  * (resolveKind in services/reports), so a pending proof is confirmed and the
@@ -156,6 +161,12 @@ async function stageReportStatusUpdates(
   for (const snapshot of await reportSnapshots(db, reportIds)) {
     const data = snapshot.data();
     if (!data || data.status === status) continue;
+    if (
+      SETTLED_REPORT_STATUSES.includes(data.status as ReportStatus) &&
+      data.statusActionId !== actionId
+    ) {
+      continue;
+    }
 
     if (status === 'resolved') {
       const kind = resolveKind(data);
