@@ -97,6 +97,17 @@ function mapBounds(map: LeafletMap) {
   };
 }
 
+const LEGEND_KEY = 'kim-legend-open';
+
+/** The legend starts collapsed so it does not cover the map; a visitor's own choice is remembered. */
+function readLegendOpen(): boolean {
+  try {
+    return window.localStorage.getItem(LEGEND_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
 export function MapCanvas() {
   const app = useApp();
   const isMobile = useIsMobile();
@@ -136,7 +147,25 @@ export function MapCanvas() {
 
   const [zoom, setZoom] = useState<number>(APP.initialZoom);
   const [pointer, setPointer] = useState<{ lat: number; lng: number } | null>(null);
-  const [legendOpen, setLegendOpen] = useState(true);
+  const [legendOpen, setLegendOpenState] = useState(readLegendOpen);
+  // The toggle button is swapped on open/close, so focus moves to its counterpart.
+  const legendCloseRef = useRef<HTMLButtonElement>(null);
+  const legendOpenRef = useRef<HTMLButtonElement>(null);
+  const legendFocusPending = useRef(false);
+  useEffect(() => {
+    if (!legendFocusPending.current) return;
+    legendFocusPending.current = false;
+    (legendOpen ? legendCloseRef : legendOpenRef).current?.focus();
+  }, [legendOpen]);
+  const setLegendOpen = useCallback((open: boolean) => {
+    legendFocusPending.current = true;
+    setLegendOpenState(open);
+    try {
+      window.localStorage.setItem(LEGEND_KEY, open ? '1' : '0');
+    } catch {
+      // Storage can be blocked (private mode); the choice then lasts for this visit only.
+    }
+  }, []);
   const pointerThrottle = useRef(0);
 
   const categoryCounts = useMemo(() => {
@@ -479,13 +508,16 @@ export function MapCanvas() {
       ) : null}
 
       {!isMobile && legendOpen && layer === 'reports' ? (
-        <div className="map-legend">
+        <div className="map-legend" id="map-legend">
           <div className="map-legend__head">
             <span className="eyebrow">Legenda</span>
             <button
+              ref={legendCloseRef}
               type="button"
               onClick={() => setLegendOpen(false)}
               aria-label="Sakrij legendu"
+              aria-expanded="true"
+              aria-controls="map-legend"
             >
               <ChevronDown size={14} aria-hidden="true" />
             </button>
@@ -536,9 +568,11 @@ export function MapCanvas() {
 
       {!isMobile && !legendOpen && layer === 'reports' ? (
         <button
+          ref={legendOpenRef}
           type="button"
           className="map-legend-open"
           onClick={() => setLegendOpen(true)}
+          aria-expanded="false"
         >
           <ChevronUp size={13} aria-hidden="true" /> Legenda
         </button>
