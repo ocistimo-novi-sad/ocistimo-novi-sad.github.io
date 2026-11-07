@@ -90,6 +90,8 @@ export interface AppContextValue {
   setMobileTab: (tab: MobileTab) => void;
 
   composeOpen: boolean;
+  /** The form is open and the map picks the report location (false on "Hvala!"). */
+  composePicking: boolean;
   composeLocation: Coordinates | null;
   /** The report being edited in the compose drawer, or null for a new one. */
   composeEditing: Report | null;

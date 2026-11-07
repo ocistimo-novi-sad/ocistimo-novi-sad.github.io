@@ -135,6 +135,7 @@ export function MapCanvas() {
     selectAction,
     clearSelection,
     composeOpen,
+    composePicking,
     composeLocation,
     setComposeLocation,
     startCompose,
@@ -187,7 +188,7 @@ export function MapCanvas() {
 
   const handleMapClick = useCallback(
     (latlng: { lat: number; lng: number }) => {
-      if (composeOpen) {
+      if (composePicking) {
         const point = {
           latitude: roundCoordinate(latlng.lat),
           longitude: roundCoordinate(latlng.lng),
@@ -198,9 +199,10 @@ export function MapCanvas() {
         }
         return;
       }
+      if (composeOpen) return;
       clearSelection();
     },
-    [clearSelection, composeOpen, notify, setComposeLocation],
+    [clearSelection, composeOpen, composePicking, notify, setComposeLocation],
   );
 
   const handleMoveEnd = useCallback(() => {
@@ -230,12 +232,12 @@ export function MapCanvas() {
   // While the report form is open, this button places the report marker at the
   // user's position instead of only moving the map.
   const handleMyLocation = useCallback(() => {
-    if (composeOpen) {
+    if (composePicking) {
       void locateForCompose();
       return;
     }
     void locateUser();
-  }, [composeOpen, locateForCompose, locateUser]);
+  }, [composePicking, locateForCompose, locateUser]);
 
   const toggleViewport = () => {
     if (filters.viewportOnly) {
@@ -258,7 +260,7 @@ export function MapCanvas() {
   const showError = reportsPhase === 'error' && reports.length === 0;
 
   return (
-    <div className={`map-shell${composeOpen ? ' is-picking' : ''}`}>
+    <div className={`map-shell${composePicking ? ' is-picking' : ''}`}>
       <MapContainer
         center={[APP.center.latitude, APP.center.longitude]}
         zoom={APP.initialZoom}
@@ -439,7 +441,7 @@ export function MapCanvas() {
         </button>
       </div>
 
-      {composeOpen ? (
+      {composePicking ? (
         <div className="pick-banner" role="status">
           <Crosshair size={16} aria-hidden="true" />
           <div className="pick-banner__text">

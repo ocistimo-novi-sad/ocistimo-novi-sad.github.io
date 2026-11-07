@@ -278,7 +278,7 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
   3. **Kako možemo da rešimo:** „Šta zajednica može sama“ i „Za šta nam treba pomoć“ — oba opciona, mogu se popuniti brzim izborom ponuđenih odgovora.
   4. **Fotografije:** do 3, opciono. Aplikacija ih smanjuje i uklanja podatke iz fotografije (uključujući GPS lokaciju telefona) pre slanja.
   5. „Pošalji na pregled“.
-- **Rezultat:** ekran „Hvala! Prijava je na pregledu.“ Prijava ima stanje „Na pregledu“ i vide je samo autor i moderatori.
+- **Rezultat:** ekran „Hvala! Prijava je na pregledu.“ Privremeni marker i traka za biranje lokacije nestaju sa mape. Prijava ima stanje „Na pregledu“ i vide je samo autor i moderatori.
 - **E-pošta:** svim moderatorima i administratorima stiže **„Nova prijava čeka pregled“** (vidi [E-1](#101-pregled-svih-obaveštenja)). Autor ne dobija ništa u ovom trenutku.
 - **Greške:**
   - nepopunjeno ili prekratko polje → poruka uz polje, fokus na prvo neispravno;
