@@ -10,6 +10,7 @@ import {
   Pencil,
   ShieldCheck,
   Trash2,
+  Users,
   X,
 } from 'lucide-react';
 import { formatCoordinates, formatDateTime, formatWeekday, plural, formatDate, formatTime } from '../lib/format';
