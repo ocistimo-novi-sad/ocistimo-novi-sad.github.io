@@ -137,7 +137,7 @@ export function ActionDetail() {
               ? 'Akcija je otkazana.'
               : isPast
                 ? 'Predviđeni termin je prošao. Proveri sa organizatorom.'
-                : 'Okupljanje je zakazano. Dolazak nije potrebno najavljivati osim ako organizator traži drugačije.'}
+                : 'Okupljanje je zakazano. Dugme „Dolazim“ stiže uskoro. Do tada samo dođi na mesto okupljanja, osim ako organizator traži drugačije.'}
         </p>
         <div className="action-hero__place">
           <div className="action-hero__row">
