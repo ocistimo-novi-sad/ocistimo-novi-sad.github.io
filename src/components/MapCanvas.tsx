@@ -142,6 +142,7 @@ export function MapCanvas() {
     notify,
     userPosition,
     locateUser,
+    locateForCompose,
     locating,
   } = app;
 
@@ -225,6 +226,16 @@ export function MapCanvas() {
     },
     [composeOpen, selectReport],
   );
+
+  // While the report form is open, this button places the report marker at the
+  // user's position instead of only moving the map.
+  const handleMyLocation = useCallback(() => {
+    if (composeOpen) {
+      void locateForCompose();
+      return;
+    }
+    void locateUser();
+  }, [composeOpen, locateForCompose, locateUser]);
 
   const toggleViewport = () => {
     if (filters.viewportOnly) {
@@ -418,7 +429,7 @@ export function MapCanvas() {
         </button>
         <button
           type="button"
-          onClick={() => void locateUser()}
+          onClick={handleMyLocation}
           aria-label="Moja lokacija"
           title="Moja lokacija"
           aria-busy={locating}

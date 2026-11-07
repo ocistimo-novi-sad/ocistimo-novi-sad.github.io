@@ -12,7 +12,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useReports } from '../hooks/useReports';
 import { useActions } from '../hooks/useActions';
 import { isUpcomingAction } from '../lib/counts';
-import { isWithinBounds } from '../lib/geo';
+import { isInServiceArea, isWithinBounds } from '../lib/geo';
 import { distanceInMeters } from '../lib/geo';
 import { toSerbianError } from '../services/errors';
 import { isFirebaseConfigured } from '../services/firebase';
@@ -61,6 +61,7 @@ import type {
 } from '../types';
 
 type PendingIntent = { kind: 'create' } | { kind: 'flag'; reportId: string };
+type PositionFix = Coordinates & { accuracy: number };
 
 const RESOLVE_MESSAGES: Record<ResolveKind, { error: string; success: string }> = {
   'confirm-proof': {
@@ -154,15 +155,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [composeEditing, setComposeEditing] = useState<Report | null>(null);
   const [modal, setModal] = useState<ModalState>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const [userPosition, setUserPosition] = useState<
-    (Coordinates & { accuracy: number }) | null
-  >(null);
+  const [userPosition, setUserPosition] = useState<PositionFix | null>(null);
   const [locating, setLocating] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [editCount, setEditCount] = useState(0);
   const [resolutionCount, setResolutionCount] = useState(0);
 
   const mapRef = useRef<LeafletMap | null>(null);
+  // Incremented whenever the report form opens or closes, so a location reply
+  // that arrives after closing cannot put a marker back on the map.
+  const composeSessionRef = useRef(0);
+  const composeOpenRef = useRef(false);
+  const positionRequestRef = useRef<Promise<PositionFix | null> | null>(null);
   const pendingIntentRef = useRef<PendingIntent | null>(null);
   const toastTimers = useRef<Map<string, number>>(new Map());
   const toastCounter = useRef(0);
@@ -442,6 +446,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const openCompose = useCallback(() => {
+    composeSessionRef.current += 1;
+    composeOpenRef.current = true;
     setSelectedReportId(null);
     setSelectedActionId(null);
     setComposeOpen(true);
@@ -462,6 +468,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [auth.user, composeOpen, openCompose]);
 
   const cancelCompose = useCallback(() => {
+    composeSessionRef.current += 1;
+    composeOpenRef.current = false;
     setComposeOpen(false);
     setComposeEditing(null);
     setComposeLocationState(null);
@@ -469,6 +477,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   /** Opens the report form prefilled with an existing report. */
   const editReport = useCallback((report: Report) => {
+    composeSessionRef.current += 1;
+    composeOpenRef.current = true;
     setSelectedReportId(null);
     setSelectedActionId(null);
     setModal(null);
@@ -519,6 +529,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     (report: Report) => {
       addReport(report);
       resetFilters();
+      composeSessionRef.current += 1;
+      composeOpenRef.current = false;
       setComposeOpen(false);
       setComposeLocationState(null);
       setSelectedReportId(report.id);
@@ -740,6 +752,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ...(next.previousVersion?.imageUrls ?? []),
         ]),
       );
+      composeSessionRef.current += 1;
+      composeOpenRef.current = false;
       setComposeOpen(false);
       setComposeEditing(null);
       setComposeLocationState(null);
@@ -972,17 +986,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (url.href !== window.location.href) window.history.replaceState(null, '', url);
   }, [selectedReportId]);
 
-  // The map's "my location" button flies there; sorting by distance only needs
-  // the position, so it passes fly: false and the map stays where it is.
-  const locateUser = useCallback(
-    ({ fly = true }: { fly?: boolean } = {}) =>
-      new Promise<boolean>((resolve) => {
-        if (!('geolocation' in navigator)) {
-          notify('error', 'Tvoj pregledač ne podržava određivanje lokacije.');
-          resolve(false);
-          return;
-        }
+  // One browser lookup shared by the map control, the form button and sorting,
+  // so `locating` always describes the request that is actually running.
+  const requestPosition = useCallback(
+    (failureMessage: string, options: PositionOptions): Promise<PositionFix | null> => {
+      const pending = positionRequestRef.current;
+      if (pending) return pending;
 
+      const request = new Promise<PositionFix | null>((resolve) => {
         setLocating(true);
         navigator.geolocation.getCurrentPosition(
           (position) => {
@@ -993,26 +1004,89 @@ export function AppProvider({ children }: { children: ReactNode }) {
               accuracy: position.coords.accuracy,
             };
             setUserPosition(coordinates);
-            if (fly) flyTo(coordinates, 15);
-            resolve(true);
+            resolve(coordinates);
           },
           (error) => {
             setLocating(false);
-            if (error.code === error.PERMISSION_DENIED) {
-              notify(
-                'error',
-                'Pristup lokaciji je odbijen. Možeš ga uključiti u podešavanjima pregledača.',
-              );
-            } else {
-              notify('error', 'Lokaciju trenutno nije moguće odrediti.');
-            }
-            resolve(false);
+            notify(
+              'error',
+              error.code === error.PERMISSION_DENIED
+                ? 'Pristup lokaciji je odbijen. Možeš ga uključiti u podešavanjima pregledača.'
+                : failureMessage,
+            );
+            resolve(null);
           },
-          { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
+          options,
         );
-      }),
-    [flyTo, notify],
+      });
+
+      positionRequestRef.current = request;
+      void request.then(() => {
+        if (positionRequestRef.current === request) positionRequestRef.current = null;
+      });
+      return request;
+    },
+    [notify],
   );
+
+  // The map's "my location" button flies there; sorting by distance only needs
+  // the position, so it passes fly: false and the map stays where it is.
+  const locateUser = useCallback(
+    ({ fly = true }: { fly?: boolean } = {}) => {
+      if (!('geolocation' in navigator)) {
+        notify('error', 'Tvoj pregledač ne podržava određivanje lokacije.');
+        return Promise.resolve(false);
+      }
+
+      return requestPosition('Lokaciju trenutno nije moguće odrediti.', {
+        enableHighAccuracy: true,
+        timeout: 12_000,
+        maximumAge: 60_000,
+      }).then((coordinates) => {
+        if (!coordinates) return false;
+        if (fly) flyTo(coordinates, 15);
+        return true;
+      });
+    },
+    [flyTo, notify, requestPosition],
+  );
+
+  /**
+   * The map control and the form's "use my location" button both place the
+   * report marker. A reply that arrives after the form is closed is ignored.
+   */
+  const locateForCompose = useCallback(async () => {
+    if (!composeOpenRef.current) return false;
+    if (!('geolocation' in navigator)) {
+      notify('error', 'Tvoj pregledač ne podržava određivanje lokacije.');
+      return false;
+    }
+
+    // Opening or closing the form starts a new session. Never apply a reply
+    // from the previous one, even if the form has been reopened meanwhile.
+    const session = composeSessionRef.current;
+    const coordinates =
+      userPosition ??
+      (await requestPosition('Lokaciju nije moguće odrediti. Izaberi tačku na mapi.', {
+        enableHighAccuracy: true,
+        timeout: 12_000,
+      }));
+
+    if (!coordinates || !composeOpenRef.current || composeSessionRef.current !== session) {
+      return false;
+    }
+
+    const point = {
+      latitude: coordinates.latitude,
+      longitude: coordinates.longitude,
+    };
+    setComposeLocationState(point);
+    flyTo(point, 17, { accountForDrawer: true });
+    if (!isInServiceArea(point)) {
+      notify('error', 'Tvoja lokacija je izvan Novog Sada.');
+    }
+    return true;
+  }, [flyTo, notify, requestPosition, userPosition]);
 
   // "Nearest" without a known position asks for it; if that fails the order
   // goes back, so the list never claims "nearest" while it is not. A sort the
@@ -1125,6 +1199,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       userPosition,
       locating,
       locateUser,
+      locateForCompose,
     }),
     [
       auth,
@@ -1203,6 +1278,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       userPosition,
       locating,
       locateUser,
+      locateForCompose,
     ],
   );
 
