@@ -8,7 +8,7 @@ import {
   useMap,
   useMapEvents,
 } from 'react-leaflet';
-import type { LeafletMouseEvent, Map as LeafletMap } from 'leaflet';
+import type { LatLngTuple, LeafletMouseEvent, Map as LeafletMap } from 'leaflet';
 import {
   ChevronDown,
   ChevronUp,
@@ -176,6 +176,14 @@ export function MapCanvas() {
     return counts;
   }, [reports]);
 
+  // The pointer readout re-renders the map on every mouse move. A new array each
+  // time made react-leaflet redraw the accuracy circle mid-zoom, at the new zoom in
+  // the old zoom's layer, so it jumped off the dot until the zoom ended (#62).
+  const userCenter = useMemo<LatLngTuple | null>(
+    () => (userPosition ? [userPosition.latitude, userPosition.longitude] : null),
+    [userPosition],
+  );
+
   const handleMapClick = useCallback(
     (latlng: { lat: number; lng: number }) => {
       if (composeOpen) {
@@ -262,15 +270,15 @@ export function MapCanvas() {
           onPointerMove={handlePointerMove}
         />
 
-        {userPosition ? (
+        {userPosition && userCenter ? (
           <>
             <Circle
-              center={[userPosition.latitude, userPosition.longitude]}
+              center={userCenter}
               radius={Math.min(userPosition.accuracy, 250)}
               pathOptions={{ color: '#234C3B', weight: 1, fillOpacity: 0.08, opacity: 0.35 }}
             />
             <Marker
-              position={[userPosition.latitude, userPosition.longitude]}
+              position={userCenter}
               icon={userIcon()}
               interactive={false}
               keyboard={false}
