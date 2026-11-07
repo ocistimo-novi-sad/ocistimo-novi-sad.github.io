@@ -110,7 +110,10 @@ export function ActionsPanel() {
       <div className="panel__head">
         <LayerSwitch />
 
-        <p className="panel__intro">Pridruži se akciji. Akcija sanira jednu ili više prijava.</p>
+        <p className="panel__intro">
+          Saznaj gde su akcije. Moderatori/koordinatori zajednice ih organizuju. Akcija može i ne
+          mora da se bavi i saniranjem postojećih prijava.
+        </p>
 
         <SearchInput
           value={actionQuery}
@@ -232,7 +235,7 @@ export function ActionsPanel() {
             title={scope === 'upcoming' ? 'Nema planiranih akcija' : 'Još nema završenih akcija'}
             description={
               scope === 'upcoming'
-                ? 'Moderatori i koordinatori zajednice organizuju akcije čišćenja. Do tada možeš pregledati prijave na mapi.'
+                ? undefined
                 : 'Završene akcije se prikazuju ovde sa svim rešenim prijavama.'
             }
             action={

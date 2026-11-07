@@ -132,7 +132,6 @@ export function ComposeDrawer() {
   const {
     composeLocation,
     composeEditing: editing,
-    setComposeLocation,
     cancelCompose,
     addCreatedReport,
     storeCreatedReport,
@@ -140,8 +139,9 @@ export function ComposeDrawer() {
     flyTo,
     notify,
     auth,
-    userPosition,
     mapRef,
+    locating,
+    locateForCompose,
   } = useApp();
 
   // The drawer is keyed by the edited report, so these initial values are
@@ -170,7 +170,6 @@ export function ComposeDrawer() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
-  const [locating, setLocating] = useState(false);
   const [collapseSignal, setCollapseSignal] = useState(0);
 
   const outsideArea = composeLocation !== null && !isInServiceArea(composeLocation);
@@ -288,7 +287,7 @@ export function ComposeDrawer() {
     if (!composeLocation) return;
 
     if (isFirebaseConfigured && !auth.user) {
-      setSubmitError('Prijava je istekla. Prijavi se ponovo i pokušaj.');
+      setSubmitError('Sesija je istekla. Uloguj se ponovo i pokušaj.');
       return;
     }
 
@@ -367,41 +366,9 @@ export function ComposeDrawer() {
   };
 
   const useMyLocation = () => {
-    if (!('geolocation' in navigator)) {
-      notify('error', 'Tvoj pregledač ne podržava određivanje lokacije.');
-      return;
-    }
-    if (userPosition) {
-      setComposeLocation({
-        latitude: userPosition.latitude,
-        longitude: userPosition.longitude,
-      });
-      setCollapseSignal((value) => value + 1);
-      flyTo(userPosition, 17, { accountForDrawer: true });
-      return;
-    }
-
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocating(false);
-        const point = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        };
-        setComposeLocation(point);
-        setCollapseSignal((value) => value + 1);
-        flyTo(point, 17, { accountForDrawer: true });
-        if (!isInServiceArea(point)) {
-          notify('error', 'Tvoja lokacija je izvan Novog Sada.');
-        }
-      },
-      () => {
-        setLocating(false);
-        notify('error', 'Lokaciju nije moguće odrediti. Izaberi tačku na mapi.');
-      },
-      { enableHighAccuracy: true, timeout: 12_000 },
-    );
+    void locateForCompose().then((found) => {
+      if (found) setCollapseSignal((value) => value + 1);
+    });
   };
 
   if (submitted) {
@@ -442,7 +409,7 @@ export function ComposeDrawer() {
           </ol>
           <p className="submit-success__note">
             Ako nešto treba ispraviti, moderator će napisati razlog. Videćeš ga uz prijavu kada
-            se prijavi ovim nalogom.
+            se uloguješ ovim nalogom.
           </p>
         </div>
       </Drawer>

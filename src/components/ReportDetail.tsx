@@ -340,7 +340,7 @@ export function ReportDetail() {
               onClick={() => requestFlag(report.id)}
             >
               <Flag size={13} aria-hidden="true" />
-              Prijavi sadržaj
+              Označi kao sporno
             </button>
           ) : (
             <span className="detail-foot__hint">Nije javno</span>

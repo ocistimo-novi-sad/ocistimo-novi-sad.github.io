@@ -154,6 +154,11 @@ export interface AppContextValue {
   locating: boolean;
   /** Resolves to false when the location could not be read (the user is told why). */
   locateUser: (options?: { fly?: boolean }) => Promise<boolean>;
+  /**
+   * Places the open report form's marker at the user's position. Does nothing
+   * if the form was closed before the browser answered.
+   */
+  locateForCompose: () => Promise<boolean>;
 }
 
 export const AppContext = createContext<AppContextValue | null>(null);

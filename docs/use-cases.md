@@ -42,8 +42,8 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 | Uloga | Ko je to | Kako se dobija |
 |---|---|---|
 | **Posetilac** | Bilo ko ko otvori sajt, bez prijave | Nije potrebno ništa |
-| **Član zajednice** | Korisnik prijavljen Google nalogom | Klikom na „Prijava“ i izborom Google naloga. Registracija ne postoji. |
-| **Moderator** | Član koji pregleda i uređuje prijave i pravi, uređuje i briše akcije čišćenja (koordinator zajednice) | Dodeljuje ga administrator u aplikaciji (Administracija) |
+| **Član zajednice** | Korisnik prijavljen Google nalogom | Klikom na „Uloguj se“ i izborom Google naloga. Registracija ne postoji. |
+| **Moderator** | Član koji pregleda i uređuje prijave i pravi, uređuje i briše akcije čišćenja (koordinator zajednice) | Dodeljuje ga administrator u aplikaciji (Administracija → Korisnici i uloge) |
 | **Administrator** | Moderator koji uz to upravlja ulogama | Dodeljuje ga samo vlasnik projekta, van aplikacije. Iz aplikacije se ne može dodeliti ni oduzeti. |
 
 ### 2.1 Šta koja uloga može
@@ -55,7 +55,7 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 | Slanje nove prijave | — | ✓ | ✓ | ✓ |
 | „Moje prijave“: praćenje, izmena i brisanje sopstvenih prijava | — | ✓ | ✓ | ✓ |
 | Slanje dokaza sanacije za sopstvenu prijavu | — | ✓ | ✓ | ✓ |
-| Prijava spornog sadržaja | — | ✓ | ✓ | ✓ |
+| Označavanje spornog sadržaja | — | ✓ | ✓ | ✓ |
 | Pregled neobjavljenih prijava drugih korisnika | — | — | ✓ | ✓ |
 | Odobravanje i odbijanje novih prijava | — | — | ✓ | ✓ |
 | Pregled izmena objavljenih prijava (prihvati / vrati) | — | — | ✓ | ✓ |
@@ -86,7 +86,7 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 | **O projektu** (ikonica ⓘ) | Kratko objašnjenje projekta, kako se koristi i napomena o privatnosti |
 | **Demo** (oznaka) | Vidi se samo u demo režimu; otvara objašnjenje |
 | **Prijavi problem** | Samo na računaru. Otvara formu za novu prijavu (traži prijavu nalogom ako korisnik nije prijavljen). Na telefonu je ovo dugme u donjoj traci. |
-| **Prijava** / avatar | Neprijavljenom: dugme „Prijava“. Prijavljenom: avatar koji otvara meni naloga |
+| **Uloguj se** / avatar | Neulogovanom: dugme „Uloguj se“. Prijavljenom: avatar koji otvara meni naloga |
 
 ### 3.2 Meni naloga (klik na avatar)
 
@@ -103,7 +103,7 @@ Na avataru se pojavljuje **crvena tačka** kada nešto čeka korisnika: odbijena
 ### 3.3 Glavni ekran
 
 - **Prijave | Akcije** — prekidač na vrhu liste (i na mapi na telefonu) bira šta mapa i lista prikazuju: prijave ili akcije čišćenja. Isti izbor važi za mapu i za listu. Broj uz „Prijave“ = učitane prijave koje nisu „Rešeno“ ni „Nije za akciju“; broj uz „Akcije“ = predstojeće akcije. Kada je 0, broj se ne prikazuje.
-- **Mapa** — za prijave: oznake prijava (boja i ikonica po kategoriji), grupisanje oznaka kada ih je mnogo na jednom mestu, legenda sa brojem prijava po kategoriji (može da uključi/isključi kategoriju), kontrole za zumiranje, „Prikaži ceo Novi Sad“ i „Moja lokacija“. Za akcije: oznake mesta okupljanja; izabrana akcija prikazuje i svoje povezane prijave.
+- **Mapa** — za prijave: oznake prijava (boja i ikonica po kategoriji), grupisanje oznaka kada ih je mnogo na jednom mestu, legenda sa brojem prijava po kategoriji (može da uključi/isključi kategoriju; na računaru je na početku skupljena u dugme „Legenda“, a pregledač pamti izbor), kontrole za zumiranje, „Prikaži ceo Novi Sad“ i „Moja lokacija“. Za akcije: oznake mesta okupljanja; izabrana akcija prikazuje i svoje povezane prijave.
 - **Lista** (levo na računaru, tab „Lista“ na telefonu) — za akcije: Predstojeće i Završene. Za prijave: sažetak napretka (ukupno, rešeno, udeo rešenih, predstojeće akcije), pretraga, filteri, sortiranje i lista.
 - **Panel sa detaljima** (desno na računaru, donji list na telefonu) — detalji prijave, detalji akcije ili forma za prijavu.
 
@@ -233,8 +233,8 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
   4. fotografije (klik = uvećan prikaz);
   5. opis i plan („Šta zajednica može sama“, „Za šta nam treba pomoć“);
   6. lokaciju (adresa). Moderator vidi i koordinate.
-- **Radnje:** „Prikaži na mapi“, „OpenStreetMap“, „Prijavi sadržaj“ (vidi UC-12).
-- **Deljenje:** dok je prijava otvorena, adresa u pregledaču sadrži `?prijava=…`. Taj link otvara istu prijavu. Ako prijava nije javna, a korisnik nije njen autor ni moderator, aplikacija javlja „Ova prijava još nije javna. Prijavi se ako si njen autor.“ (prijavljenom korisniku samo „Ova prijava još nije javna.“) Ako je obrisana: „Prijava nije pronađena. Možda je obrisana.“
+- **Radnje:** „Prikaži na mapi“, „OpenStreetMap“, „Označi kao sporno“ (vidi UC-12).
+- **Deljenje:** dok je prijava otvorena, adresa u pregledaču sadrži `?prijava=…`. Taj link otvara istu prijavu. Ako prijava nije javna, a korisnik nije njen autor ni moderator, aplikacija javlja „Ova prijava još nije javna. Uloguj se ako si njen autor.“ (prijavljenom korisniku samo „Ova prijava još nije javna.“) Ako je obrisana: „Prijava nije pronađena. Možda je obrisana.“
 
 ### UC-04 Pregled akcija čišćenja
 
@@ -252,12 +252,12 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
      - šta poneti;
      - povezane prijave (klik vodi na prijavu).
 
-### UC-05 Prijava Google nalogom
+### UC-05 Logovanje Google nalogom
 
 - **Akter:** posetilac
-- **Gde:** dugme „Prijava“, ili automatski kada posetilac pokuša radnju koja zahteva nalog („Prijavi problem“, „Prijavi sadržaj“)
+- **Gde:** dugme „Uloguj se“, ili automatski kada posetilac pokuša radnju koja zahteva nalog („Prijavi problem“, „Označi kao sporno“)
 - **Tok:**
-  1. Otvara se prozor „Prijavi se da nastaviš“ sa objašnjenjem zašto je nalog potreban.
+  1. Otvara se prozor „Uloguj se da nastaviš“ sa objašnjenjem zašto je nalog potreban.
   2. „Nastavi sa Google“ → izbor Google naloga.
   3. Aplikacija čuva ime, profilnu sliku i adresu e-pošte iz Google naloga. Na tu adresu stižu obaveštenja.
   4. Ako je prijava pokrenuta iz neke radnje, ta radnja se nastavlja (otvara se forma za prijavu ili prozor za prijavu sadržaja).
@@ -341,14 +341,14 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
 - **Tok:** „Obriši“ → potvrda „Trajno obrisati?“ → „Obriši“. Prijava i njene fotografije se trajno brišu.
 - **E-pošta:** ne šalje se.
 
-### UC-12 Prijava spornog sadržaja
+### UC-12 Označavanje spornog sadržaja
 
 - **Akter:** prijavljen korisnik
-- **Gde:** detalji objavljene prijave → dno panela → „Prijavi sadržaj“
+- **Gde:** detalji objavljene prijave → dno panela → „Označi kao sporno“
 - **Tok:**
   1. Izbor razloga: Spam ili reklama; Dupla prijava; Netačna ili obmanjujuća prijava; Neprimeren sadržaj; Drugo.
   2. Opciona napomena.
-  3. „Pošalji prijavu“ → „Prijava sadržaja je poslata administratorima.“
+  3. „Pošalji oznaku“ → „Oznaka je poslata administratorima.“
 - **Ograničenje:** jedan korisnik može istu prijavu da označi **samo jednom**. Drugi pokušaj javlja grešku.
 - **E-pošta:** svim moderatorima i administratorima, osim onome ko je označio, **„Prijavljen sporan sadržaj“** (E-5). Autor označene prijave **ne dobija** obaveštenje, osim ako je i sam moderator ili administrator; tada dobija E-5 kao i ostali.
 
