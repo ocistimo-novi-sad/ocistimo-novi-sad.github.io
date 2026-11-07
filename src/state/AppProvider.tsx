@@ -153,6 +153,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeLocation, setComposeLocationState] = useState<Coordinates | null>(null);
   const [composeEditing, setComposeEditing] = useState<Report | null>(null);
+  const [composeSubmitted, setComposeSubmitted] = useState(false);
+  const composePicking = composeOpen && !composeSubmitted;
   const [modal, setModal] = useState<ModalState>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [userPosition, setUserPosition] = useState<PositionFix | null>(null);
@@ -451,6 +453,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSelectedReportId(null);
     setSelectedActionId(null);
     setComposeOpen(true);
+    setComposeSubmitted(false);
     setComposeEditing(null);
     setComposeLocationState(null);
     setLayerState('reports');
@@ -485,6 +488,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setComposeEditing(report);
     setComposeLocationState({ latitude: report.latitude, longitude: report.longitude });
     setComposeOpen(true);
+    setComposeSubmitted(false);
     setLayerState('reports');
     setMobileTabState('map');
   }, []);
@@ -568,10 +572,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [removeReport],
   );
 
-  /** Keeps a just-created, still unpublished report without showing it. */
+  /** Keeps a just-created, still unpublished report and ends location picking (#113). */
   const storeCreatedReport = useCallback(
     (report: Report) => {
       applyReport(report);
+      composeSessionRef.current += 1;
+      composeOpenRef.current = false;
+      setComposeLocationState(null);
+      setComposeSubmitted(true);
     },
     [applyReport],
   );
@@ -1160,6 +1168,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       mobileTab,
       setMobileTab,
       composeOpen,
+      composePicking,
       composeLocation,
       composeEditing,
       startCompose,
@@ -1241,6 +1250,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       mobileTab,
       setMobileTab,
       composeOpen,
+      composePicking,
       composeLocation,
       composeEditing,
       startCompose,
