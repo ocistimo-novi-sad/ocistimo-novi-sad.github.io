@@ -565,10 +565,7 @@ export function MapCanvas() {
               <Info size={18} aria-hidden="true" />
             </div>
             {actions.length === 0 ? (
-              <>
-                <h2>Još nema akcija</h2>
-                <p>Moderatori i koordinatori zajednice organizuju akcije čišćenja.</p>
-              </>
+              <h2>Još nema akcija</h2>
             ) : actionQuery.trim() ? (
               <>
                 <h2>Nema akcija za ovu pretragu</h2>
@@ -584,7 +581,6 @@ export function MapCanvas() {
             ) : actionScope === 'upcoming' ? (
               <>
                 <h2>Nema predstojećih akcija</h2>
-                <p>Moderatori i koordinatori zajednice organizuju akcije čišćenja.</p>
                 <button
                   type="button"
                   className="btn btn--quiet btn--sm"
