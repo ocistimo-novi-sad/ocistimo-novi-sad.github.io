@@ -491,7 +491,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const requestFlag = useCallback(
     (reportId: string) => {
       if (!isFirebaseConfigured) {
-        notify('info', 'Prijava sadržaja je dostupna kada je Firebase baza povezana.');
+        notify('info', 'Označavanje spornog sadržaja je dostupno kada je Firebase baza povezana.');
         return;
       }
       if (!auth.user) {
@@ -958,7 +958,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           'info',
           auth.user
             ? 'Ova prijava još nije javna.'
-            : 'Ova prijava još nije javna. Prijavi se ako si njen autor.',
+            : 'Ova prijava još nije javna. Uloguj se ako si njen autor.',
         );
       });
   }, [applyReport, auth.ready, auth.user, knownReports, notify, reportsPhase, selectReport]);

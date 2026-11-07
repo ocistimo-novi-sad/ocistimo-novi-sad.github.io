@@ -288,7 +288,7 @@ export function ComposeDrawer() {
     if (!composeLocation) return;
 
     if (isFirebaseConfigured && !auth.user) {
-      setSubmitError('Prijava je istekla. Prijavi se ponovo i pokušaj.');
+      setSubmitError('Sesija je istekla. Uloguj se ponovo i pokušaj.');
       return;
     }
 
@@ -442,7 +442,7 @@ export function ComposeDrawer() {
           </ol>
           <p className="submit-success__note">
             Ako nešto treba ispraviti, moderator će napisati razlog. Videćeš ga uz prijavu kada
-            se prijavi ovim nalogom.
+            se uloguješ ovim nalogom.
           </p>
         </div>
       </Drawer>

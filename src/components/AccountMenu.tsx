@@ -57,7 +57,7 @@ export function AccountMenu() {
         onClick={() => openModal({ kind: 'auth', intent: 'generic' })}
       >
         <UserRound size={15} aria-hidden="true" />
-        <span className="btn__text">Prijava</span>
+        <span className="btn__text">Uloguj se</span>
       </button>
     );
   }
