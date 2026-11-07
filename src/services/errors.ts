@@ -22,9 +22,9 @@ export function errorCode(error: unknown): string {
 
 const MESSAGES: Record<string, string> = {
   'permission-denied':
-    'Pristup bazi je odbijen. Proveri da li je nalog prijavljen i da li su Firestore pravila objavljena.',
-  unauthenticated: 'Potrebna je prijava na nalog.',
-  'auth/requires-recent-login': 'Prijavi se ponovo da nastaviš.',
+    'Pristup bazi je odbijen. Proveri da li je korisnik ulogovan i da li su Firestore pravila objavljena.',
+  unauthenticated: 'Uloguj se da nastaviš.',
+  'auth/requires-recent-login': 'Uloguj se ponovo da nastaviš.',
   unavailable:
     'Baza trenutno nije dostupna. Proveri internet vezu i da li je Cloud Firestore omogućen.',
   timeout:
@@ -36,17 +36,17 @@ const MESSAGES: Record<string, string> = {
   'deadline-exceeded': 'Zahtev je istekao. Pokušaj ponovo.',
   'not-found': 'Traženi zapis više ne postoji.',
   'already-exists': 'Ovaj zapis već postoji.',
-  'auth/popup-closed-by-user': 'Prijava je otkazana.',
-  'auth/cancelled-popup-request': 'Prijava je otkazana.',
+  'auth/popup-closed-by-user': 'Logovanje je otkazano.',
+  'auth/cancelled-popup-request': 'Logovanje je otkazano.',
   'auth/popup-blocked':
-    'Pregledač je blokirao prozor za prijavu. Dozvoli iskačuće prozore za ovaj sajt.',
-  'auth/operation-not-allowed': 'Google prijava nije omogućena u Firebase konzoli.',
+    'Pregledač je blokirao prozor za logovanje. Dozvoli iskačuće prozore za ovaj sajt.',
+  'auth/operation-not-allowed': 'Logovanje Google nalogom nije omogućeno u Firebase konzoli.',
   'auth/unauthorized-domain':
     'Ovaj domen nije autorizovan u Firebase konzoli (Authentication → Settings → Authorized domains).',
-  'auth/network-request-failed': 'Prijava nije uspela zbog mreže. Pokušaj ponovo.',
+  'auth/network-request-failed': 'Logovanje nije uspelo zbog mreže. Pokušaj ponovo.',
   'auth/account-exists-with-different-credential':
-    'Nalog sa ovom mejl adresom već koristi drugi način prijave.',
-  'auth/too-many-requests': 'Previše pokušaja prijave. Pokušaj kasnije.',
+    'Nalog sa ovom mejl adresom već koristi drugi način logovanja.',
+  'auth/too-many-requests': 'Previše pokušaja logovanja. Pokušaj kasnije.',
   'storage/not-configured':
     'Otpremanje fotografija nije podešeno za ovaj sajt. Prijava može biti poslata bez fotografija.',
   'storage/type': 'Dozvoljene su JPG, PNG i WebP fotografije.',
@@ -56,8 +56,8 @@ const MESSAGES: Record<string, string> = {
   'storage/processing':
     'Fotografiju nije moguće obraditi. Probaj drugu fotografiju (JPG, PNG ili WebP).',
   'storage/unauthorized':
-    'Otpremanje je odbijeno. Proveri da li je nalog prijavljen i da li su Storage pravila objavljena.',
-  'storage/unauthenticated': 'Prijavi se da dodaš fotografiju.',
+    'Otpremanje je odbijeno. Proveri da li je korisnik ulogovan i da li su Storage pravila objavljena.',
+  'storage/unauthenticated': 'Uloguj se da dodaš fotografiju.',
   'storage/retry-limit-exceeded':
     'Otpremanje fotografije nije uspelo zbog mreže. Pokušaj ponovo.',
   'storage/quota-exceeded': 'Prostor za fotografije je trenutno pun. Javi se administratoru.',
@@ -70,7 +70,7 @@ export function toSerbianError(error: unknown, fallback: string): string {
   if (MESSAGES[code]) return MESSAGES[code];
 
   if (code.startsWith('auth/')) {
-    return 'Prijava nije uspela. Pokušaj ponovo.';
+    return 'Logovanje nije uspelo. Pokušaj ponovo.';
   }
   if (code.startsWith('storage/')) {
     return MESSAGES['storage/upload-failed'];

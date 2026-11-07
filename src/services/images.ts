@@ -109,7 +109,7 @@ class FirebaseImageStorage implements ImageStorage {
     assertValidImage(file);
     const uid = auth?.currentUser?.uid;
     if (!uid) {
-      throw new AppError('storage/unauthenticated', 'Prijavi se da dodaš fotografiju.');
+      throw new AppError('storage/unauthenticated', 'Uloguj se da dodaš fotografiju.');
     }
 
     let prepared: PreparedImage;

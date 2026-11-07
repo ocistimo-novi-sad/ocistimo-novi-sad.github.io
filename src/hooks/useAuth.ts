@@ -54,13 +54,13 @@ export function useAuth() {
       (error) => {
         if (cancelled) return;
         setReady(true);
-        setSignInError(toSerbianError(error, 'Prijava nije uspela.'));
+        setSignInError(toSerbianError(error, 'Logovanje nije uspelo.'));
       },
     );
 
     void getRedirectResult(auth).catch((error: unknown) => {
       if (cancelled) return;
-      setSignInError(toSerbianError(error, 'Prijava nije uspela.'));
+      setSignInError(toSerbianError(error, 'Logovanje nije uspelo.'));
     });
 
     return () => {
@@ -85,11 +85,11 @@ export function useAuth() {
         try {
           await signInWithRedirect(auth, provider);
         } catch (redirectError) {
-          setSignInError(toSerbianError(redirectError, 'Prijava nije uspela.'));
+          setSignInError(toSerbianError(redirectError, 'Logovanje nije uspelo.'));
           throw redirectError;
         }
       } else {
-        setSignInError(toSerbianError(error, 'Prijava nije uspela.'));
+        setSignInError(toSerbianError(error, 'Logovanje nije uspelo.'));
         throw error;
       }
     } finally {

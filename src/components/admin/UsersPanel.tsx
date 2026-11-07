@@ -152,7 +152,7 @@ export function UsersPanel() {
           description={
             users?.length
               ? 'Promeni pretragu ili filter po ulozi.'
-              : 'Korisnik se pojavljuje ovde posle prve prijave Google nalogom.'
+              : 'Korisnik se pojavljuje ovde kada se prvi put uloguje Google nalogom.'
           }
         />
       ) : (

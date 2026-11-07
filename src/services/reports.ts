@@ -183,7 +183,7 @@ function mapSnapshots(docs: QueryDocumentSnapshot[]): Report[] {
 function currentUser() {
   const user = requireAuth().currentUser;
   if (!user) {
-    throw new AppError('unauthenticated', 'Prijavi se ponovo.');
+    throw new AppError('unauthenticated', 'Uloguj se ponovo.');
   }
   return user;
 }
@@ -217,7 +217,7 @@ export async function createReportRecord(
   const db = requireDb();
   const user = requireAuth().currentUser;
   if (!user) {
-    throw new AppError('unauthenticated', 'Prijavi se da pošalješ prijavu.');
+    throw new AppError('unauthenticated', 'Uloguj se da pošalješ prijavu.');
   }
 
   const payload: Record<string, unknown> = {
