@@ -40,7 +40,7 @@ Glavni deo aplikacije je interaktivna mapa Novog Sada (OpenStreetMap podloga). N
 
 - **Grupisanje oznaka** — kada je na jednom mestu mnogo prijava, oznake se spajaju u grupu sa brojem prijava; klik na grupu približava mapu.
 - **Pregled pri prelasku mišem** — oznaka prikazuje kategoriju, naslov i, ako postoji, sličicu fotografije.
-- **Legenda** — na desktop prikazu legenda prikazuje broj prijava po kategoriji i omogućava da se pojedine kategorije uključe ili isključe direktno sa mape.
+- **Legenda** — na desktop prikazu legenda prikazuje broj prijava po kategoriji i omogućava da se pojedine kategorije uključe ili isključe direktno sa mape. Na početku je skupljena u dugme „Legenda“ u donjem levom uglu; pregledač pamti da li ju je posetilac otvorio.
 - **Kontrole mape** — zumiranje, povratak na prikaz celog grada i „Moja lokacija“.
 
 Mapa i lista prijava rade zajedno: izbor prijave u listi usmerava mapu na njenu lokaciju, dok izbor oznake na mapi otvara detalje odgovarajuće prijave.
