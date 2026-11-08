@@ -168,6 +168,7 @@ export function ComposeDrawer() {
   });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [triedUnchanged, setTriedUnchanged] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
   const [collapseSignal, setCollapseSignal] = useState(0);
@@ -278,6 +279,13 @@ export function ComposeDrawer() {
   };
 
   const submit = async () => {
+    // Saving an unchanged report would only send it to review again (#144).
+    if (editing && !dirty) {
+      setSubmitError(null);
+      setTriedUnchanged(true);
+      return;
+    }
+
     const nextErrors = validate();
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
@@ -440,12 +448,18 @@ export function ComposeDrawer() {
       ? 'Moderator pregleda prijavu pre objave. Ne unosi lične podatke.'
       : 'Ne unosi lične podatke. Demo režim: prijava se čuva samo u ovom pregledaču.';
 
+  const formAlert =
+    submitError ??
+    (triedUnchanged && !dirty
+      ? 'Ništa nije promenjeno. Izmeni ono što treba ili klikni „Otkaži“.'
+      : null);
+
   const footer = (
     <div className="compose-foot">
-      {submitError ? (
+      {formAlert ? (
         <div className="form-alert" role="alert">
           <TriangleAlert size={15} aria-hidden="true" />
-          <p>{submitError}</p>
+          <p>{formAlert}</p>
         </div>
       ) : null}
       <div className="compose-foot__row">

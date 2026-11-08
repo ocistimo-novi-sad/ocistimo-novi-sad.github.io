@@ -641,6 +641,7 @@ sequenceDiagram
 - Učitava se do 80 akcija sa najkasnijim datumom; starije akcije se ne prikazuju ni u „Završenim“.
 - Pretraga adresa nije automatska; lokacija se bira na mapi.
 - Obrisane ili zamenjene fotografije se brišu zajedno sa prijavom ili izmenom.
+- Ako se u formi za izmenu ništa ne promeni, ništa se i ne čuva: forma javi „Ništa nije promenjeno“, prijava ne ide ponovo na pregled i ne šalje se e-pošta. Isto važi i za izmenu moderatora.
 
 ---
 
