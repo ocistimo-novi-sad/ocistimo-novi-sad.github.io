@@ -63,7 +63,7 @@ export function RejectForm({
         <div className="field__top">
           <label htmlFor="reject-reason">Razlog odbijanja</label>
           <span className="field__counter">
-            {reason.length}/{LIMITS.rejectReasonMax}
+            {reason.trim().length}/{LIMITS.rejectReasonMax}
           </span>
         </div>
         <textarea
