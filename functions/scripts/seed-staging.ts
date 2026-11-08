@@ -10,11 +10,9 @@
  * Credentials come from `gcloud auth application-default login` (see
  * CONTRIBUTING.md → Staging baza).
  */
-import { applicationDefault, initializeApp } from 'firebase-admin/app';
 import { getFirestore, Timestamp, type Firestore } from 'firebase-admin/firestore';
 import { createDemoActions, createDemoReports } from '../../src/demo/data.ts';
-
-const STAGING_PROJECT_ID = 'project-7fe611ea-b32a-4a6e-85d';
+import { connect, STAGING_PROJECT_ID } from './projects.ts';
 
 /** Collections the seed owns. Roles and profiles are never wiped. */
 const SEEDED_COLLECTIONS = ['reports', 'actions', 'flags', 'mail'];
@@ -146,7 +144,7 @@ async function grantAdmins(db: Firestore, emails: string[]): Promise<void> {
 async function main(): Promise<void> {
   const { reset, admins } = parseArgs(process.argv.slice(2));
 
-  const app = initializeApp({ projectId: STAGING_PROJECT_ID, credential: applicationDefault() });
+  const app = connect(STAGING_PROJECT_ID);
   if (app.options.projectId !== STAGING_PROJECT_ID) {
     throw new Error('Seed sme da radi samo na staging projektu.');
   }
