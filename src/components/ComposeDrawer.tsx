@@ -85,7 +85,7 @@ function PlanField({
           {label} <span className="field__optional">opciono</span>
         </label>
         <span className="field__counter">
-          {value.length}/{COMMUNITY_MAX}
+          {value.trim().length}/{COMMUNITY_MAX}
         </span>
       </div>
       <div className="preset-row" role="group" aria-label={`Brzi izbor: ${label}`}>
@@ -609,7 +609,7 @@ export function ComposeDrawer() {
             <label htmlFor="report-address">
               Adresa ili orijentir <span className="field__optional">opciono</span>
             </label>
-            <span className="field__counter">{address.length}/{LIMITS.addressMax}</span>
+            <span className="field__counter">{address.trim().length}/{LIMITS.addressMax}</span>
           </div>
           <input
             id="report-address"
@@ -635,7 +635,7 @@ export function ComposeDrawer() {
           <div className="field__top">
             <label htmlFor="report-title">Naslov</label>
             <span className="field__counter">
-              {title.length}/{TITLE_MAX}
+              {title.trim().length}/{TITLE_MAX}
             </span>
           </div>
           <input
@@ -699,7 +699,7 @@ export function ComposeDrawer() {
           <div className="field__top">
             <label htmlFor="report-description">Opis problema</label>
             <span className="field__counter">
-              {description.length}/{DESC_MAX}
+              {description.trim().length}/{DESC_MAX}
             </span>
           </div>
           <textarea

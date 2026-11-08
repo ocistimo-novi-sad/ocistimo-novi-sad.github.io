@@ -152,7 +152,7 @@ export function ResolveDialog({ reportId }: { reportId: string }) {
             Napomena <span className="field__optional">opciono</span>
           </label>
           <span className="field__counter">
-            {note.length}/{LIMITS.resolutionNoteMax}
+            {note.trim().length}/{LIMITS.resolutionNoteMax}
           </span>
         </div>
         <textarea
