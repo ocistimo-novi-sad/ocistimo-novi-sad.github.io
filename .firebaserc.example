@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "your-firebase-project-id"
+    "prod": "ocistimo-novi-sad",
+    "staging": "project-7fe611ea-b32a-4a6e-85d"
   }
 }

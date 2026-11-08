@@ -163,6 +163,8 @@ Niko ne dobija obaveštenje o sopstvenoj radnji. Potpun spisak poruka, sa tačni
 firebase deploy --only functions,extensions,firestore,storage --project ocistimo-novi-sad
 ```
 
+Izmene se prvo objave i testiraju na staging projektu: ista komanda, sa `--project staging` umesto `--project ocistimo-novi-sad` (vidi [CONTRIBUTING → Staging baza](CONTRIBUTING.md#staging-baza)).
+
 Pri prvom objavljivanju ekstenzije Firebase CLI traži Gmail app password i čuva ga u Secret Manager-u. Lozinka se nikada ne upisuje u repozitorijum.
 
 Korisnici treba da objavljuju samo informacije relevantne za problem na javnom prostoru. Fotografije i opisi ne treba nepotrebno da otkrivaju lične podatke ili prikazuju ljude na način koji ugrožava njihovu privatnost.
