@@ -95,7 +95,9 @@ npm --prefix functions run seed:staging -- --admin ime@gmail.com    # da ulogu a
 
 Za `--admin` se tim Google nalogom prvo jednom prijavi na staging, jer skripta korisnika traži po e-pošti iz profila. Skripta radi samo na staging projektu i odbija svaki drugi. Za pokretanje je potreban [Google Cloud CLI](https://cloud.google.com/sdk/docs/install) i pristup staging projektu (dodaje ga vlasnik projekta).
 
-Pravila, indeksi i funkcije se na staging objavljuju isto kao na produkciju, samo sa `--project staging`. Izmene u `firestore.rules`, `storage.rules` i `functions/` prvo se objave na staging i tamo testiraju.
+Staging šalje prava obaveštenja e-poštom, sa iste adrese kao produkcija. Pošiljalac je „Kuka i Motika (staging)“, naslov počinje sa `[STAGING]`, a linkovi vode na staging sajt. Te vrednosti su u `functions/.env.staging` i `extensions/firestore-send-email.env.project-7fe611ea-b32a-4a6e-85d`, a Gmail app password staginga je u Secret Manager-u staging projekta, odvojen od produkcijskog.
+
+Pravila, indeksi, funkcije i ekstenzija se na staging objavljuju isto kao na produkciju, samo sa `--project staging`. Izmene u `firestore.rules`, `storage.rules` i `functions/` prvo se objave na staging i tamo testiraju.
 
 ## Pravila
 
