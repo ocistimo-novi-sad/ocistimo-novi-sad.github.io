@@ -7,11 +7,13 @@ Staging i produkcija su odvojeni Firebase projekti, svaki sa svojom bazom, Stora
 | Staging | `staging` | `project-7fe611ea-b32a-4a6e-85d` | `247888940343` | Vercel |
 | Produkcija | `prod` | `ocistimo-novi-sad` | `69675330087` | GitHub Pages |
 
+`.firebaserc` nije u repou (vidi `.gitignore`, primer je [.firebaserc.example](../.firebaserc.example)), pa aliasi `staging` i `prod` važe samo na računaru na kome su upisani. Workflow zato objavljuje po ID-ju projekta. Ako se ID promeni, menja se i u [firebase-deploy.yml](../.github/workflows/firebase-deploy.yml) (`PROJECT_ID`).
+
 ## Kako radi
 
 Workflow [firebase-deploy.yml](../.github/workflows/firebase-deploy.yml) pokreće `firebase deploy` i objavljuje sve iz [firebase.json](../firebase.json): Firestore i Storage pravila, Firestore indekse, Cloud Functions i ekstenziju za mejl.
 
-- **Spajanje u `staging`** → objava na staging projekat, ali samo ako PR menja nešto od Firebase-a (`firestore.rules`, `storage.rules`, `firestore.indexes.json`, `functions/`, `extensions/`, `firebase.json`, `.firebaserc`). Vercel objavljuje sajt nezavisno od toga, pa staging sajt može minut-dva da radi sa starim pravilima.
+- **Spajanje u `staging`** → objava na staging projekat, ali samo ako PR menja nešto od Firebase-a (`firestore.rules`, `storage.rules`, `firestore.indexes.json`, `functions/`, `extensions/`, `firebase.json`). Vercel objavljuje sajt nezavisno od toga, pa staging sajt može minut-dva da radi sa starim pravilima.
 - **Spajanje `staging` → `main`** → [deploy.yml](../.github/workflows/deploy.yml) prvo objavi Firebase na prod, pa tek onda sajt na GitHub Pages. Ako Firebase deploy padne, ni sajt se ne objavljuje.
 - **Ručno ponavljanje:** Actions → **Firebase deploy** → **Run workflow**, pa izaberi `staging` ili `prod`. `prod` radi samo sa grane `main`.
 
