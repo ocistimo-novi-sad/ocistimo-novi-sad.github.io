@@ -23,7 +23,7 @@ export function FlagsPanel() {
       const result = await withTimeout(fetchOpenFlags());
       setFlags(result);
     } catch (loadError) {
-      setError(toSerbianError(loadError, 'Prijave sadržaja nisu učitane.'));
+      setError(toSerbianError(loadError, 'Oznake spornog sadržaja nisu učitane.'));
     } finally {
       setLoading(false);
     }
@@ -41,11 +41,11 @@ export function FlagsPanel() {
       notify(
         'success',
         status === 'resolved'
-          ? 'Prijava sadržaja je rešena.'
-          : 'Prijava sadržaja je odbijena.',
+          ? 'Oznaka je rešena.'
+          : 'Oznaka je odbijena.',
       );
     } catch (resolveError) {
-      notify('error', toSerbianError(resolveError, 'Prijavu sadržaja nije moguće rešiti.'));
+      notify('error', toSerbianError(resolveError, 'Oznaku nije moguće rešiti.'));
     } finally {
       setBusyId(null);
     }
@@ -65,7 +65,7 @@ export function FlagsPanel() {
     return (
       <div className="admin-loading" role="status">
         <Spinner size={16} />
-        Učitavanje prijava sadržaja…
+        Učitavanje označenog sadržaja…
       </div>
     );
   }
@@ -74,7 +74,7 @@ export function FlagsPanel() {
     return (
       <EmptyState
         icon={<TriangleAlert size={20} />}
-        title="Prijave sadržaja nisu učitane"
+        title="Oznake spornog sadržaja nisu učitane"
         description={error}
         action={
           <button type="button" className="btn btn--quiet btn--sm" onClick={() => void load()}>
@@ -90,7 +90,7 @@ export function FlagsPanel() {
       <EmptyState
         icon={<ShieldAlert size={20} />}
         title="Nema označenog sadržaja"
-        description="Kada neko prijavi prijavu kao netačnu, uvredljivu ili duplu, pojaviće se ovde."
+        description="Kada neko označi prijavu kao netačnu, uvredljivu ili duplu, pojaviće se ovde."
         action={
           <button type="button" className="btn btn--quiet btn--sm" onClick={() => void load()}>
             <RefreshCw size={13} aria-hidden="true" /> Osveži
@@ -103,7 +103,7 @@ export function FlagsPanel() {
   return (
     <div className="flags">
       <div className="flags__head">
-        <span className="eyebrow">Otvorene prijave sadržaja</span>
+        <span className="eyebrow">Otvorene oznake</span>
         <button type="button" className="link-btn" onClick={() => void load()} disabled={loading}>
           <RefreshCw size={12} aria-hidden="true" /> Osveži
         </button>
@@ -113,7 +113,7 @@ export function FlagsPanel() {
         {flags.map((flag) => {
           const report = reports.find((item) => item.id === flag.reportId);
           const reason =
-            FLAG_REASONS.find((option) => option.id === flag.reason)?.label ?? 'Prijava';
+            FLAG_REASONS.find((option) => option.id === flag.reason)?.label ?? 'Drugo';
           return (
             <li key={flag.id} className="flag-row">
               <div className="flag-row__head">

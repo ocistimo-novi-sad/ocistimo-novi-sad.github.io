@@ -12,7 +12,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useReports } from '../hooks/useReports';
 import { useActions } from '../hooks/useActions';
 import { isUpcomingAction } from '../lib/counts';
-import { isWithinBounds } from '../lib/geo';
+import { isInServiceArea, isWithinBounds } from '../lib/geo';
 import { distanceInMeters } from '../lib/geo';
 import { toSerbianError } from '../services/errors';
 import { isFirebaseConfigured } from '../services/firebase';
@@ -21,21 +21,23 @@ import { droppedImages, removeImages } from '../services/images';
 import {
   acceptEdit,
   approveReport as approveReportRecord,
-  approveResolution,
   countEditedReports,
   countPendingReports,
   countPendingResolutions,
   deleteReportRecord,
   fetchMyReports,
   fetchReport,
-  markResolved,
   rejectReport as rejectReportRecord,
   rejectResolution,
+  resolveDroppedImages,
+  resolveKind,
+  resolveReport,
   revertEdit,
   submitResolution,
   updateOwnReport,
   updateReportAsModerator,
   updateReportStatus,
+  type ResolveKind,
 } from '../services/reports';
 import {
   AppContext,
@@ -59,6 +61,22 @@ import type {
 } from '../types';
 
 type PendingIntent = { kind: 'create' } | { kind: 'flag'; reportId: string };
+type PositionFix = Coordinates & { accuracy: number };
+
+const RESOLVE_MESSAGES: Record<ResolveKind, { error: string; success: string }> = {
+  'confirm-proof': {
+    error: 'Sanaciju nije moguće potvrditi.',
+    success: 'Sanacija je potvrđena. Prijava je rešena.',
+  },
+  'without-proof': {
+    error: 'Prijavu nije moguće označiti kao rešenu.',
+    success: 'Prijava je označena kao rešena.',
+  },
+  'status-only': {
+    error: 'Status nije moguće sačuvati.',
+    success: 'Status prijave je ažuriran.',
+  },
+};
 
 function fold(value: string): string {
   return value
@@ -135,17 +153,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeLocation, setComposeLocationState] = useState<Coordinates | null>(null);
   const [composeEditing, setComposeEditing] = useState<Report | null>(null);
+  const [composeSubmitted, setComposeSubmitted] = useState(false);
+  const composePicking = composeOpen && !composeSubmitted;
   const [modal, setModal] = useState<ModalState>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const [userPosition, setUserPosition] = useState<
-    (Coordinates & { accuracy: number }) | null
-  >(null);
+  const [userPosition, setUserPosition] = useState<PositionFix | null>(null);
   const [locating, setLocating] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
   const [editCount, setEditCount] = useState(0);
   const [resolutionCount, setResolutionCount] = useState(0);
 
   const mapRef = useRef<LeafletMap | null>(null);
+  // Incremented whenever the report form opens or closes, so a location reply
+  // that arrives after closing cannot put a marker back on the map.
+  const composeSessionRef = useRef(0);
+  const composeOpenRef = useRef(false);
+  const positionRequestRef = useRef<Promise<PositionFix | null> | null>(null);
   const pendingIntentRef = useRef<PendingIntent | null>(null);
   const toastTimers = useRef<Map<string, number>>(new Map());
   const toastCounter = useRef(0);
@@ -215,14 +238,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [actions, selectedActionId],
   );
 
+  // The action shown on the report: the nearest active one, else the latest
+  // completed one. A cancelled action is never shown, so the report keeps its
+  // progress steps instead.
   const relatedAction = useMemo(() => {
     if (!selectedReport) return null;
     const linked = actions.filter((action) => action.reportIds.includes(selectedReport.id));
-    if (linked.length === 0) return null;
-    const active = linked.find(
-      (action) => action.status === 'planned' || action.status === 'in_progress',
-    );
-    return active ?? linked[0];
+    const active = linked
+      .filter((action) => action.status === 'planned' || action.status === 'in_progress')
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
+    if (active.length) return active[0];
+    const completed = linked
+      .filter((action) => action.status === 'completed')
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
+    return completed[0] ?? null;
   }, [actions, selectedReport]);
 
   const actionReports = useMemo(() => {
@@ -376,7 +405,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       // it also makes sure report markers (not action markers) are rendered.
       setLayerState('reports');
       setMobileTabState('map');
-      if (options?.fly !== false) flyTo(report, APP.focusZoom, { accountForDrawer: true });
+      // Never zoom out to open a report: a pin clicked up close would merge
+      // back into a group with its neighbours (#61).
+      const zoom = Math.max(mapRef.current?.getZoom() ?? 0, APP.focusZoom);
+      if (options?.fly !== false) flyTo(report, zoom, { accountForDrawer: true });
     },
     [flyTo],
   );
@@ -416,9 +448,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const openCompose = useCallback(() => {
+    composeSessionRef.current += 1;
+    composeOpenRef.current = true;
     setSelectedReportId(null);
     setSelectedActionId(null);
     setComposeOpen(true);
+    setComposeSubmitted(false);
     setComposeEditing(null);
     setComposeLocationState(null);
     setLayerState('reports');
@@ -436,6 +471,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [auth.user, composeOpen, openCompose]);
 
   const cancelCompose = useCallback(() => {
+    composeSessionRef.current += 1;
+    composeOpenRef.current = false;
     setComposeOpen(false);
     setComposeEditing(null);
     setComposeLocationState(null);
@@ -443,12 +480,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   /** Opens the report form prefilled with an existing report. */
   const editReport = useCallback((report: Report) => {
+    composeSessionRef.current += 1;
+    composeOpenRef.current = true;
     setSelectedReportId(null);
     setSelectedActionId(null);
     setModal(null);
     setComposeEditing(report);
     setComposeLocationState({ latitude: report.latitude, longitude: report.longitude });
     setComposeOpen(true);
+    setComposeSubmitted(false);
     setLayerState('reports');
     setMobileTabState('map');
   }, []);
@@ -465,7 +505,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const requestFlag = useCallback(
     (reportId: string) => {
       if (!isFirebaseConfigured) {
-        notify('info', 'Prijava sadržaja je dostupna kada je Firebase baza povezana.');
+        notify('info', 'Označavanje spornog sadržaja je dostupno kada je Firebase baza povezana.');
         return;
       }
       if (!auth.user) {
@@ -493,6 +533,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     (report: Report) => {
       addReport(report);
       resetFilters();
+      composeSessionRef.current += 1;
+      composeOpenRef.current = false;
       setComposeOpen(false);
       setComposeLocationState(null);
       setSelectedReportId(report.id);
@@ -530,10 +572,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [removeReport],
   );
 
-  /** Keeps a just-created, still unpublished report without showing it. */
+  /** Keeps a just-created, still unpublished report and ends location picking (#113). */
   const storeCreatedReport = useCallback(
     (report: Report) => {
       applyReport(report);
+      composeSessionRef.current += 1;
+      composeOpenRef.current = false;
+      setComposeLocationState(null);
+      setComposeSubmitted(true);
     },
     [applyReport],
   );
@@ -585,10 +631,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ...(action.resultImageUrls ?? []),
         ]),
       ]);
-      await loadActions();
+      // Deleting also puts its reports back to their earlier status.
+      await Promise.all([loadActions(), loadReports()]);
       notify('success', 'Akcija je obrisana.');
     },
-    [loadActions, notify],
+    [loadActions, loadReports, notify],
   );
 
   const moderateReport = useCallback(
@@ -700,7 +747,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const changes = await updateOwnReport(report, content);
         next = { ...report, ...changes };
         message =
-          report.moderation === 'approved'
+          changes.moderation === 'approved'
             ? 'Izmena je sačuvana i vidljiva. Moderator će je pregledati.'
             : 'Prijava je ispravljena i ponovo poslata na pregled.';
       }
@@ -713,6 +760,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ...(next.previousVersion?.imageUrls ?? []),
         ]),
       );
+      composeSessionRef.current += 1;
+      composeOpenRef.current = false;
       setComposeOpen(false);
       setComposeEditing(null);
       setComposeLocationState(null);
@@ -812,32 +861,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [applyReport, notify],
   );
 
-  const approveReportResolution = useCallback(
-    async (report: Report) => {
+  /** Resolves a report by the shared rule (resolveKind in services/reports). */
+  const resolveReportAs = useCallback(
+    async (report: Report, kind: ResolveKind) => {
+      const messages = RESOLVE_MESSAGES[kind];
       try {
-        await approveResolution(report.id);
+        await resolveReport(report.id, kind);
       } catch (error) {
-        notify('error', toSerbianError(error, 'Sanaciju nije moguće potvrditi.'));
+        notify('error', toSerbianError(error, messages.error));
         throw error;
       }
-      applyReport({
-        ...report,
-        status: 'resolved',
-        resolution: report.resolution
-          ? {
-              ...report.resolution,
-              state: 'approved',
-              rejectionReason: undefined,
-              reviewedAt: new Date(),
-              reviewedBy: auth.user?.uid,
-            }
-          : undefined,
-        ...moderatorStamp(),
-      });
-      setResolutionCount((count) => Math.max(0, count - 1));
-      notify('success', 'Sanacija je potvrđena. Prijava je rešena.');
+
+      // Mirrors resolveChanges, so the drawer updates without a reload.
+      const reviewed = { reviewedAt: new Date(), reviewedBy: auth.user?.uid };
+      let resolution = report.resolution;
+      if (kind === 'confirm-proof' && resolution) {
+        resolution = { ...resolution, state: 'approved', rejectionReason: undefined, ...reviewed };
+      } else if (kind === 'without-proof') {
+        resolution = {
+          state: 'approved',
+          imageUrls: [],
+          note: '',
+          byModerator: true,
+          submittedAt: null,
+          ...reviewed,
+        };
+      }
+      applyReport({ ...report, status: 'resolved', resolution, ...moderatorStamp() });
+
+      if (kind === 'confirm-proof') {
+        setResolutionCount((count) => Math.max(0, count - 1));
+      }
+      void removeImages(resolveDroppedImages(report, kind));
+      notify('success', messages.success);
     },
     [applyReport, auth.user, moderatorStamp, notify],
+  );
+
+  const approveReportResolution = useCallback(
+    (report: Report) => resolveReportAs(report, 'confirm-proof'),
+    [resolveReportAs],
   );
 
   const rejectReportResolution = useCallback(
@@ -867,34 +930,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [applyReport, auth.user, moderatorStamp, notify],
   );
 
-  const markReportResolved = useCallback(
-    async (report: Report) => {
-      try {
-        await markResolved(report.id);
-      } catch (error) {
-        notify('error', toSerbianError(error, 'Prijavu nije moguće označiti kao rešenu.'));
-        throw error;
+  const setReportStatus = useCallback(
+    async (report: Report, status: ReportStatus) => {
+      if (status === 'resolved' && report.status !== 'resolved') {
+        await resolveReportAs(report, resolveKind(report));
+      } else {
+        await moderateReport(report.id, status);
       }
-      applyReport({
-        ...report,
-        status: 'resolved',
-        resolution: {
-          state: 'approved',
-          imageUrls: [],
-          note: '',
-          byModerator: true,
-          submittedAt: null,
-          reviewedAt: new Date(),
-          reviewedBy: auth.user?.uid,
-        },
-        ...moderatorStamp(),
-      });
-      if (report.resolution?.state === 'pending') {
-        setResolutionCount((count) => Math.max(0, count - 1));
-      }
-      notify('success', 'Prijava je označena kao rešena.');
     },
-    [applyReport, auth.user, moderatorStamp, notify],
+    [moderateReport, resolveReportAs],
   );
 
   // Deep link (?prijava=<id>) from shared links. Waits for auth so
@@ -936,7 +980,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           'info',
           auth.user
             ? 'Ova prijava još nije javna.'
-            : 'Ova prijava još nije javna. Prijavi se ako si njen autor.',
+            : 'Ova prijava još nije javna. Uloguj se ako si njen autor.',
         );
       });
   }, [applyReport, auth.ready, auth.user, knownReports, notify, reportsPhase, selectReport]);
@@ -950,17 +994,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (url.href !== window.location.href) window.history.replaceState(null, '', url);
   }, [selectedReportId]);
 
-  // The map's "my location" button flies there; sorting by distance only needs
-  // the position, so it passes fly: false and the map stays where it is.
-  const locateUser = useCallback(
-    ({ fly = true }: { fly?: boolean } = {}) =>
-      new Promise<boolean>((resolve) => {
-        if (!('geolocation' in navigator)) {
-          notify('error', 'Tvoj pregledač ne podržava određivanje lokacije.');
-          resolve(false);
-          return;
-        }
+  // One browser lookup shared by the map control, the form button and sorting,
+  // so `locating` always describes the request that is actually running.
+  const requestPosition = useCallback(
+    (failureMessage: string, options: PositionOptions): Promise<PositionFix | null> => {
+      const pending = positionRequestRef.current;
+      if (pending) return pending;
 
+      const request = new Promise<PositionFix | null>((resolve) => {
         setLocating(true);
         navigator.geolocation.getCurrentPosition(
           (position) => {
@@ -971,26 +1012,89 @@ export function AppProvider({ children }: { children: ReactNode }) {
               accuracy: position.coords.accuracy,
             };
             setUserPosition(coordinates);
-            if (fly) flyTo(coordinates, 15);
-            resolve(true);
+            resolve(coordinates);
           },
           (error) => {
             setLocating(false);
-            if (error.code === error.PERMISSION_DENIED) {
-              notify(
-                'error',
-                'Pristup lokaciji je odbijen. Možeš ga uključiti u podešavanjima pregledača.',
-              );
-            } else {
-              notify('error', 'Lokaciju trenutno nije moguće odrediti.');
-            }
-            resolve(false);
+            notify(
+              'error',
+              error.code === error.PERMISSION_DENIED
+                ? 'Pristup lokaciji je odbijen. Možeš ga uključiti u podešavanjima pregledača.'
+                : failureMessage,
+            );
+            resolve(null);
           },
-          { enableHighAccuracy: true, timeout: 12_000, maximumAge: 60_000 },
+          options,
         );
-      }),
-    [flyTo, notify],
+      });
+
+      positionRequestRef.current = request;
+      void request.then(() => {
+        if (positionRequestRef.current === request) positionRequestRef.current = null;
+      });
+      return request;
+    },
+    [notify],
   );
+
+  // The map's "my location" button flies there; sorting by distance only needs
+  // the position, so it passes fly: false and the map stays where it is.
+  const locateUser = useCallback(
+    ({ fly = true }: { fly?: boolean } = {}) => {
+      if (!('geolocation' in navigator)) {
+        notify('error', 'Tvoj pregledač ne podržava određivanje lokacije.');
+        return Promise.resolve(false);
+      }
+
+      return requestPosition('Lokaciju trenutno nije moguće odrediti.', {
+        enableHighAccuracy: true,
+        timeout: 12_000,
+        maximumAge: 60_000,
+      }).then((coordinates) => {
+        if (!coordinates) return false;
+        if (fly) flyTo(coordinates, 15);
+        return true;
+      });
+    },
+    [flyTo, notify, requestPosition],
+  );
+
+  /**
+   * The map control and the form's "use my location" button both place the
+   * report marker. A reply that arrives after the form is closed is ignored.
+   */
+  const locateForCompose = useCallback(async () => {
+    if (!composeOpenRef.current) return false;
+    if (!('geolocation' in navigator)) {
+      notify('error', 'Tvoj pregledač ne podržava određivanje lokacije.');
+      return false;
+    }
+
+    // Opening or closing the form starts a new session. Never apply a reply
+    // from the previous one, even if the form has been reopened meanwhile.
+    const session = composeSessionRef.current;
+    const coordinates =
+      userPosition ??
+      (await requestPosition('Lokaciju nije moguće odrediti. Izaberi tačku na mapi.', {
+        enableHighAccuracy: true,
+        timeout: 12_000,
+      }));
+
+    if (!coordinates || !composeOpenRef.current || composeSessionRef.current !== session) {
+      return false;
+    }
+
+    const point = {
+      latitude: coordinates.latitude,
+      longitude: coordinates.longitude,
+    };
+    setComposeLocationState(point);
+    flyTo(point, 17, { accountForDrawer: true });
+    if (!isInServiceArea(point)) {
+      notify('error', 'Tvoja lokacija je izvan Novog Sada.');
+    }
+    return true;
+  }, [flyTo, notify, requestPosition, userPosition]);
 
   // "Nearest" without a known position asks for it; if that fails the order
   // goes back, so the list never claims "nearest" while it is not. A sort the
@@ -1064,6 +1168,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       mobileTab,
       setMobileTab,
       composeOpen,
+      composePicking,
       composeLocation,
       composeEditing,
       startCompose,
@@ -1097,12 +1202,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
       submitReportResolution,
       approveReportResolution,
       rejectReportResolution,
-      markReportResolved,
+      setReportStatus,
       mapRef,
       flyTo,
       userPosition,
       locating,
       locateUser,
+      locateForCompose,
     }),
     [
       auth,
@@ -1144,6 +1250,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       mobileTab,
       setMobileTab,
       composeOpen,
+      composePicking,
       composeLocation,
       composeEditing,
       startCompose,
@@ -1176,11 +1283,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       submitReportResolution,
       approveReportResolution,
       rejectReportResolution,
-      markReportResolved,
+      setReportStatus,
       flyTo,
       userPosition,
       locating,
       locateUser,
+      locateForCompose,
     ],
   );
 

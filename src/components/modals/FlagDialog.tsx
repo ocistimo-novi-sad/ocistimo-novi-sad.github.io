@@ -21,13 +21,13 @@ export function FlagDialog({ reportId }: { reportId: string }) {
     setError(null);
     try {
       await createFlag(reportId, reason, note.trim());
-      notify('success', 'Prijava sadržaja je poslata administratorima.');
+      notify('success', 'Oznaka je poslata administratorima.');
       closeModal();
     } catch (flagError) {
       setError(
         toSerbianError(
           flagError,
-          'Prijava sadržaja nije poslata. Možda je ova prijava već prijavljena sa tvog naloga.',
+          'Oznaka nije poslata. Možda je ova prijava već označena sa tvog naloga.',
         ),
       );
     } finally {
@@ -37,8 +37,8 @@ export function FlagDialog({ reportId }: { reportId: string }) {
 
   return (
     <Modal
-      title="Prijavi sadržaj"
-      description="Administratori pregledaju prijavu i mogu da uklone ili isprave sadržaj."
+      title="Označi kao sporno"
+      description="Administratori pregledaju oznaku i mogu da uklone ili isprave sadržaj."
       size="sm"
       onClose={closeModal}
       footer={
@@ -53,7 +53,7 @@ export function FlagDialog({ reportId }: { reportId: string }) {
             disabled={busy}
           >
             {busy ? <Spinner size={14} /> : <Flag size={13} aria-hidden="true" />}
-            {busy ? 'Slanje…' : 'Pošalji prijavu'}
+            {busy ? 'Slanje…' : 'Pošalji oznaku'}
           </button>
         </div>
       }
@@ -86,7 +86,7 @@ export function FlagDialog({ reportId }: { reportId: string }) {
           <label htmlFor="flag-note">
             Napomena <span className="field__optional">opciono</span>
           </label>
-          <span className="field__counter">{note.length}/500</span>
+          <span className="field__counter">{note.trim().length}/500</span>
         </div>
         <textarea
           id="flag-note"
@@ -107,7 +107,7 @@ export function FlagDialog({ reportId }: { reportId: string }) {
       ) : null}
 
       <p className="field__hint">
-        Jedna prijava po nalogu za isti sadržaj. Zloupotreba prijavljivanja može dovesti do
+        Jedna oznaka po nalogu za isti sadržaj. Zloupotreba označavanja može dovesti do
         ograničenja naloga.
       </p>
     </Modal>

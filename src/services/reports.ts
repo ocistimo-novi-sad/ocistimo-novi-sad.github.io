@@ -183,7 +183,7 @@ function mapSnapshots(docs: QueryDocumentSnapshot[]): Report[] {
 function currentUser() {
   const user = requireAuth().currentUser;
   if (!user) {
-    throw new AppError('unauthenticated', 'Prijavi se ponovo.');
+    throw new AppError('unauthenticated', 'Uloguj se ponovo.');
   }
   return user;
 }
@@ -217,14 +217,15 @@ export async function createReportRecord(
   const db = requireDb();
   const user = requireAuth().currentUser;
   if (!user) {
-    throw new AppError('unauthenticated', 'Prijavi se da pošalješ prijavu.');
+    throw new AppError('unauthenticated', 'Uloguj se da pošalješ prijavu.');
   }
 
   const payload: Record<string, unknown> = {
     title: input.title,
     description: input.description,
-    communityCan: input.communityCan,
-    helpNeeded: input.helpNeeded,
+    // Optional since #38: an empty plan field is left out, not saved as ''.
+    ...(input.communityCan ? { communityCan: input.communityCan } : {}),
+    ...(input.helpNeeded ? { helpNeeded: input.helpNeeded } : {}),
     category: input.category,
     status: 'new',
     moderation: 'pending',
@@ -267,6 +268,8 @@ export async function updateReportStatus(
   const user = currentUser();
   await updateDoc(doc(requireDb(), 'reports', reportId), {
     status,
+    // A status set by hand is the moderator's, not an action's to undo.
+    statusActionId: deleteField(),
     ...moderationStamp(user),
   });
 }
@@ -361,14 +364,22 @@ function pickStoredContent(data: DocumentData): Record<string, unknown> {
  * Author edit. Before publication it goes back to the review queue. After
  * publication it stays live and waits for a moderator's look, keeping the
  * last approved version so a moderator can restore it.
+ *
+ * The rules pick the case from the stored report, and a moderator may have
+ * approved it or closed an edit review since this page loaded it, so the
+ * report is read from the server first.
  */
 export async function updateOwnReport(
   report: Report,
   content: ReportContent,
 ): Promise<Partial<Report>> {
   const reference = doc(requireDb(), 'reports', report.id);
+  const snapshot = await getDoc(reference);
+  const data = snapshot.data();
+  if (!data) throw new AppError('not-found', 'Prijava više ne postoji.');
 
-  if (report.moderation !== 'approved') {
+  // Same defaults as the rules: no moderation state means approved.
+  if ((data.moderation ?? 'approved') !== 'approved') {
     await updateDoc(reference, {
       ...contentWrite(content),
       moderation: 'pending',
@@ -383,21 +394,28 @@ export async function updateOwnReport(
     editedAt: serverTimestamp(),
     editReview: 'pending',
   };
-  let previousVersion = report.previousVersion;
+  let previousVersion: ReportContent | undefined;
 
-  // Rules require previousVersion to match the stored content exactly, so it
-  // is taken from the server rather than from the (normalised) local copy.
-  if (report.editReview !== 'pending') {
-    const snapshot = await getDoc(reference);
-    const data = snapshot.data();
-    if (!data) throw new AppError('not-found', 'Prijava više ne postoji.');
+  // While an edit waits, the rules keep its previousVersion untouched.
+  // Otherwise it must match the stored content exactly, so it is taken as
+  // stored rather than from the (normalised) mapped copy.
+  if (data.editReview === 'pending') {
+    const kept = data.previousVersion;
+    previousVersion = kept && typeof kept === 'object' ? (mapContent(kept) ?? undefined) : undefined;
+  } else {
     const stored = pickStoredContent(data);
     changes.previousVersion = stored;
     previousVersion = mapContent(stored) ?? undefined;
   }
 
   await updateDoc(reference, changes);
-  return { ...content, editedAt: new Date(), editReview: 'pending', previousVersion };
+  return {
+    ...content,
+    moderation: 'approved',
+    editedAt: new Date(),
+    editReview: 'pending',
+    previousVersion,
+  };
 }
 
 /** Moderator edit: applied directly and attributed, no further review. */
@@ -535,17 +553,75 @@ export async function countPendingResolutions(): Promise<number> {
   return snapshot.data().count;
 }
 
-/** Confirms the author's proof: the report becomes resolved. */
-export async function approveResolution(reportId: string): Promise<void> {
-  const user = currentUser();
-  await updateDoc(doc(requireDb(), 'reports', reportId), {
+/**
+ * How a report that is not resolved yet becomes resolved, judged by its proof:
+ * a pending proof is confirmed; without a proof, or with a rejected one, the
+ * report is resolved without proof; a report that was resolved before and got
+ * another status keeps its resolution and photos, so only the status changes.
+ * Every place that resolves a report follows this rule, so they all record the
+ * same thing and the author gets the same email ("Problem je rešen", except for
+ * "status-only").
+ */
+export type ResolveKind = 'confirm-proof' | 'without-proof' | 'status-only';
+
+interface ResolvableReport {
+  resolution?: { state: string; imageUrls: string[] } | null;
+}
+
+export function resolveKind(report: ResolvableReport): ResolveKind {
+  switch (report.resolution?.state) {
+    case 'pending':
+      return 'confirm-proof';
+    case 'approved':
+      return 'status-only';
+    default:
+      return 'without-proof';
+  }
+}
+
+/** Photos that resolving drops: a rejected proof is not proof, so it goes. */
+export function resolveDroppedImages(report: ResolvableReport, kind: ResolveKind): string[] {
+  return kind === 'without-proof' ? (report.resolution?.imageUrls ?? []) : [];
+}
+
+/**
+ * The fields that resolve a report, for an update or a batch. Resolving by hand
+ * clears statusActionId, so cancelling an action later leaves the report alone.
+ */
+export function resolveChanges(
+  kind: ResolveKind,
+  user: { uid: string; displayName: string | null },
+): Record<string, unknown> {
+  const proof =
+    kind === 'confirm-proof'
+      ? {
+          'resolution.state': 'approved',
+          'resolution.rejectionReason': deleteField(),
+          'resolution.reviewedAt': serverTimestamp(),
+          'resolution.reviewedBy': user.uid,
+        }
+      : kind === 'without-proof'
+        ? {
+            resolution: {
+              state: 'approved',
+              imageUrls: [],
+              note: '',
+              byModerator: true,
+              reviewedAt: serverTimestamp(),
+              reviewedBy: user.uid,
+            },
+          }
+        : {};
+  return {
     status: 'resolved',
-    'resolution.state': 'approved',
-    'resolution.rejectionReason': deleteField(),
-    'resolution.reviewedAt': serverTimestamp(),
-    'resolution.reviewedBy': user.uid,
+    statusActionId: deleteField(),
+    ...proof,
     ...moderationStamp(user),
-  });
+  };
+}
+
+export async function resolveReport(reportId: string, kind: ResolveKind): Promise<void> {
+  await updateDoc(doc(requireDb(), 'reports', reportId), resolveChanges(kind, currentUser()));
 }
 
 export async function rejectResolution(reportId: string, reason: string): Promise<void> {
@@ -555,23 +631,6 @@ export async function rejectResolution(reportId: string, reason: string): Promis
     'resolution.rejectionReason': reason,
     'resolution.reviewedAt': serverTimestamp(),
     'resolution.reviewedBy': user.uid,
-    ...moderationStamp(user),
-  });
-}
-
-/** Moderator marks a report resolved without the author's proof. */
-export async function markResolved(reportId: string): Promise<void> {
-  const user = currentUser();
-  await updateDoc(doc(requireDb(), 'reports', reportId), {
-    status: 'resolved',
-    resolution: {
-      state: 'approved',
-      imageUrls: [],
-      note: '',
-      byModerator: true,
-      reviewedAt: serverTimestamp(),
-      reviewedBy: user.uid,
-    },
     ...moderationStamp(user),
   });
 }

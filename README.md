@@ -2,11 +2,13 @@
 
 **Mapa problema u javnim prostorima Novog Sada i mesto za organizovanje zajedničkih akcija čišćenja i uređenja grada.**
 
+👉 **[ocistimo-novi-sad.github.io](https://ocistimo-novi-sad.github.io/)**
+
 Kuka i Motika je zamišljen kao praktičan alat za građane koji žele da prijave smeće, oštećen javni inventar, grafite i druge probleme u svom okruženju. Cilj je da se takvi problemi lakše uoče, dokumentuju i povežu sa ljudima koji žele da pomognu u njihovom rešavanju.
 
 Ideja projekta je jednostavna: umesto da informacije o zapuštenim mestima ostanu rasute po porukama i društvenim mrežama, sve prijave mogu da budu pregledno prikazane na jednoj mapi. Tako zajednica lakše može da proceni gde je pomoć potrebna i da organizuje konkretnu akciju.
 
-Detaljan opis rada aplikacije — uloge, slučajevi korišćenja, životni ciklus prijava i akcija i sva obaveštenja e-poštom — nalazi se u dokumentu [Kako aplikacija radi](docs/use-cases.md). Kako se predlažu i objavljuju izmene (grane, pregled, staging, Release Notes) opisano je u [CONTRIBUTING.md](CONTRIBUTING.md).
+Detaljan opis rada aplikacije — uloge, slučajevi korišćenja, životni ciklus prijava i akcija i sva obaveštenja e-poštom — nalazi se u dokumentu [Kako aplikacija radi](docs/use-cases.md). Kako se aplikacija pokreće lokalno i kako se predlažu i objavljuju izmene (grane, pregled, staging, Release Notes) opisano je u [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Sadržaj
 
@@ -38,7 +40,7 @@ Glavni deo aplikacije je interaktivna mapa Novog Sada (OpenStreetMap podloga). N
 
 - **Grupisanje oznaka** — kada je na jednom mestu mnogo prijava, oznake se spajaju u grupu sa brojem prijava; klik na grupu približava mapu.
 - **Pregled pri prelasku mišem** — oznaka prikazuje kategoriju, naslov i, ako postoji, sličicu fotografije.
-- **Legenda** — na desktop prikazu legenda prikazuje broj prijava po kategoriji i omogućava da se pojedine kategorije uključe ili isključe direktno sa mape.
+- **Legenda** — na desktop prikazu legenda prikazuje broj prijava po kategoriji i omogućava da se pojedine kategorije uključe ili isključe direktno sa mape. Na početku je skupljena u dugme „Legenda“ u donjem levom uglu; pregledač pamti da li ju je posetilac otvorio.
 - **Kontrole mape** — zumiranje, povratak na prikaz celog grada i „Moja lokacija“.
 
 Mapa i lista prijava rade zajedno: izbor prijave u listi usmerava mapu na njenu lokaciju, dok izbor oznake na mapi otvara detalje odgovarajuće prijave.
@@ -51,7 +53,7 @@ Korisnik bira lokaciju na mapi (ili koristi svoju trenutnu lokaciju) i popunjava
 
 - naslov (5–90 znakova) i opis problema (20–1200 znakova);
 - kategoriju;
-- „Šta zajednica može sama“ i „Za šta nam treba pomoć“ (obavezno, 10–600 znakova; mogu se popuniti brzim izborom ponuđenih odgovora);
+- „Šta zajednica može sama“ i „Za šta nam treba pomoć“ (opciono; ako su popunjena, 10–600 znakova; mogu se popuniti brzim izborom ponuđenih odgovora);
 - lokaciju označenu na mapi, unutar područja Novog Sada;
 - adresu ili orijentir, opciono;
 - do tri fotografije (JPG, PNG ili WebP, do 20 MB po fotografiji).
@@ -99,7 +101,7 @@ Aplikacija sadrži poseban prikaz za akcije čišćenja, podeljen na **predstoje
 
 Povezivanje više prijava sa jednom akcijom olakšava planiranje rada na nekoliko problema u istom delu grada.
 
-Status akcije se automatski prenosi na sve povezane prijave: **Planirano → Akcija planirana**, **U toku → Akcija u toku**, **Završeno → Rešeno**. Otkazivanje akcije ne menja status prijava.
+Status akcije se automatski prenosi na sve povezane prijave: **Planirano → Akcija planirana**, **U toku → Akcija u toku**, **Završeno → Rešeno**. Kada se akcija otkaže ili obriše, ili se prijava ukloni iz nje, prijava se vraća na **Nova prijava**, osim ako je u drugoj aktivnoj akciji (tada dobija njen status) ili joj je moderator ručno menjao status.
 
 ## Kategorije problema
 
@@ -155,13 +157,9 @@ Aplikacija šalje kratka obaveštenja na adresu Google naloga:
 - **autoru prijave** — kada je prijava odobrena ili odbijena (uz razlog), kada joj moderator promeni status ili vrati prethodnu verziju posle izmene, kada je dokaz sanacije potvrđen ili odbijen, kada je prijava uključena u akciju čišćenja, kada se toj akciji promeni termin ili mesto okupljanja i kada je akcija otkazana;
 - **moderatorima i administratorima** — kada stigne nova ili ispravljena prijava, izmena objavljene prijave, dokaz sanacije ili oznaka spornog sadržaja.
 
-Niko ne dobija obaveštenje o sopstvenoj radnji. Potpun spisak poruka, sa tačnim uslovima kada se šalju i kada ne, nalazi se u [Kako aplikacija radi → Obaveštenja e-poštom](docs/use-cases.md#10-obaveštenja-e-poštom). Obaveštenja pravi Cloud Function iz foldera `functions/` i upisuje ih u kolekciju `mail`, a ekstenzija Trigger Email ih šalje preko Gmail SMTP-a. Upisani zapisi se brišu posle nedelju dana. Funkcije, ekstenzija i pravila se objavljuju ručno, jer GitHub Actions objavljuje samo sajt:
+Niko ne dobija obaveštenje o sopstvenoj radnji. Potpun spisak poruka, sa tačnim uslovima kada se šalju i kada ne, nalazi se u [Kako aplikacija radi → Obaveštenja e-poštom](docs/use-cases.md#10-obaveštenja-e-poštom). Obaveštenja pravi Cloud Function iz foldera `functions/` i upisuje ih u kolekciju `mail`, a ekstenzija Trigger Email ih šalje preko Gmail SMTP-a. Upisani zapisi se brišu posle nedelju dana. Funkcije, ekstenzija i pravila se objavljuju sami posle spajanja: u `staging` na staging Firebase projekat, a u `main` na produkcijski (vidi [Objavljivanje Firebase-a](docs/firebase-deploy.md)).
 
-```sh
-firebase deploy --only functions,extensions,firestore,storage --project ocistimo-novi-sad
-```
-
-Pri prvom objavljivanju ekstenzije Firebase CLI traži Gmail app password i čuva ga u Secret Manager-u. Lozinka se nikada ne upisuje u repozitorijum.
+Gmail app password stoji u Secret Manager-u svakog projekta. Lozinka se nikada ne upisuje u repozitorijum.
 
 Korisnici treba da objavljuju samo informacije relevantne za problem na javnom prostoru. Fotografije i opisi ne treba nepotrebno da otkrivaju lične podatke ili prikazuju ljude na način koji ugrožava njihovu privatnost.
 

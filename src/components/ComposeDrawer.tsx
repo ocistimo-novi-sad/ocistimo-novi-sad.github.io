@@ -81,9 +81,11 @@ function PlanField({
   return (
     <div className={`field${error ? ' has-error' : ''}`}>
       <div className="field__top">
-        <label htmlFor={id}>{label}</label>
+        <label htmlFor={id}>
+          {label} <span className="field__optional">opciono</span>
+        </label>
         <span className="field__counter">
-          {value.length}/{COMMUNITY_MAX}
+          {value.trim().length}/{COMMUNITY_MAX}
         </span>
       </div>
       <div className="preset-row" role="group" aria-label={`Brzi izbor: ${label}`}>
@@ -130,7 +132,6 @@ export function ComposeDrawer() {
   const {
     composeLocation,
     composeEditing: editing,
-    setComposeLocation,
     cancelCompose,
     addCreatedReport,
     storeCreatedReport,
@@ -138,8 +139,9 @@ export function ComposeDrawer() {
     flyTo,
     notify,
     auth,
-    userPosition,
     mapRef,
+    locating,
+    locateForCompose,
   } = useApp();
 
   // The drawer is keyed by the edited report, so these initial values are
@@ -168,7 +170,6 @@ export function ComposeDrawer() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
-  const [locating, setLocating] = useState(false);
   const [collapseSignal, setCollapseSignal] = useState(0);
 
   const outsideArea = composeLocation !== null && !isInServiceArea(composeLocation);
@@ -226,15 +227,14 @@ export function ComposeDrawer() {
       next.description = `Opis mora imati najmanje ${DESC_MIN} znakova.`;
     }
 
-    if (communityCan.trim().length < COMMUNITY_MIN) {
-      next.communityCan = communityCan.trim()
-        ? `Napiši bar ${COMMUNITY_MIN} znakova ili izaberi ponuđeno.`
-        : 'Napiši šta zajednica može sama ili izaberi ponuđeno.';
+    // Both plan fields are optional (#38); if filled, they still need a few words.
+    const community = communityCan.trim();
+    if (community && community.length < COMMUNITY_MIN) {
+      next.communityCan = `Napiši bar ${COMMUNITY_MIN} znakova ili ostavi prazno.`;
     }
-    if (helpNeeded.trim().length < COMMUNITY_MIN) {
-      next.helpNeeded = helpNeeded.trim()
-        ? `Napiši bar ${COMMUNITY_MIN} znakova ili izaberi ponuđeno.`
-        : 'Napiši za šta je potrebna pomoć ili izaberi ponuđeno.';
+    const help = helpNeeded.trim();
+    if (help && help.length < COMMUNITY_MIN) {
+      next.helpNeeded = `Napiši bar ${COMMUNITY_MIN} znakova ili ostavi prazno.`;
     }
 
     if (photos.length > LIMITS.imagesMax) {
@@ -287,7 +287,7 @@ export function ComposeDrawer() {
     if (!composeLocation) return;
 
     if (isFirebaseConfigured && !auth.user) {
-      setSubmitError('Prijava je istekla. Prijavi se ponovo i pokušaj.');
+      setSubmitError('Sesija je istekla. Uloguj se ponovo i pokušaj.');
       return;
     }
 
@@ -366,41 +366,9 @@ export function ComposeDrawer() {
   };
 
   const useMyLocation = () => {
-    if (!('geolocation' in navigator)) {
-      notify('error', 'Tvoj pregledač ne podržava određivanje lokacije.');
-      return;
-    }
-    if (userPosition) {
-      setComposeLocation({
-        latitude: userPosition.latitude,
-        longitude: userPosition.longitude,
-      });
-      setCollapseSignal((value) => value + 1);
-      flyTo(userPosition, 17, { accountForDrawer: true });
-      return;
-    }
-
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocating(false);
-        const point = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        };
-        setComposeLocation(point);
-        setCollapseSignal((value) => value + 1);
-        flyTo(point, 17, { accountForDrawer: true });
-        if (!isInServiceArea(point)) {
-          notify('error', 'Tvoja lokacija je izvan Novog Sada.');
-        }
-      },
-      () => {
-        setLocating(false);
-        notify('error', 'Lokaciju nije moguće odrediti. Izaberi tačku na mapi.');
-      },
-      { enableHighAccuracy: true, timeout: 12_000 },
-    );
+    void locateForCompose().then((found) => {
+      if (found) setCollapseSignal((value) => value + 1);
+    });
   };
 
   if (submitted) {
@@ -441,7 +409,7 @@ export function ComposeDrawer() {
           </ol>
           <p className="submit-success__note">
             Ako nešto treba ispraviti, moderator će napisati razlog. Videćeš ga uz prijavu kada
-            se prijavi ovim nalogom.
+            se uloguješ ovim nalogom.
           </p>
         </div>
       </Drawer>
@@ -589,29 +557,28 @@ export function ComposeDrawer() {
           ) : null}
         </div>
 
-        <div className={`location-pick${composeLocation ? ' is-set' : ''}${outsideArea ? ' is-error' : ''}`}>
+        {/* The whole card opens the map, so the form needs no extra button (#38). */}
+        <button
+          type="button"
+          id="compose-map-button"
+          className={`location-pick${composeLocation ? ' is-set' : ''}${outsideArea ? ' is-error' : ''}`}
+          onClick={focusMap}
+          disabled={submitting}
+        >
           <span className="location-pick__icon" aria-hidden="true">
             <Crosshair size={16} />
           </span>
-          <div className="location-pick__body">
+          <span className="location-pick__body">
             <strong>
               {composeLocation ? 'Lokacija je izabrana' : 'Lokacija nije izabrana'}
             </strong>
             <span>
               {composeLocation
                 ? formatCoordinates(composeLocation.latitude, composeLocation.longitude)
-                : 'Klikni na mapu da postaviš marker.'}
+                : 'Klikni na mapu da postaviš lokaciju'}
             </span>
-          </div>
-          <button
-            type="button"
-            id="compose-map-button"
-            className="btn btn--quiet btn--sm"
-            onClick={focusMap}
-          >
-            {composeLocation ? 'Pomeri' : 'Izaberi'}
-          </button>
-        </div>
+          </span>
+        </button>
 
         <div className="location-actions">
           <button
@@ -623,7 +590,6 @@ export function ComposeDrawer() {
             {locating ? <Spinner size={13} /> : <Navigation size={13} aria-hidden="true" />}
             {locating ? 'Traženje lokacije…' : 'Koristi moju lokaciju'}
           </button>
-          <span className="location-actions__hint">Tačka se postavlja klikom na mapu.</span>
         </div>
 
         {errors.location ? (
@@ -643,7 +609,7 @@ export function ComposeDrawer() {
             <label htmlFor="report-address">
               Adresa ili orijentir <span className="field__optional">opciono</span>
             </label>
-            <span className="field__counter">{address.length}/{LIMITS.addressMax}</span>
+            <span className="field__counter">{address.trim().length}/{LIMITS.addressMax}</span>
           </div>
           <input
             id="report-address"
@@ -669,7 +635,7 @@ export function ComposeDrawer() {
           <div className="field__top">
             <label htmlFor="report-title">Naslov</label>
             <span className="field__counter">
-              {title.length}/{TITLE_MAX}
+              {title.trim().length}/{TITLE_MAX}
             </span>
           </div>
           <input
@@ -733,7 +699,7 @@ export function ComposeDrawer() {
           <div className="field__top">
             <label htmlFor="report-description">Opis problema</label>
             <span className="field__counter">
-              {description.length}/{DESC_MAX}
+              {description.trim().length}/{DESC_MAX}
             </span>
           </div>
           <textarea

@@ -8,7 +8,7 @@ import {
   useMap,
   useMapEvents,
 } from 'react-leaflet';
-import type { LeafletMouseEvent, Map as LeafletMap } from 'leaflet';
+import type { LatLngTuple, LeafletMouseEvent, Map as LeafletMap } from 'leaflet';
 import {
   ChevronDown,
   ChevronUp,
@@ -37,6 +37,7 @@ import { LayerSwitch } from './LayerSwitch';
 import { DraftMarkers, ReportMarkers } from './map/ReportMarkers';
 import { ActionMarkers } from './map/ActionMarkers';
 import { tempIcon, userIcon } from './map/map-icons';
+import { NamedMarker } from './map/NamedMarker';
 
 function MapBridge() {
   const map = useMap();
@@ -96,6 +97,17 @@ function mapBounds(map: LeafletMap) {
   };
 }
 
+const LEGEND_KEY = 'kim-legend-open';
+
+/** The legend starts collapsed so it does not cover the map; a visitor's own choice is remembered. */
+function readLegendOpen(): boolean {
+  try {
+    return window.localStorage.getItem(LEGEND_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
 export function MapCanvas() {
   const app = useApp();
   const isMobile = useIsMobile();
@@ -123,6 +135,7 @@ export function MapCanvas() {
     selectAction,
     clearSelection,
     composeOpen,
+    composePicking,
     composeLocation,
     setComposeLocation,
     startCompose,
@@ -130,12 +143,31 @@ export function MapCanvas() {
     notify,
     userPosition,
     locateUser,
+    locateForCompose,
     locating,
   } = app;
 
   const [zoom, setZoom] = useState<number>(APP.initialZoom);
   const [pointer, setPointer] = useState<{ lat: number; lng: number } | null>(null);
-  const [legendOpen, setLegendOpen] = useState(true);
+  const [legendOpen, setLegendOpenState] = useState(readLegendOpen);
+  // The toggle button is swapped on open/close, so focus moves to its counterpart.
+  const legendCloseRef = useRef<HTMLButtonElement>(null);
+  const legendOpenRef = useRef<HTMLButtonElement>(null);
+  const legendFocusPending = useRef(false);
+  useEffect(() => {
+    if (!legendFocusPending.current) return;
+    legendFocusPending.current = false;
+    (legendOpen ? legendCloseRef : legendOpenRef).current?.focus();
+  }, [legendOpen]);
+  const setLegendOpen = useCallback((open: boolean) => {
+    legendFocusPending.current = true;
+    setLegendOpenState(open);
+    try {
+      window.localStorage.setItem(LEGEND_KEY, open ? '1' : '0');
+    } catch {
+      // Storage can be blocked (private mode); the choice then lasts for this visit only.
+    }
+  }, []);
   const pointerThrottle = useRef(0);
 
   const categoryCounts = useMemo(() => {
@@ -146,9 +178,17 @@ export function MapCanvas() {
     return counts;
   }, [reports]);
 
+  // The pointer readout re-renders the map on every mouse move. A new array each
+  // time made react-leaflet redraw the accuracy circle mid-zoom, at the new zoom in
+  // the old zoom's layer, so it jumped off the dot until the zoom ended (#62).
+  const userCenter = useMemo<LatLngTuple | null>(
+    () => (userPosition ? [userPosition.latitude, userPosition.longitude] : null),
+    [userPosition],
+  );
+
   const handleMapClick = useCallback(
     (latlng: { lat: number; lng: number }) => {
-      if (composeOpen) {
+      if (composePicking) {
         const point = {
           latitude: roundCoordinate(latlng.lat),
           longitude: roundCoordinate(latlng.lng),
@@ -159,9 +199,10 @@ export function MapCanvas() {
         }
         return;
       }
+      if (composeOpen) return;
       clearSelection();
     },
-    [clearSelection, composeOpen, notify, setComposeLocation],
+    [clearSelection, composeOpen, composePicking, notify, setComposeLocation],
   );
 
   const handleMoveEnd = useCallback(() => {
@@ -188,6 +229,16 @@ export function MapCanvas() {
     [composeOpen, selectReport],
   );
 
+  // While the report form is open, this button places the report marker at the
+  // user's position instead of only moving the map.
+  const handleMyLocation = useCallback(() => {
+    if (composePicking) {
+      void locateForCompose();
+      return;
+    }
+    void locateUser();
+  }, [composePicking, locateForCompose, locateUser]);
+
   const toggleViewport = () => {
     if (filters.viewportOnly) {
       updateFilters({ viewportOnly: false });
@@ -209,7 +260,7 @@ export function MapCanvas() {
   const showError = reportsPhase === 'error' && reports.length === 0;
 
   return (
-    <div className={`map-shell${composeOpen ? ' is-picking' : ''}`}>
+    <div className={`map-shell${composePicking ? ' is-picking' : ''}`}>
       <MapContainer
         center={[APP.center.latitude, APP.center.longitude]}
         zoom={APP.initialZoom}
@@ -232,17 +283,18 @@ export function MapCanvas() {
           onPointerMove={handlePointerMove}
         />
 
-        {userPosition ? (
+        {userPosition && userCenter ? (
           <>
             <Circle
-              center={[userPosition.latitude, userPosition.longitude]}
+              center={userCenter}
               radius={Math.min(userPosition.accuracy, 250)}
               pathOptions={{ color: '#234C3B', weight: 1, fillOpacity: 0.08, opacity: 0.35 }}
             />
             <Marker
-              position={[userPosition.latitude, userPosition.longitude]}
+              position={userCenter}
               icon={userIcon()}
               interactive={false}
+              keyboard={false}
               zIndexOffset={500}
             />
           </>
@@ -281,7 +333,8 @@ export function MapCanvas() {
         )}
 
         {composeLocation ? (
-          <Marker
+          <NamedMarker
+            label="Nova prijava. Pomeri marker."
             position={[composeLocation.latitude, composeLocation.longitude]}
             icon={tempIcon()}
             draggable
@@ -300,7 +353,7 @@ export function MapCanvas() {
             <Tooltip direction="top" offset={[0, -26]} className="ns-tooltip">
               Nova prijava. Pomeri marker.
             </Tooltip>
-          </Marker>
+          </NamedMarker>
         ) : null}
       </MapContainer>
 
@@ -378,7 +431,7 @@ export function MapCanvas() {
         </button>
         <button
           type="button"
-          onClick={() => void locateUser()}
+          onClick={handleMyLocation}
           aria-label="Moja lokacija"
           title="Moja lokacija"
           aria-busy={locating}
@@ -388,7 +441,7 @@ export function MapCanvas() {
         </button>
       </div>
 
-      {composeOpen ? (
+      {composePicking ? (
         <div className="pick-banner" role="status">
           <Crosshair size={16} aria-hidden="true" />
           <div className="pick-banner__text">
@@ -476,13 +529,16 @@ export function MapCanvas() {
       ) : null}
 
       {!isMobile && legendOpen && layer === 'reports' ? (
-        <div className="map-legend">
+        <div className="map-legend" id="map-legend">
           <div className="map-legend__head">
             <span className="eyebrow">Legenda</span>
             <button
+              ref={legendCloseRef}
               type="button"
               onClick={() => setLegendOpen(false)}
               aria-label="Sakrij legendu"
+              aria-expanded="true"
+              aria-controls="map-legend"
             >
               <ChevronDown size={14} aria-hidden="true" />
             </button>
@@ -533,9 +589,11 @@ export function MapCanvas() {
 
       {!isMobile && !legendOpen && layer === 'reports' ? (
         <button
+          ref={legendOpenRef}
           type="button"
           className="map-legend-open"
           onClick={() => setLegendOpen(true)}
+          aria-expanded="false"
         >
           <ChevronUp size={13} aria-hidden="true" /> Legenda
         </button>
@@ -562,10 +620,7 @@ export function MapCanvas() {
               <Info size={18} aria-hidden="true" />
             </div>
             {actions.length === 0 ? (
-              <>
-                <h2>Još nema akcija</h2>
-                <p>Moderatori i koordinatori zajednice organizuju akcije čišćenja.</p>
-              </>
+              <h2>Još nema akcija</h2>
             ) : actionQuery.trim() ? (
               <>
                 <h2>Nema akcija za ovu pretragu</h2>
@@ -581,7 +636,6 @@ export function MapCanvas() {
             ) : actionScope === 'upcoming' ? (
               <>
                 <h2>Nema predstojećih akcija</h2>
-                <p>Moderatori i koordinatori zajednice organizuju akcije čišćenja.</p>
                 <button
                   type="button"
                   className="btn btn--quiet btn--sm"

@@ -95,8 +95,9 @@ service cloud.firestore {
     // Content an author writes, on create and on every edit.
     function validReportContent(data) {
       return validReportCore(data)
-        && validPlanField(data, 'communityCan', true)
-        && validPlanField(data, 'helpNeeded', true);
+        // Both plan fields are optional since #38.
+        && validPlanField(data, 'communityCan', false)
+        && validPlanField(data, 'helpNeeded', false);
     }
 
     // Proof of a fix, in any state a moderator may leave it in. A rejected
@@ -116,12 +117,15 @@ service cloud.firestore {
     }
 
     // `snapshot` holds exactly the content fields of `data`, unchanged.
+    // In a.diff(b), addedKeys() are keys only in a and removedKeys() keys
+    // only in b. `data` is the whole report, so it may hold keys the snapshot
+    // lacks, but never content ones.
     function isContentOf(snapshot, data) {
       return snapshot is map
         && snapshot.keys().hasOnly(contentKeys())
         && snapshot.diff(data).changedKeys().size() == 0
-        && snapshot.diff(data).removedKeys().size() == 0
-        && !snapshot.diff(data).addedKeys().hasAny(contentKeys());
+        && snapshot.diff(data).addedKeys().size() == 0
+        && !snapshot.diff(data).removedKeys().hasAny(contentKeys());
     }
 
     // Reports created before pre-moderation have no state and count as
@@ -314,8 +318,10 @@ service cloud.firestore {
              .hasOnly(contentKeys().concat([
                'status', 'moderation', 'rejectionReason', 'editedAt',
                'editReview', 'previousVersion', 'resolution',
-               'moderatedAt', 'moderatedBy', 'moderatedByName'
+               'moderatedAt', 'moderatedBy', 'moderatedByName',
+               'statusActionId'
              ]))
+        && request.resource.data.get('statusActionId', '') is string
         && validResolution(request.resource.data)
         && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(contentKeys())
             || (validReportCore(request.resource.data)

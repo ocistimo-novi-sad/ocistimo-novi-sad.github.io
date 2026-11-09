@@ -123,7 +123,8 @@ export const ACTION_STATUS_MAP: Record<ActionStatus, string> = Object.fromEntrie
 /**
  * Report status applied to every report linked to an action when the action is
  * saved. Reports have no "completed" status, so a completed action resolves
- * its reports. Cancelling an action leaves the report statuses unchanged.
+ * its reports. Cancelling has no status of its own: it releases the reports,
+ * as deleting the action does (see stageReportRelease in services/actions.ts).
  */
 export const ACTION_REPORT_STATUS: Record<ActionStatus, ReportStatus | null> = {
   planned: 'planned',

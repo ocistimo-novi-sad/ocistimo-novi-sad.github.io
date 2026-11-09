@@ -94,15 +94,15 @@ export function MyReportsPanel() {
     body = (
       <EmptyState
         icon={<UserRound size={20} />}
-        title="Prijavi se"
-        description="Prijavi se Google nalogom da vidiš svoje prijave i njihov status."
+        title="Uloguj se"
+        description="Uloguj se Google nalogom da vidiš svoje prijave i njihov status."
         action={
           <button
             type="button"
             className="btn btn--primary btn--sm"
             onClick={() => openModal({ kind: 'auth', intent: 'generic' })}
           >
-            Prijava
+            Uloguj se
           </button>
         }
       />

@@ -51,7 +51,7 @@ export function LocationPicker({
       >
         <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" maxZoom={19} />
         <ClickPicker onPick={onChange} />
-        <Marker position={[latitude, longitude]} icon={tempIcon()} />
+        <Marker position={[latitude, longitude]} icon={tempIcon()} keyboard={false} />
         <SizeFix />
       </MapContainer>
       <p className="picker-map__hint">

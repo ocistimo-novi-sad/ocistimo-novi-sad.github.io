@@ -90,6 +90,8 @@ export interface AppContextValue {
   setMobileTab: (tab: MobileTab) => void;
 
   composeOpen: boolean;
+  /** The form is open and the map picks the report location (false on "Hvala!"). */
+  composePicking: boolean;
   composeLocation: Coordinates | null;
   /** The report being edited in the compose drawer, or null for a new one. */
   composeEditing: Report | null;
@@ -137,8 +139,11 @@ export interface AppContextValue {
   submitReportResolution: (report: Report, imageUrls: string[], note: string) => Promise<void>;
   approveReportResolution: (report: Report) => Promise<void>;
   rejectReportResolution: (report: Report, reason: string) => Promise<void>;
-  /** Moderator marks a report resolved without the author's proof. */
-  markReportResolved: (report: Report) => Promise<void>;
+  /**
+   * Moderator sets a published report's status. "Rešeno" resolves the report
+   * by the shared rule: it confirms a pending proof, or resolves without one.
+   */
+  setReportStatus: (report: Report, status: ReportStatus) => Promise<void>;
 
   mapRef: React.RefObject<LeafletMap | null>;
   flyTo: (
@@ -150,6 +155,11 @@ export interface AppContextValue {
   locating: boolean;
   /** Resolves to false when the location could not be read (the user is told why). */
   locateUser: (options?: { fly?: boolean }) => Promise<boolean>;
+  /**
+   * Places the open report form's marker at the user's position. Does nothing
+   * if the form was closed before the browser answered.
+   */
+  locateForCompose: () => Promise<boolean>;
 }
 
 export const AppContext = createContext<AppContextValue | null>(null);

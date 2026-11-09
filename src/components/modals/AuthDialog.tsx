@@ -47,7 +47,7 @@ export function AuthDialog({
     try {
       await auth.signIn();
     } catch (signInError) {
-      setError(toSerbianError(signInError, 'Prijava nije uspela. Pokušaj ponovo.'));
+      setError(toSerbianError(signInError, 'Logovanje nije uspelo. Pokušaj ponovo.'));
     } finally {
       setBusy(false);
     }
@@ -57,12 +57,12 @@ export function AuthDialog({
     intent === 'create'
       ? 'Prijava problema je vezana za nalog kako bi zajednica mogla da odgovori na pitanja i spreči zloupotrebu.'
       : intent === 'flag'
-        ? 'Prijava neprikladnog sadržaja je vezana za nalog kako bi administratori mogli da provere slučaj.'
-        : 'Prijavi se da objavljuješ prijave i prijaviš neprikladan sadržaj.';
+        ? 'Označavanje spornog sadržaja je vezano za nalog kako bi administratori mogli da provere slučaj.'
+        : 'Uloguj se da objavljuješ prijave i označiš sporan sadržaj.';
 
   return (
     <Modal
-      title="Prijavi se da nastaviš"
+      title="Uloguj se da nastaviš"
       description="Pregled prijava i akcija je javan, bez naloga."
       size="sm"
       onClose={closeModal}
@@ -102,12 +102,12 @@ export function AuthDialog({
           disabled={busy || !auth.configured}
         >
           {busy ? <Spinner size={16} /> : <GoogleMark />}
-          {busy ? 'Prijavljivanje…' : 'Nastavi sa Google'}
+          {busy ? 'Logovanje…' : 'Nastavi sa Google'}
         </button>
 
         {!auth.configured ? (
           <p className="auth-card__warning">
-            Firebase nije povezan, pa prijava trenutno nije moguća. Aplikacija radi u demo režimu.
+            Firebase nije povezan, pa logovanje trenutno nije moguće. Aplikacija radi u demo režimu.
           </p>
         ) : null}
 

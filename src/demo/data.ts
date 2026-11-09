@@ -278,7 +278,7 @@ export function createDemoActions(): CleanupAction[] {
       supplies: ['Radne rukavice', 'Vreće za otpad', 'Grablje i metle', 'Voda za piće'],
       organizerName: 'Ekološko udruženje Futoški park',
       organizerNote:
-        'Prijavi se porukom na mejl organizatora najkasnije dan ranije. Maloletni mogu doći uz pratnju roditelja.',
+        'Javi se porukom na mejl organizatora najkasnije dan ranije. Maloletni mogu doći uz pratnju roditelja.',
       createdAt: hoursAgo(150),
       createdBy: 'demo-admin',
       source: 'demo',

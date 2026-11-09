@@ -38,13 +38,13 @@
   }
 
   .brand__name {
-    font-size: 12.5px;
+    font-size: var(--text-xs);
     letter-spacing: 0.1em;
   }
 
   .brand__city {
     margin-top: 3px;
-    font-size: 7.5px;
+    font-size: var(--text-2xs);
   }
 
   /* The tab bar carries the report button on mobile. */
@@ -103,7 +103,7 @@
   }
 
   .map-controls {
-    top: 58px;
+    top: 10px;
     right: 10px;
   }
 
@@ -116,6 +116,12 @@
     top: 10px;
     right: 58px;
     left: 10px;
+  }
+
+  /* With 14px chips the row no longer fits; wrap so "Očisti sve" stays visible (#92). */
+  .map-mobile-bar .active-filters {
+    flex-wrap: wrap;
+    overflow-x: visible;
   }
 
   .map-area-toggle,
@@ -232,7 +238,7 @@
   .field textarea,
   .field select {
     min-height: 42px;
-    font-size: 16px;
+    font-size: var(--text-md);
   }
 
   .field textarea {
@@ -244,7 +250,7 @@
   }
 
   .search-field input {
-    font-size: 16px;
+    font-size: var(--text-md);
   }
 
   .btn {
@@ -254,7 +260,7 @@
   .btn--sm {
     height: 32px;
     padding: 0 10px;
-    font-size: 12px;
+    font-size: var(--text-xs);
   }
 
   .btn--icon {
@@ -271,16 +277,16 @@
   .chip {
     height: 32px;
     padding: 0 10px;
-    font-size: 12px;
+    font-size: var(--text-xs);
   }
 
   .select-field {
     height: 32px;
-    font-size: 12px;
+    font-size: var(--text-xs);
   }
 
   .select-field select {
-    font-size: 12px;
+    font-size: var(--text-md);
   }
 
   .popover__row {
@@ -293,7 +299,7 @@
 
   .category-option {
     min-height: 44px;
-    font-size: 12px;
+    font-size: var(--text-xs);
   }
 
   .photo-draft,
@@ -379,8 +385,30 @@
     flex: 1;
   }
 
+  /* With 14px labels four tabs do not fit in one line: equal tabs, a long label takes two lines.
+     On the smallest phones with a larger font the row scrolls instead of widening the window (#92). */
+  .admin-tabs {
+    overflow-x: auto;
+    border-bottom: 0;
+    box-shadow: inset 0 -1px 0 var(--line);
+    scrollbar-width: none;
+  }
+
+  .admin-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .admin-tab {
+    flex: 1 1 0;
+    justify-content: center;
+    margin-bottom: 0;
+    padding-inline: 6px;
+    text-align: center;
+  }
+
   .review {
-    grid-template-columns: 1fr;
+    /* minmax(0, ...): a long one-line title must not widen the list past the screen (#92). */
+    grid-template-columns: minmax(0, 1fr);
     min-height: 0;
   }
 
@@ -447,7 +475,7 @@
     display: block;
     color: var(--muted-2);
     font-family: var(--font-mono);
-    font-size: 9px;
+    font-size: var(--text-xs);
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
@@ -488,15 +516,15 @@
   }
 
   .brand__name {
-    font-size: 11.5px;
+    font-size: var(--text-xs);
   }
 
   .detail-title {
-    font-size: 21px;
+    font-size: 1.3125rem;
   }
 
   .compose-title {
-    font-size: 20px;
+    font-size: 1.25rem;
   }
 
   .impact {
@@ -505,7 +533,7 @@
   }
 
   .impact__title {
-    font-size: 18px;
+    font-size: 1.125rem;
   }
 
   .impact-stat {
@@ -513,7 +541,7 @@
   }
 
   .impact-stat__value {
-    font-size: 21px;
+    font-size: 1.3125rem;
   }
 
   .drawer {
@@ -525,7 +553,7 @@
   }
 
   .map-controls {
-    top: 56px;
+    top: 10px;
   }
 
   .auth-foot {
@@ -538,7 +566,7 @@
   }
 
   .info-hero h3 {
-    font-size: 20px;
+    font-size: 1.25rem;
   }
 
   .category-grid {
@@ -560,7 +588,7 @@
   }
 
   .segmented__item {
-    font-size: 11px;
+    font-size: var(--text-xs);
   }
 
   .compose-foot__row .btn {

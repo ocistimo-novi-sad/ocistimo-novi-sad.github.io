@@ -12,10 +12,19 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  # Never cancel a run halfway: it may be in the middle of the Firebase deploy.
+  cancel-in-progress: false
 
 jobs:
+  # Rules and functions go out first, so the new site never runs against the
+  # old ones. If this fails, the site is not published either.
+  firebase:
+    uses: ./.github/workflows/firebase-deploy.yml
+    with:
+      target: prod
+
   build:
+    needs: firebase
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
