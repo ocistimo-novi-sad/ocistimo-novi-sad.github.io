@@ -1,8 +1,0 @@
-{
-  "rewrites": [
-    {
-      "source": "/__/auth/:path*",
-      "destination": "https://project-7fe611ea-b32a-4a6e-85d.firebaseapp.com/__/auth/:path*"
-    }
-  ]
-}
