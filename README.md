@@ -157,13 +157,9 @@ Aplikacija šalje kratka obaveštenja na adresu Google naloga:
 - **autoru prijave** — kada je prijava odobrena ili odbijena (uz razlog), kada joj moderator promeni status ili vrati prethodnu verziju posle izmene, kada je dokaz sanacije potvrđen ili odbijen, kada je prijava uključena u akciju čišćenja, kada se toj akciji promeni termin ili mesto okupljanja i kada je akcija otkazana;
 - **moderatorima i administratorima** — kada stigne nova ili ispravljena prijava, izmena objavljene prijave, dokaz sanacije ili oznaka spornog sadržaja.
 
-Niko ne dobija obaveštenje o sopstvenoj radnji. Potpun spisak poruka, sa tačnim uslovima kada se šalju i kada ne, nalazi se u [Kako aplikacija radi → Obaveštenja e-poštom](docs/use-cases.md#10-obaveštenja-e-poštom). Obaveštenja pravi Cloud Function iz foldera `functions/` i upisuje ih u kolekciju `mail`, a ekstenzija Trigger Email ih šalje preko Gmail SMTP-a. Upisani zapisi se brišu posle nedelju dana. Funkcije, ekstenzija i pravila se objavljuju ručno, jer GitHub Actions objavljuje samo sajt:
+Niko ne dobija obaveštenje o sopstvenoj radnji. Potpun spisak poruka, sa tačnim uslovima kada se šalju i kada ne, nalazi se u [Kako aplikacija radi → Obaveštenja e-poštom](docs/use-cases.md#10-obaveštenja-e-poštom). Obaveštenja pravi Cloud Function iz foldera `functions/` i upisuje ih u kolekciju `mail`, a ekstenzija Trigger Email ih šalje preko Gmail SMTP-a. Upisani zapisi se brišu posle nedelju dana. Funkcije, ekstenzija i pravila se objavljuju sami posle spajanja: u `staging` na staging Firebase projekat, a u `main` na produkcijski (vidi [Objavljivanje Firebase-a](docs/firebase-deploy.md)).
 
-```sh
-firebase deploy --only functions,extensions,firestore,storage --project ocistimo-novi-sad
-```
-
-Pri prvom objavljivanju ekstenzije Firebase CLI traži Gmail app password i čuva ga u Secret Manager-u. Lozinka se nikada ne upisuje u repozitorijum.
+Gmail app password stoji u Secret Manager-u svakog projekta. Lozinka se nikada ne upisuje u repozitorijum.
 
 Korisnici treba da objavljuju samo informacije relevantne za problem na javnom prostoru. Fotografije i opisi ne treba nepotrebno da otkrivaju lične podatke ili prikazuju ljude na način koji ugrožava njihovu privatnost.
 

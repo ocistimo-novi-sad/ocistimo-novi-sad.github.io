@@ -54,7 +54,7 @@ Bez `.env.local` aplikacija radi u **demo režimu**: izmišljeni primeri, bez na
 
 Za rad sa pravim podacima kopiraj [.env.example](.env.example) u `.env.local` i popuni vrednosti iz Firebase konzole (Project settings → Your apps). Te vrednosti nisu tajne; podatke štite `firestore.rules` i `storage.rules`.
 
-> **Važno:** aplikacija se ne povezuje na Firebase emulatore, iako su navedeni u `firebase.json`. Sa popunjenim `.env.local` lokalna verzija, kao i staging, radi sa **produkcijskom bazom**. Posle testiranja obriši sve test podatke.
+> **Važno:** aplikacija se ne povezuje na Firebase emulatore, iako su navedeni u `firebase.json`. Sa popunjenim `.env.local` lokalna verzija radi sa bazom projekta čije si vrednosti upisao. Za razvoj koristi **staging** projekat, nikako produkcijski (vidi [Objavljivanje Firebase-a](docs/firebase-deploy.md)). Posle testiranja obriši test podatke.
 
 Pre otvaranja PR-a proveri da prolazi build (uključuje i proveru tipova):
 
@@ -107,13 +107,14 @@ Sa GitHub CLI-jem prva dva reda zamenjuje `gh pr checkout <broj PR-a>`. PR se od
 
 - tiket iz „Closes #…“ se sam zatvara;
 - PR se pojavljuje u nacrtu Release Notes **„Sledeća verzija“** (pravilo 6);
-- staging se sam objavljuje na **Vercelu**, ništa ne treba pokretati ručno.
+- staging se sam objavljuje na **Vercelu**, ništa ne treba pokretati ručno;
+- ako PR menja pravila, indekse, funkcije ili ekstenziju, oni se sami objavljuju na staging Firebase projekat (workflow **Firebase deploy**).
 
 Kada se nova verzija pojavi na Vercelu, Tijana (i svako ko želi da pomogne u testiranju) prolazi kroz PR-ove iz nacrta „Sledeća verzija“ i javlja da li je sve u redu. Ako nešto ne radi, otvara se novi issue (pravilo 5).
 
-> **Važno: staging radi sa produkcijskom bazom.** Sve što se napravi tokom testiranja (prijave, akcije, fotografije, prijave sadržaja, test nalozi) vide i pravi korisnici. Zato se **posle svakog testiranja na stagingu obavezno obrišu svi test podaci**.
+> Staging ima **svoju bazu**, odvojenu od produkcijske, pa test podaci ne stižu do pravih korisnika. Ipak, posle testiranja obriši test podatke, da staging ostane pregledan za sledeće testiranje.
 
-Produkcija ostaje na GitHub Pages i objavljuje se sama kada se `staging` spoji u `main`. Cloud Functions, ekstenzija za e-poštu i Firestore/Storage pravila se i dalje objavljuju ručno (vidi [README → Obaveštenja e-poštom](README.md#obaveštenja-e-poštom)).
+Produkcija ostaje na GitHub Pages i objavljuje se sama kada se `staging` spoji u `main`: prvo Firestore/Storage pravila, indeksi, Cloud Functions i ekstenzija za e-poštu na produkcijski Firebase projekat, pa tek onda sajt. Detalji su u [Objavljivanje Firebase-a](docs/firebase-deploy.md).
 
 ### 4. Na `main` ide više PR-ova odjednom
 
@@ -151,5 +152,5 @@ Uvodimo Release Notes: spisak PR-ova (a preko njih i tiketa) koji su ušli u sva
 - [ ] Ko pregleda PR, preuzeo je granu i lokalno proverio izmenu.
 - [ ] Ima bar jedno odobrenje pre spajanja.
 - [ ] Posle objave na staging, tester je potvrdio da radi.
-- [ ] Posle testiranja na stagingu obrisani su svi test podaci (staging koristi produkcijsku bazu).
+- [ ] Posle testiranja na stagingu obrisani su test podaci.
 - [ ] Ako je ovo ispravka, u issue-u ili PR-u piše na koji se tiket odnosi.
