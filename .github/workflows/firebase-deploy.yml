@@ -1,0 +1,74 @@
+name: Firebase deploy
+
+# Publishes everything in firebase.json: Firestore and Storage rules, Firestore
+# indexes, Cloud Functions and the e-mail extension.
+#   - push to staging → staging project (only when Firebase files change)
+#   - deploy.yml calls this for main → prod project, before the site is built
+#   - workflow_dispatch reruns a failed deploy by hand
+# Access is Workload Identity Federation per project; the GitHub environment
+# (firebase-staging / firebase-prod) holds that project's provider and service
+# account. See docs/firebase-deploy.md.
+on:
+  push:
+    branches: [staging]
+    paths:
+      - firebase.json
+      - .firebaserc
+      - firestore.rules
+      - firestore.indexes.json
+      - storage.rules
+      - functions/**
+      - extensions/**
+      - .github/workflows/firebase-deploy.yml
+  workflow_call:
+    inputs:
+      target:
+        description: Alias from .firebaserc
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Alias from .firebaserc
+        type: choice
+        options: [staging, prod]
+        default: staging
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # A push carries no inputs, and it only ever means staging.
+    environment: firebase-${{ inputs.target || 'staging' }}
+    concurrency:
+      group: firebase-${{ inputs.target || 'staging' }}
+      # A deploy cut off halfway can leave rules and functions out of step.
+      cancel-in-progress: false
+    env:
+      TARGET: ${{ inputs.target || 'staging' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+
+      # The predeploy hook in firebase.json runs the functions build.
+      - name: Install functions dependencies
+        run: npm --prefix functions ci
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+
+      - name: Deploy
+        run: npx --yes firebase-tools@15.20.0 deploy --project "$TARGET" --non-interactive

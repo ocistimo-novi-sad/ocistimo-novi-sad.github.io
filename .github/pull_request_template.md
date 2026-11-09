@@ -10,5 +10,5 @@ Closes #
 
 ## Kako testirati na stagingu
 
-<!-- Staging radi sa produkcijskom bazom: posle testiranja obrišite sve test podatke. -->
+<!-- Staging ima svoju bazu, odvojenu od produkcije. Posle testiranja obriši test podatke. -->
 
