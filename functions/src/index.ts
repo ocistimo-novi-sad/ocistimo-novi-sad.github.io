@@ -4,7 +4,7 @@ import { setGlobalOptions } from 'firebase-functions';
 import { onDocumentCreated, onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { actionEvents, isForStaff, reportEvents } from './events.js';
 import { queueMail } from './mail.js';
-import { reportAuthors, staffUids } from './recipients.js';
+import { authorUids, reportAuthors, staffUids } from './recipients.js';
 import { actionMessage, flagMessage, reportMessage, type ReportSummary } from './templates.js';
 
 initializeApp();
@@ -37,8 +37,8 @@ export const onReportWritten = onDocumentWritten('reports/{reportId}', async (ev
     const message = reportMessage(change, report);
     if (isForStaff(change)) {
       await queueMail(id, { bccUids: await staffUids(author), message });
-    } else if (author && author !== moderator) {
-      await queueMail(id, { toUids: [author], message });
+    } else {
+      await queueMail(id, { toUids: await authorUids(author, moderator), message });
     }
   }
 });

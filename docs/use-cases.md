@@ -96,6 +96,7 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 | **Moje prijave** | Svi prijavljeni | Lista sopstvenih prijava i njihovog stanja. Crveni broj = prijave koje treba ispraviti. |
 | **Moderacija** | Moderator, administrator | Redovi za pregled: Nove prijave, Izmene, Sanacije, Označen sadržaj. Broj = nove prijave, izmene i sanacije koje čekaju (označen sadržaj se ne broji). |
 | **Administracija** (moderatoru: „Akcije čišćenja“) | Moderator, administrator | Akcije čišćenja; Korisnici i uloge (samo administrator) |
+| **Obaveštenja e-poštom** | Svi prijavljeni („Za moderaciju“ samo moderator/administrator) | Prekidači „O mojim prijavama“ i „Za moderaciju“, vidi [10.2](#102-opšta-pravila) |
 | **Odjava** | Svi prijavljeni | Odjava sa naloga |
 
 Na avataru se pojavljuje **crvena tačka** kada nešto čeka korisnika: odbijena prijava ili odbijen dokaz sanacije koji treba ispraviti, a za moderatore i nove prijave, izmene i sanacije koje čekaju pregled.
@@ -543,7 +544,11 @@ Svaka poruka ima tekstualnu i HTML verziju i završava se rečenicom: „Ovu por
 - **Pošiljalac:** Kuka i Motika &lt;podrska.kuka.i.motika.ns@gmail.com&gt;.
 - **Ista radnja ne šalje istu poruku dvaput**, čak i ako se sistemski događaj ponovi.
 - **Link „Otvori prijavu“** vodi direktno na tu prijavu. Neobjavljenu prijavu (E-1, E-2, E-7) otvaraju samo autor i moderatori, i to kada su prijavljeni u aplikaciju.
-- **Isključivanje obaveštenja trenutno nije moguće.**
+- **Obaveštenja mogu da se isključe** u meniju naloga → „Obaveštenja e-poštom“. Podrazumevano su uključena, a izbor se pamti uz nalog:
+  - **„O mojim prijavama“** (svi prijavljeni): poruke autoru, E-6 do E-14;
+  - **„Za moderaciju“** (moderatori i administratori): poruke o novom sadržaju za pregled, E-1 do E-5.
+
+  Ko isključi jednu vrstu, i dalje dobija drugu. Isključivanje važi od sledeće poruke; poruke koje su već poslate se ne povlače.
 - **Zapisi o poslatim porukama brišu se posle nedelju dana.**
 - **U demo režimu se ne šalje nijedna poruka.**
 

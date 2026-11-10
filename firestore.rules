@@ -40,6 +40,16 @@ service cloud.firestore {
       return !('email' in data) || data.email == request.auth.token.email;
     }
 
+    // Which e-mails the person wants (#79). Only an explicit false turns a
+    // kind off; the Cloud Functions read it in functions/src/recipients.ts.
+    function validMailPrefs(data) {
+      return !('mailPrefs' in data)
+        || (data.mailPrefs is map
+            && data.mailPrefs.keys().hasOnly(['myReports', 'moderation'])
+            && data.mailPrefs.get('myReports', true) is bool
+            && data.mailPrefs.get('moderation', true) is bool);
+    }
+
     // Novi Sad municipality, with a small margin. Prevents reports and
     // cleanup actions from being placed anywhere else on the planet.
     function validCoordinates(lat, lng) {
@@ -224,11 +234,12 @@ service cloud.firestore {
       allow update: if signedIn()
         && request.auth.uid == uid
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['displayName', 'email', 'photoURL', 'lastSeenAt'])
+             .hasOnly(['displayName', 'email', 'photoURL', 'lastSeenAt', 'mailPrefs'])
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() <= 80
         && request.resource.data.lastSeenAt == request.time
         && validProfileEmail(request.resource.data)
+        && validMailPrefs(request.resource.data)
         && (!('photoURL' in request.resource.data)
             || request.resource.data.photoURL is string);
 
