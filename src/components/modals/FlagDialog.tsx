@@ -86,7 +86,7 @@ export function FlagDialog({ reportId }: { reportId: string }) {
           <label htmlFor="flag-note">
             Napomena <span className="field__optional">opciono</span>
           </label>
-          <span className="field__counter">{note.length}/500</span>
+          <span className="field__counter">{note.trim().length}/500</span>
         </div>
         <textarea
           id="flag-note"

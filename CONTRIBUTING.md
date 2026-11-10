@@ -135,13 +135,14 @@ Sa GitHub CLI-jem prva dva reda zamenjuje `gh pr checkout <broj PR-a>`. PR se od
 
 - tiket iz „Closes #…“ se sam zatvara;
 - PR se pojavljuje u nacrtu Release Notes **„Sledeća verzija“** (pravilo 6);
-- staging se sam objavljuje na **Vercelu**, ništa ne treba pokretati ručno.
+- staging se sam objavljuje na **Vercelu**, ništa ne treba pokretati ručno;
+- ako PR menja pravila, indekse, funkcije ili ekstenziju, oni se sami objavljuju na staging Firebase projekat (workflow **Firebase deploy**).
 
 Kada se nova verzija pojavi na Vercelu, Tijana (i svako ko želi da pomogne u testiranju) prolazi kroz PR-ove iz nacrta „Sledeća verzija“ i javlja da li je sve u redu. Ako nešto ne radi, otvara se novi issue (pravilo 5).
 
 Staging radi sa **staging bazom** (vidi [Staging baza](#staging-baza)), pa test podaci ne stižu do pravih korisnika i ne moraju da se brišu posle svakog testiranja. Kada se baza previše zatrpa, vraća se na poznato stanje sa `seed:staging -- --reset`.
 
-Produkcija ostaje na GitHub Pages i objavljuje se sama kada se `staging` spoji u `main`. Cloud Functions, ekstenzija za e-poštu i Firestore/Storage pravila se i dalje objavljuju ručno (vidi [README → Obaveštenja e-poštom](README.md#obaveštenja-e-poštom)).
+Produkcija ostaje na GitHub Pages i objavljuje se sama kada se `staging` spoji u `main`: prvo Firestore/Storage pravila, indeksi, Cloud Functions i ekstenzija za e-poštu na produkcijski Firebase projekat, pa tek onda sajt. Detalji su u [Objavljivanje Firebase-a](docs/firebase-deploy.md).
 
 ### 4. Na `main` ide više PR-ova odjednom
 
@@ -179,5 +180,5 @@ Uvodimo Release Notes: spisak PR-ova (a preko njih i tiketa) koji su ušli u sva
 - [ ] Ko pregleda PR, preuzeo je granu i lokalno proverio izmenu.
 - [ ] Ima bar jedno odobrenje pre spajanja.
 - [ ] Posle objave na staging, tester je potvrdio da radi.
-- [ ] Posle testiranja na stagingu obrisani su svi test podaci (staging koristi produkcijsku bazu).
+- [ ] Posle testiranja na stagingu obrisani su test podaci.
 - [ ] Ako je ovo ispravka, u issue-u ili PR-u piše na koji se tiket odnosi.

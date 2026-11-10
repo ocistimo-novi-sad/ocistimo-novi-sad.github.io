@@ -230,7 +230,7 @@ export function ActionForm({
             <div className="field__top">
               <label htmlFor="action-title">Naziv akcije</label>
               <span className="field__counter">
-                {title.length}/{TITLE_MAX}
+                {title.trim().length}/{TITLE_MAX}
               </span>
             </div>
             <input
@@ -249,7 +249,7 @@ export function ActionForm({
             <div className="field__top">
               <label htmlFor="action-description">Opis i plan rada</label>
               <span className="field__counter">
-                {description.length}/{DESCRIPTION_MAX}
+                {description.trim().length}/{DESCRIPTION_MAX}
               </span>
             </div>
             <textarea
@@ -361,7 +361,7 @@ export function ActionForm({
               <div className="field__top">
                 <label htmlFor="action-meeting">Mesto okupljanja</label>
                 <span className="field__counter">
-                  {meetingPoint.length}/{MEETING_MAX}
+                  {meetingPoint.trim().length}/{MEETING_MAX}
                 </span>
               </div>
               <input
@@ -480,7 +480,7 @@ export function ActionForm({
             <div className="field__top">
               <label htmlFor="action-organizer">Organizator</label>
               <span className="field__counter">
-                {organizerName.length}/{ORGANIZER_MAX}
+                {organizerName.trim().length}/{ORGANIZER_MAX}
               </span>
             </div>
             <input
@@ -501,7 +501,7 @@ export function ActionForm({
                 Napomena za učesnike <span className="field__optional">opciono</span>
               </label>
               <span className="field__counter">
-                {organizerNote.length}/{NOTE_MAX}
+                {organizerNote.trim().length}/{NOTE_MAX}
               </span>
             </div>
             <textarea
