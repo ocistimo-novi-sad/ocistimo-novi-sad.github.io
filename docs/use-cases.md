@@ -110,7 +110,7 @@ Na avataru se pojavljuje **crvena tačka** kada nešto čeka korisnika: odbijena
 
 ### 3.4 Mobilni telefon
 
-Na dnu ekrana je traka: **Mapa**, **＋ Prijavi** (u sredini), **Lista**. Mapa i Lista prikazuju ono što je izabrano prekidačem **Prijave | Akcije**. „＋ Prijavi“ otvara formu za novu prijavu; moderatoru i administratoru nudi izbor „Prijavi problem“ ili „Nova akcija“. Na dugmetu „Lista“ je isti broj kao na prekidaču za izabrani prikaz. Detalji i forme se otvaraju kao list koji se izvlači odozdo; dok je list otvoren, donja traka se ne prikazuje.
+Na dnu ekrana je traka: **Mapa**, **＋ Prijavi** (u sredini), **Lista**. Mapa i Lista prikazuju ono što je izabrano prekidačem **Prijave | Akcije**. „＋ Prijavi“ otvara formu za novu prijavu; moderatoru i administratoru nudi izbor „Prijavi problem“ ili „Nova akcija“. Detalji i forme se otvaraju kao list koji se izvlači odozdo; dok je list otvoren, donja traka se ne prikazuje.
 
 Pri prvom dolasku na telefonu pojavljuje se **kratak vodič** u tri koraka: „＋ Prijavi“, prekidač „Prijave | Akcije“ i „Lista“. Može da se preskoči, a ponovo se pokreće iz „O projektu“ → „Pokreni kratak vodič kroz aplikaciju“.
 
@@ -642,7 +642,7 @@ sequenceDiagram
 - Podaci se ne osvežavaju sami u realnom vremenu; osvežavaju se posle radnje ili dugmetom za osvežavanje.
 - Redovi moderacije prikazuju do 50 stavki odjednom: Nove prijave, Izmene i Sanacije najstarije prvo, Označen sadržaj (do 50 otvorenih oznaka) najnovije prvo.
 - „Moje prijave“ prikazuje do 100 najnovijih sopstvenih prijava.
-- Objavljene prijave se učitavaju po 80, od najnovijih. Sažetak napretka i brojevi na prekidaču i dugmetu „Lista“ računaju se od učitanih prijava, pa su manji od stvarnih dok se sve ne učitaju („Učitaj još prijava“).
+- Objavljene prijave se učitavaju po 80, od najnovijih. Sažetak napretka i brojevi na prekidaču računaju se od učitanih prijava, pa su manji od stvarnih dok se sve ne učitaju („Učitaj još prijava“).
 - Učitava se do 80 akcija sa najkasnijim datumom; starije akcije se ne prikazuju ni u „Završenim“.
 - Pretraga adresa nije automatska; lokacija se bira na mapi.
 - Obrisane ili zamenjene fotografije se brišu zajedno sa prijavom ili izmenom.

@@ -599,10 +599,6 @@
     width: 42px;
     height: 42px;
   }
-
-  .tabbar__count {
-    top: 5px;
-  }
 }
 
 @media (max-height: 640px) and (max-width: 900px) {
