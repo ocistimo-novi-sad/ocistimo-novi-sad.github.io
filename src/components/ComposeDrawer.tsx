@@ -565,7 +565,7 @@ export function ComposeDrawer() {
           <span className="form-section__num">01</span>
           <h3 id="compose-location-label">Lokacija</h3>
           {composeLocation && !outsideArea ? (
-            <span className="form-section__done" aria-label="Lokacija je izabrana">
+            <span className="form-section__done" role="img" aria-label="Lokacija je izabrana">
               <Check size={12} aria-hidden="true" />
             </span>
           ) : null}
