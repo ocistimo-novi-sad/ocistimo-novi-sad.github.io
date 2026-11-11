@@ -157,7 +157,7 @@ Aplikacija šalje kratka obaveštenja na adresu Google naloga:
 - **autoru prijave** — kada je prijava odobrena ili odbijena (uz razlog), kada joj moderator promeni status ili vrati prethodnu verziju posle izmene, kada je dokaz sanacije potvrđen ili odbijen, kada je prijava uključena u akciju čišćenja, kada se toj akciji promeni termin ili mesto okupljanja i kada je akcija otkazana;
 - **moderatorima i administratorima** — kada stigne nova ili ispravljena prijava, izmena objavljene prijave, dokaz sanacije ili oznaka spornog sadržaja.
 
-Niko ne dobija obaveštenje o sopstvenoj radnji. Potpun spisak poruka, sa tačnim uslovima kada se šalju i kada ne, nalazi se u [Kako aplikacija radi → Obaveštenja e-poštom](docs/use-cases.md#10-obaveštenja-e-poštom). Obaveštenja pravi Cloud Function iz foldera `functions/` i upisuje ih u kolekciju `mail`, a ekstenzija Trigger Email ih šalje preko Gmail SMTP-a. Upisani zapisi se brišu posle nedelju dana. Funkcije, ekstenzija i pravila se objavljuju sami posle spajanja: u `staging` na staging Firebase projekat, a u `main` na produkcijski (vidi [Objavljivanje Firebase-a](docs/firebase-deploy.md)).
+Niko ne dobija obaveštenje o sopstvenoj radnji. Obaveštenja su podrazumevano uključena, a svako ih može isključiti u meniju naloga, u delu „Obaveštenja e-poštom“. Potpun spisak poruka, sa tačnim uslovima kada se šalju i kada ne, nalazi se u [Kako aplikacija radi → Obaveštenja e-poštom](docs/use-cases.md#10-obaveštenja-e-poštom). Obaveštenja pravi Cloud Function iz foldera `functions/` i upisuje ih u kolekciju `mail`, a ekstenzija Trigger Email ih šalje preko Gmail SMTP-a. Upisani zapisi se brišu posle nedelju dana. Funkcije, ekstenzija i pravila se objavljuju ručno, jer GitHub Actions objavljuje samo sajt:
 
 ```sh
 firebase deploy --only functions,extensions,firestore,storage --project ocistimo-novi-sad
@@ -184,7 +184,7 @@ Dizajn je usmeren na preglednost i brzo korišćenje: mapa ostaje u prvom planu,
 - Fotografije se čitaju preko javnih adresa sa nasumičnim imenima, a izlistavanje foldera je zabranjeno. Ko ima tačnu adresu fotografije može da je otvori, pa i fotografije „posle” u dokazu sanacije pre nego što ga moderator potvrdi.
 - Ako slanje forme ne uspe pošto su fotografije već otpremljene, pa korisnik odustane, te fotografije ostaju u Storage-u. Automatsko čišćenje takvih fotografija još ne postoji.
 - Aplikacija trenutno nema komentare ni evidenciju prisustva volontera.
-- Obaveštenja e-poštom rade samo uz Firebase (Cloud Functions i ekstenziju Trigger Email), ne u demonstracionom režimu. Korisnik ih za sada ne može isključiti.
+- Obaveštenja e-poštom rade samo uz Firebase (Cloud Functions i ekstenziju Trigger Email), ne u demonstracionom režimu. Svako ih može isključiti u meniju naloga (poruke o svojim prijavama, a moderatori i poruke za moderaciju).
 - Pretraga adresa nije automatska; korisnik označava lokaciju na mapi i, po potrebi, unosi adresu kao tekst.
 - Promene se ne osvežavaju automatski u realnom vremenu; podaci se osvežavaju nakon relevantnih radnji ili dugmetom za osvežavanje.
 - Prijave i akcije moraju biti unutar područja Novog Sada (približno 45.05–45.45° S, 19.55–20.05° I).

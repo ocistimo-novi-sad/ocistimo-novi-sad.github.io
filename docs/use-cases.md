@@ -96,6 +96,7 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 | **Moje prijave** | Svi prijavljeni | Lista sopstvenih prijava i njihovog stanja. Crveni broj = prijave koje treba ispraviti. |
 | **Moderacija** | Moderator, administrator | Redovi za pregled: Nove prijave, Izmene, Sanacije, Označen sadržaj. Broj = nove prijave, izmene i sanacije koje čekaju (označen sadržaj se ne broji). |
 | **Administracija** (moderatoru: „Akcije čišćenja“) | Moderator, administrator | Akcije čišćenja; Korisnici i uloge (samo administrator) |
+| **Obaveštenja e-poštom** | Svi prijavljeni („Za moderaciju“ samo moderator/administrator) | Prekidači „O mojim prijavama“ i „Za moderaciju“, vidi [10.2](#102-opšta-pravila) |
 | **Odjava** | Svi prijavljeni | Odjava sa naloga |
 
 Na avataru se pojavljuje **crvena tačka** kada nešto čeka korisnika: odbijena prijava ili odbijen dokaz sanacije koji treba ispraviti, a za moderatore i nove prijave, izmene i sanacije koje čekaju pregled.
@@ -109,7 +110,7 @@ Na avataru se pojavljuje **crvena tačka** kada nešto čeka korisnika: odbijena
 
 ### 3.4 Mobilni telefon
 
-Na dnu ekrana je traka: **Mapa**, **＋ Prijavi** (u sredini), **Lista**. Mapa i Lista prikazuju ono što je izabrano prekidačem **Prijave | Akcije**. „＋ Prijavi“ otvara formu za novu prijavu; moderatoru i administratoru nudi izbor „Prijavi problem“ ili „Nova akcija“. Na dugmetu „Lista“ je isti broj kao na prekidaču za izabrani prikaz. Detalji i forme se otvaraju kao list koji se izvlači odozdo; dok je list otvoren, donja traka se ne prikazuje.
+Na dnu ekrana je traka: **Mapa**, **＋ Prijavi** (u sredini), **Lista**. Mapa i Lista prikazuju ono što je izabrano prekidačem **Prijave | Akcije**. „＋ Prijavi“ otvara formu za novu prijavu; moderatoru i administratoru nudi izbor „Prijavi problem“ ili „Nova akcija“. Detalji i forme se otvaraju kao list koji se izvlači odozdo; dok je list otvoren, donja traka se ne prikazuje.
 
 Pri prvom dolasku na telefonu pojavljuje se **kratak vodič** u tri koraka: „＋ Prijavi“, prekidač „Prijave | Akcije“ i „Lista“. Može da se preskoči, a ponovo se pokreće iz „O projektu“ → „Pokreni kratak vodič kroz aplikaciju“.
 
@@ -543,7 +544,11 @@ Svaka poruka ima tekstualnu i HTML verziju i završava se rečenicom: „Ovu por
 - **Pošiljalac:** Kuka i Motika &lt;podrska.kuka.i.motika.ns@gmail.com&gt;.
 - **Ista radnja ne šalje istu poruku dvaput**, čak i ako se sistemski događaj ponovi.
 - **Link „Otvori prijavu“** vodi direktno na tu prijavu. Neobjavljenu prijavu (E-1, E-2, E-7) otvaraju samo autor i moderatori, i to kada su prijavljeni u aplikaciju.
-- **Isključivanje obaveštenja trenutno nije moguće.**
+- **Obaveštenja mogu da se isključe** u meniju naloga → „Obaveštenja e-poštom“. Podrazumevano su uključena, a izbor se pamti uz nalog:
+  - **„O mojim prijavama“** (svi prijavljeni): poruke autoru, E-6 do E-14;
+  - **„Za moderaciju“** (moderatori i administratori): poruke o novom sadržaju za pregled, E-1 do E-5.
+
+  Ko isključi jednu vrstu, i dalje dobija drugu. Isključivanje važi od sledeće poruke; poruke koje su već poslate se ne povlače.
 - **Zapisi o poslatim porukama brišu se posle nedelju dana.**
 - **U demo režimu se ne šalje nijedna poruka.**
 
@@ -637,10 +642,11 @@ sequenceDiagram
 - Podaci se ne osvežavaju sami u realnom vremenu; osvežavaju se posle radnje ili dugmetom za osvežavanje.
 - Redovi moderacije prikazuju do 50 stavki odjednom: Nove prijave, Izmene i Sanacije najstarije prvo, Označen sadržaj (do 50 otvorenih oznaka) najnovije prvo.
 - „Moje prijave“ prikazuje do 100 najnovijih sopstvenih prijava.
-- Objavljene prijave se učitavaju po 80, od najnovijih. Sažetak napretka i brojevi na prekidaču i dugmetu „Lista“ računaju se od učitanih prijava, pa su manji od stvarnih dok se sve ne učitaju („Učitaj još prijava“).
+- Objavljene prijave se učitavaju po 80, od najnovijih. Sažetak napretka i brojevi na prekidaču računaju se od učitanih prijava, pa su manji od stvarnih dok se sve ne učitaju („Učitaj još prijava“).
 - Učitava se do 80 akcija sa najkasnijim datumom; starije akcije se ne prikazuju ni u „Završenim“.
 - Pretraga adresa nije automatska; lokacija se bira na mapi.
 - Obrisane ili zamenjene fotografije se brišu zajedno sa prijavom ili izmenom.
+- Ako se u formi za izmenu ništa ne promeni, ništa se i ne čuva: forma javi „Ništa nije promenjeno“, prijava ne ide ponovo na pregled i ne šalje se e-pošta. Isto važi i za izmenu moderatora.
 
 ---
 
