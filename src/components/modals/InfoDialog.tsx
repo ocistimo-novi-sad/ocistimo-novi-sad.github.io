@@ -32,9 +32,11 @@ export function InfoDialog() {
           Moderatori zajednice zatim organizuju akcije čišćenja, a svako može da im se pridruži.
         </p>
         <p>
-          Piši na{' '}
-          <a href="mailto:podrska.kuka.i.motika.ns@gmail.com">podrska.kuka.i.motika.ns@gmail.com</a>{' '}
-          da prijaviš koordinatora tvoje zajednice.
+          Prijavi se kao koordinator svoje zajednice{' '}
+          <a href="https://forms.gle/4FX2ay68hkhgYbrm6" target="_blank" rel="noreferrer">
+            ovde
+          </a>
+          .
         </p>
       </div>
 
