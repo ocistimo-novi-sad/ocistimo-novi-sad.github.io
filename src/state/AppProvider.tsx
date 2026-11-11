@@ -139,6 +139,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const [layer, setLayerState] = useState<Layer>('reports');
   const [mobileTab, setMobileTabState] = useState<MobileTab>('map');
+  // A detail opened from the mobile list goes back to the list when it closes (#156).
+  const [detailFromList, setDetailFromList] = useState(false);
+  const mobileTabRef = useRef<MobileTab>(mobileTab);
+  mobileTabRef.current = mobileTab;
   const [actionScope, setActionScope] = useState<ActionScope>('upcoming');
   const [actionQuery, setActionQuery] = useState('');
   const [actionsNearest, setActionsNearestState] = useState(false);
@@ -397,8 +401,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setMobileTabState(tab);
   }, []);
 
+  // From the list: remember it. From the map: forget it, unless one detail
+  // opens another (a report from its action), which keeps the way back.
+  const selectionOpenRef = useRef(false);
+  selectionOpenRef.current = selectedReportId !== null || selectedActionId !== null;
+  const rememberWhereDetailOpened = useCallback(() => {
+    if (mobileTabRef.current === 'list') setDetailFromList(true);
+    else if (!selectionOpenRef.current) setDetailFromList(false);
+  }, []);
+
   const selectReport = useCallback(
     (report: Report, options?: { fly?: boolean }) => {
+      rememberWhereDetailOpened();
       setSelectedReportId(report.id);
       setSelectedActionId(null);
       // On mobile this makes the map the surface behind the detail sheet, and
@@ -410,11 +424,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const zoom = Math.max(mapRef.current?.getZoom() ?? 0, APP.focusZoom);
       if (options?.fly !== false) flyTo(report, zoom, { accountForDrawer: true });
     },
-    [flyTo],
+    [flyTo, rememberWhereDetailOpened],
   );
 
   const selectAction = useCallback(
     (action: CleanupAction, options?: { fly?: boolean }) => {
+      rememberWhereDetailOpened();
       setSelectedActionId(action.id);
       setSelectedReportId(null);
       setLayerState('actions');
@@ -422,13 +437,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setMobileTabState('map');
       if (options?.fly !== false) flyTo(action, APP.focusZoom, { accountForDrawer: true });
     },
-    [flyTo],
+    [flyTo, rememberWhereDetailOpened],
   );
 
   const clearSelection = useCallback(() => {
     setSelectedReportId(null);
     setSelectedActionId(null);
+    setDetailFromList(false);
   }, []);
+
+  // The close button, Escape and a swipe down: back to the list if the detail came from it.
+  const closeSelection = useCallback(() => {
+    if (detailFromList) setMobileTabState('list');
+    clearSelection();
+  }, [clearSelection, detailFromList]);
 
   /**
    * ova funkcija sluzi da bi se nakon zahtjeva da se prikaze gdje je prijava izvrsena, 
@@ -1162,7 +1184,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       showReportOnMap,
       selectAction,
       clearSelection,
-      closeSelection: clearSelection,
+      closeSelection,
+      detailFromList,
       layer,
       setLayer,
       mobileTab,
@@ -1245,6 +1268,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       showReportOnMap,
       selectAction,
       clearSelection,
+      closeSelection,
+      detailFromList,
       layer,
       setLayer,
       mobileTab,

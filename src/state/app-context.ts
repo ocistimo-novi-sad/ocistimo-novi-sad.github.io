@@ -83,6 +83,8 @@ export interface AppContextValue {
   selectAction: (action: CleanupAction, options?: { fly?: boolean }) => void;
   clearSelection: () => void;
   closeSelection: () => void;
+  /** The open detail was opened from the mobile list and closing it goes back there. */
+  detailFromList: boolean;
 
   layer: Layer;
   setLayer: (layer: Layer) => void;

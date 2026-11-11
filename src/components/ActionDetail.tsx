@@ -29,6 +29,7 @@ export function ActionDetail() {
     selectedAction: action,
     actionReports,
     closeSelection,
+    detailFromList,
     selectReport,
     flyTo,
     auth,
@@ -77,6 +78,7 @@ export function ActionDetail() {
     <Drawer
       label={`Akcija: ${action.title}`}
       onClose={closeSelection}
+      onBack={detailFromList ? closeSelection : undefined}
       className="drawer--action"
       footer={
         <div className="detail-foot">

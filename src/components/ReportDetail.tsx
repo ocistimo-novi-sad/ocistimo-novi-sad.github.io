@@ -272,6 +272,7 @@ export function ReportDetail() {
     selectedReport: report,
     relatedAction,
     closeSelection,
+    detailFromList,
     requestFlag,
     auth,
     setReportStatus,
@@ -331,6 +332,7 @@ export function ReportDetail() {
     <Drawer
       label={`Prijava: ${report.title}`}
       onClose={closeSelection}
+      onBack={detailFromList ? closeSelection : undefined}
       footer={
         <div className="detail-foot">
           {published ? (
