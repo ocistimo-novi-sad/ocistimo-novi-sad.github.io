@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import { REJECT_REASONS, REPORT_STATUSES, RESOLUTION_REJECT_REASONS } from '../config';
 import {
-  formatCoordinates,
   formatDate,
   formatDateTime,
   formatTime,
@@ -539,11 +538,6 @@ export function ReportDetail() {
             <MapPin size={14} aria-hidden="true" />
             <span>{report.address ?? 'Novi Sad'}</span>
           </div>
-          {auth.isModerator ? (
-            <code className="location-box__coords">
-              {formatCoordinates(report.latitude, report.longitude)}
-            </code>
-          ) : null}
           <div className="location-box__actions">
             <a
               className="btn btn--quiet btn--sm"

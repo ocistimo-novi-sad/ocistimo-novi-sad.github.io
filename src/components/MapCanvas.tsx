@@ -447,12 +447,10 @@ export function MapCanvas() {
           <div className="pick-banner__text">
             <strong>
               {composeLocation
-                ? 'Klikni na drugu tačku da pomeriš marker'
+                ? 'Dodirni mapu da promeniš lokaciju.'
                 : 'Klikni na mapu da postaviš lokaciju'}
             </strong>
-            {composeLocation ? (
-              <span>{formatCoordinates(composeLocation.latitude, composeLocation.longitude)}</span>
-            ) : (
+            {composeLocation ? null : (
               <span>Možeš i da prevučeš marker radi preciznijeg položaja.</span>
             )}
           </div>

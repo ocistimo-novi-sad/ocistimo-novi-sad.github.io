@@ -17,7 +17,6 @@ import {
   LIMITS,
 } from '../config';
 import { addDemoReport } from '../demo/store';
-import { formatCoordinates } from '../lib/format';
 import { isInServiceArea } from '../lib/geo';
 import { toSerbianError } from '../services/errors';
 import { isFirebaseConfigured } from '../services/firebase';
@@ -586,11 +585,7 @@ export function ComposeDrawer() {
             <strong>
               {composeLocation ? 'Lokacija je izabrana' : 'Lokacija nije izabrana'}
             </strong>
-            <span>
-              {composeLocation
-                ? formatCoordinates(composeLocation.latitude, composeLocation.longitude)
-                : 'Klikni na mapu da postaviš lokaciju'}
-            </span>
+            {composeLocation ? null : <span>Klikni na mapu da postaviš lokaciju</span>}
           </span>
         </button>
 
