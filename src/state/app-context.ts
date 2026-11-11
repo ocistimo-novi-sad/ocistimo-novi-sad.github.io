@@ -78,9 +78,9 @@ export interface AppContextValue {
   selectedAction: CleanupAction | null;
   relatedAction: CleanupAction | null;
   actionReports: Report[];
-  selectReport: (report: Report, options?: { fly?: boolean }) => void;
+  selectReport: (report: Report, options?: { fly?: boolean; fromDetail?: boolean }) => void;
   showReportOnMap: (report: Report) => void;
-  selectAction: (action: CleanupAction, options?: { fly?: boolean }) => void;
+  selectAction: (action: CleanupAction, options?: { fly?: boolean; fromDetail?: boolean }) => void;
   clearSelection: () => void;
   closeSelection: () => void;
   /** The open detail was opened from the mobile list and closing it goes back there. */

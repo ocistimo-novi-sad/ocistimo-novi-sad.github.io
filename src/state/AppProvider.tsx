@@ -401,18 +401,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setMobileTabState(tab);
   }, []);
 
-  // From the list: remember it. From the map: forget it, unless one detail
-  // opens another (a report from its action), which keeps the way back.
-  const selectionOpenRef = useRef(false);
-  selectionOpenRef.current = selectedReportId !== null || selectedActionId !== null;
-  const rememberWhereDetailOpened = useCallback(() => {
+  // From the list: remember it. From anywhere else: forget it, unless a link
+  // inside the open detail opens another one (a report from its action).
+  const rememberWhereDetailOpened = useCallback((fromDetail?: boolean) => {
     if (mobileTabRef.current === 'list') setDetailFromList(true);
-    else if (!selectionOpenRef.current) setDetailFromList(false);
+    else if (!fromDetail) setDetailFromList(false);
   }, []);
 
   const selectReport = useCallback(
-    (report: Report, options?: { fly?: boolean }) => {
-      rememberWhereDetailOpened();
+    (report: Report, options?: { fly?: boolean; fromDetail?: boolean }) => {
+      rememberWhereDetailOpened(options?.fromDetail);
       setSelectedReportId(report.id);
       setSelectedActionId(null);
       // On mobile this makes the map the surface behind the detail sheet, and
@@ -428,8 +426,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const selectAction = useCallback(
-    (action: CleanupAction, options?: { fly?: boolean }) => {
-      rememberWhereDetailOpened();
+    (action: CleanupAction, options?: { fly?: boolean; fromDetail?: boolean }) => {
+      rememberWhereDetailOpened(options?.fromDetail);
       setSelectedActionId(action.id);
       setSelectedReportId(null);
       setLayerState('actions');

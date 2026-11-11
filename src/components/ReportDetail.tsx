@@ -438,7 +438,7 @@ export function ReportDetail() {
         <button
           type="button"
           className="related-action"
-          onClick={() => selectAction(relatedAction)}
+          onClick={() => selectAction(relatedAction, { fromDetail: true })}
         >
           <CalendarDays size={18} aria-hidden="true" className="related-action__icon" />
           <span className="related-action__body">

@@ -227,7 +227,7 @@ export function ActionDetail() {
                 <button
                   type="button"
                   className="linked-report"
-                  onClick={() => selectReport(report)}
+                  onClick={() => selectReport(report, { fromDetail: true })}
                 >
                   <span className="linked-report__glyph" data-category={report.category}>
                     <CategoryGlyph category={report.category} size={13} />
