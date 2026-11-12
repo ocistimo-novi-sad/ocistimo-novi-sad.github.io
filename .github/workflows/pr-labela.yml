@@ -16,8 +16,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Mark the PR's issues as ready for review (CONTRIBUTING.md, rule 1); a draft PR removes the label.
+      # Skipped once the PR is closed, so editing a merged PR does not bring the label back.
       - name: Label issues ready for review
-        if: contains(fromJSON('["opened", "reopened", "edited", "converted_to_draft", "ready_for_review"]'), github.event.action)
+        if: github.event.pull_request.state == 'open' && contains(fromJSON('["opened", "reopened", "edited", "converted_to_draft", "ready_for_review"]'), github.event.action)
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -25,8 +26,8 @@ jobs:
           BRANCH: ${{ github.head_ref }}
           DRAFT: ${{ github.event.pull_request.draft }}
         run: |
-          # Only lines that start with "Closes #N", so "#N" mentioned in the text does not count.
-          issues=$( { printf '%s\n' "$BODY" | grep -oiE '^[[:space:]]*(closes|fixes|resolves)[[:space:]]+#[0-9]+' | grep -oE '[0-9]+'; printf '%s\n' "$BRANCH" | grep -oE '^[0-9]+'; } | sort -un || true)
+          # Only lines that start with "Tiket #N" (or the older "Closes #N"), so "#N" mentioned in the text does not count.
+          issues=$( { printf '%s\n' "$BODY" | grep -oiE '^[[:space:]]*(tiket|closes|fixes|resolves)[[:space:]]+#[0-9]+' | grep -oE '[0-9]+'; printf '%s\n' "$BRANCH" | grep -oE '^[0-9]+'; } | sort -un || true)
 
           for n in $issues; do
             # Skip numbers that are PRs or do not exist.
@@ -40,6 +41,9 @@ jobs:
               echo "::notice::PR je draft, issue #$n nema labelu „ready for review“."
             else
               gh api "repos/$GH_REPO/issues/$n/labels" -f "labels[]=ready for review" > /dev/null
+              # A new PR for an issue already on staging (e.g. after rework) starts the review again.
+              gh api -X DELETE "repos/$GH_REPO/issues/$n/labels/on%20staging" > /dev/null 2>&1 || true
+              gh api -X DELETE "repos/$GH_REPO/issues/$n/labels/rework" > /dev/null 2>&1 || true
               echo "::notice::Issue #$n ima labelu „ready for review“."
             fi
           done
@@ -60,8 +64,8 @@ jobs:
             exit 0
           fi
 
-          # Parse "Closes #N" lines and the branch name here; GitHub's own issue links ignore the branch name.
-          issues=$( { printf '%s\n' "$BODY" | grep -oiE '^[[:space:]]*(closes|fixes|resolves)[[:space:]]+#[0-9]+' | grep -oE '[0-9]+'; printf '%s\n' "$BRANCH" | grep -oE '^[0-9]+'; } | sort -un || true)
+          # Parse "Tiket #N" (or "Closes #N") lines and the branch name here.
+          issues=$( { printf '%s\n' "$BODY" | grep -oiE '^[[:space:]]*(tiket|closes|fixes|resolves)[[:space:]]+#[0-9]+' | grep -oE '[0-9]+'; printf '%s\n' "$BRANCH" | grep -oE '^[0-9]+'; } | sort -un || true)
 
           labels=""
           source=""

@@ -105,7 +105,9 @@ Pravila, indeksi, funkcije i ekstenzija se na staging objavljuju isto kao na pro
 
 PR se ne spaja dok ga bar jedna osoba ne pregleda i ne odobri (**Approve**). Odobrenje se poništava posle svakog novog push-a na granu PR-a, pa PR tada treba ponovo odobriti.
 
-Čim se otvori PR, issue-u za koji je otvoren dodaje se labela `ready for review`. To radi GitHub sam, za issue iz reda u opisu PR-a koji počinje sa „Closes #…“ (ili „Fixes #…“, „Resolves #…“) i iz broja na početku imena grane (npr. `44-…`). Broj pomenut negde u tekstu se ne računa. Dok je PR draft, labela se skida, a vraća se kad se PR označi kao **Ready for review**.
+Čim se otvori PR, issue-u za koji je otvoren dodaje se labela `ready for review`. To radi GitHub sam, za issue iz reda u opisu PR-a koji počinje sa „Tiket #…“ i iz broja na početku imena grane (npr. `44-…`). Broj pomenut negde u tekstu se ne računa. Dok je PR draft, labela se skida, a vraća se kad se PR označi kao **Ready for review**. Ako issue već ima `on staging` ili `rework` (vidi pravilo 5), te labele se tada skidaju.
+
+Piše se „Tiket #…“, ne „Closes #…“: `staging` je podrazumevana grana, pa bi „Closes #…“ (i „Fixes #…“, „Resolves #…“) zatvorio issue čim se PR spoji. I ti redovi se čitaju, a zatvoren issue se posle spajanja sam ponovo otvara, ali ostaje trag „closed… reopened“ i pratioci dobijaju suvišna obaveštenja.
 
 ### 2. Odobren PR se spaja u `staging`
 
@@ -114,7 +116,7 @@ Ciljna grana svakog PR-a je `staging`, ne `main`. `staging` je podrazumevana gra
 - Spaja se dugmetom **Create a merge commit** ili **Squash and merge**. Rebase nije dozvoljen.
 - Pre spajanja mora da prođe kontrola **labela** (vidi pravilo 6).
 - Direktan push, force push i brisanje grane `staging` nisu dozvoljeni; sve ide kroz PR.
-- „Closes #…“ zatvara issue čim se PR spoji u `staging`, ne tek posle objave na `main`. Šta je stvarno objavljeno vidi se u [Releases](https://github.com/ocistimo-novi-sad/ocistimo-novi-sad.github.io/releases).
+- Posle spajanja issue ostaje otvoren: skida mu se `ready for review` i dodaje `on staging`. Zatvara ga tester kada potvrdi da radi na stagingu (pravilo 3). Šta je stvarno objavljeno vidi se u [Releases](https://github.com/ocistimo-novi-sad/ocistimo-novi-sad.github.io/releases).
 
 ### 3. Testiranje: prvo lokalno, pa na stagingu
 
@@ -133,12 +135,12 @@ Sa GitHub CLI-jem prva dva reda zamenjuje `gh pr checkout <broj PR-a>`. PR se od
 
 **Posle spajanja — na stagingu.** Kada se PR spoji u `staging`:
 
-- tiket iz „Closes #…“ se sam zatvara;
+- tiket iz „Tiket #…“ dobija labelu `on staging` umesto `ready for review` i ostaje otvoren;
 - PR se pojavljuje u nacrtu Release Notes **„Sledeća verzija“** (pravilo 6);
 - staging se sam objavljuje na **Vercelu**, ništa ne treba pokretati ručno;
 - ako PR menja pravila, indekse, funkcije ili ekstenziju, oni se sami objavljuju na staging Firebase projekat (workflow **Firebase deploy**).
 
-Kada se nova verzija pojavi na Vercelu, Tijana (i svako ko želi da pomogne u testiranju) prolazi kroz PR-ove iz nacrta „Sledeća verzija“ i javlja da li je sve u redu. Ako nešto ne radi, otvara se novi issue (pravilo 5).
+Kada se nova verzija pojavi na Vercelu, Tijana (i svako ko želi da pomogne u testiranju) prolazi kroz PR-ove iz nacrta „Sledeća verzija“ i issue-e sa labelom `on staging`. Ako je sve u redu, ručno zatvara issue. Ako nešto ne radi, issue-u dodaje labelu `rework` (pravilo 5).
 
 Staging radi sa **staging bazom** (vidi [Staging baza](#staging-baza)), pa test podaci ne stižu do pravih korisnika i ne moraju da se brišu posle svakog testiranja. Kada se baza previše zatrpa, vraća se na poznato stanje sa `seed:staging -- --reset`.
 
@@ -149,17 +151,21 @@ Produkcija ostaje na GitHub Pages i objavljuje se sama kada se `staging` spoji u
 Ne objavljujemo svaki PR posebno. Kada se na stagingu skupi više proverenih PR-ova, `staging` se spaja u `main`. Tako se sve testira na stagingu, a na `main` stiže samo ono što je potvrđeno.
 
 - U `main` se spaja samo grana `staging`. Kontrola **samo-sa-staginga** pada na PR-u iz bilo koje druge grane, i GitHub ga blokira.
-- PR `staging` → `main` sam dobija labelu `objava`. Ne treba mu „Closes #…“ ni labela iz pravila 6, jer su tiketi već navedeni u PR-ovima ka `staging`-u, a sam taj PR ne ulazi u Release Notes.
+- PR `staging` → `main` sam dobija labelu `objava`. Ne treba mu „Tiket #…“ ni labela iz pravila 6, jer su tiketi već navedeni u PR-ovima ka `staging`-u, a sam taj PR ne ulazi u Release Notes.
 - PR `staging` → `main` odobrava [@svilimonovicQA](https://github.com/svilimonovicQA) ili [@sekuchu](https://github.com/sekuchu) (spisak je u [.github/CODEOWNERS](.github/CODEOWNERS)). GitHub čita CODEOWNERS sa `main`-a, pa izmena spiska važi tek kada stigne na `main`.
 - Kada jedno od njih odobri, dugme Merge može da pritisne svako sa `write` pristupom. Repo pripada ličnom nalogu, pa GitHub ne dozvoljava da se to ograniči na određene osobe.
 - Dozvoljen je samo merge commit, pa dugme glasi samo **Merge pull request**, bez izbora Squash i Rebase. Tako `staging` i `main` ostaju usklađeni: squash bi napravio commit koji ne postoji na `staging`-u, i sledeće spajanje bi imalo konflikte.
 - Direktan push, force push i brisanje grane `main` nisu dozvoljeni.
 
-### 5. Ispravka za nešto što je već na stagingu ide kroz novi issue
+### 5. Ispravka za nešto što je na stagingu ide kroz isti issue
 
-Zatvoren tiket se ne otvara ponovo. Ako se pri testiranju na stagingu nađe problem u spojenom PR-u, otvara se **novi issue** i povezuje sa tiketom tog PR-a: u opisu novog issue-a (ili u opisu PR-a sa ispravkom) napiše se „Ispravka za #44“. GitHub tada u #44 prikaže link ka novom issue-u, pa se iz oba tiketa vidi kako su povezani.
+Ako se pri testiranju na stagingu nađe problem u spojenom PR-u, tester issue-u dodaje labelu **`rework`**, a `on staging` ostaje. Šta ne radi napiše se u komentaru na tom issue-u.
 
-„Ispravka za #44“ ne zatvara #44 i ne dodaje mu `ready for review`. Ako PR nema labelu, a ni issue iz „Closes #…“ je nema (ili takvog reda nema), PR zbog toga dobija labelu `bug` (vidi pravilo 6).
+Ispravka se radi kroz novi PR za **isti** issue, sa „Tiket #44“ u opisu. Kada se taj PR otvori, issue opet dobija `ready for review`, a `on staging` i `rework` se skidaju. Posle spajanja issue ponovo dobija `on staging` i čeka testiranje.
+
+Zatvoren tiket se ne otvara ponovo. Ako se problem nađe u tiketu koji je već zatvoren (npr. posle objave na `main`), otvara se **novi issue** i povezuje sa starim: u opisu novog issue-a (ili u opisu PR-a sa ispravkom) napiše se „Ispravka za #44“. GitHub tada u #44 prikaže link ka novom issue-u, pa se iz oba tiketa vidi kako su povezani.
+
+„Ispravka za #44“ ne menja labele tiketa #44. Ako PR nema labelu, a ni issue iz „Tiket #…“ je nema (ili takvog reda nema), PR zbog toga dobija labelu `bug` (vidi pravilo 6).
 
 ### 6. Release Notes
 
@@ -168,17 +174,17 @@ Uvodimo Release Notes: spisak PR-ova (a preko njih i tiketa) koji su ušli u sva
 - Posle svakog spajanja u `staging` ažurira se nacrt **„Sledeća verzija“**: spisak PR-ova spojenih od poslednje objave, tj. onih koji su na stagingu, a još nisu na produkciji. Nacrt vide samo članovi tima.
 - Posle spajanja `staging` → `main` pravi se javna objava sa tagom po datumu (npr. `v2026.11.04`, a `v2026.11.04-2`, `-3`… ako je istog dana bilo više objava) i naslovom „Objava DD.MM.GGGG.“. Nacrt se tada briše.
 - PR-ovi su razvrstani po labeli: `enhancement` → Novo, `bug` → Ispravke, `accessibility` → Pristupačnost, `documentation` → Dokumentacija, ostalo → Ostalo. PR-ovi sa labelama `objava`, `duplicate` i `wontfix` se izostavljaju. Zato svaki PR ka `staging`-u treba da ima labelu.
-- Labela se stavlja sama ako je PR nema. Prvo se prepisuje sa issue-a iz „Closes #…“ (ili iz imena grane, npr. `44-…`). Ako issue nema labelu, „Ispravka za #…“ u opisu daje `bug`, a ako ni toga nema, odlučuje prefiks imena grane (vidi [Ime grane](#ime-grane)). Ako labela ne može da se odredi, kontrola **labela** pada i PR ne može da se spoji. Kada autor doda labelu ručno, kontrola se sama ponovo pokreće i prolazi.
+- Labela se stavlja sama ako je PR nema. Prvo se prepisuje sa issue-a iz „Tiket #…“ (ili iz imena grane, npr. `44-…`). Ako issue nema labelu, „Ispravka za #…“ u opisu daje `bug`, a ako ni toga nema, odlučuje prefiks imena grane (vidi [Ime grane](#ime-grane)). Ako labela ne može da se odredi, kontrola **labela** pada i PR ne može da se spoji. Kada autor doda labelu ručno, kontrola se sama ponovo pokreće i prolazi.
 
 ## Ukratko, za svaki PR
 
 - [ ] Issue je bio slobodan i dodeljen je tebi, a grana je napravljena iz njega (od `staging`-a).
 - [ ] PR je otvoren ka grani `staging`.
-- [ ] U opisu PR-a piše tiket („Closes #…“ ili „Ispravka za #…“).
-- [ ] Issue ima labelu `ready for review` (dodaje se sama kad PR nije draft i ima „Closes #…“ ili broj tiketa na početku imena grane).
+- [ ] U opisu PR-a piše tiket („Tiket #…“ ili „Ispravka za #…“).
+- [ ] Issue ima labelu `ready for review` (dodaje se sama kad PR nije draft i ima „Tiket #…“ ili broj tiketa na početku imena grane).
 - [ ] PR ima labelu (`enhancement`, `bug`, …) zbog Release Notes; najčešće se doda sama sa issue-a.
 - [ ] Ko pregleda PR, preuzeo je granu i lokalno proverio izmenu.
 - [ ] Ima bar jedno odobrenje pre spajanja.
-- [ ] Posle objave na staging, tester je potvrdio da radi.
+- [ ] Posle objave na staging, tester je potvrdio da radi i zatvorio issue (ili mu dodao `rework`).
 - [ ] Posle testiranja na stagingu obrisani su test podaci.
 - [ ] Ako je ovo ispravka, u issue-u ili PR-u piše na koji se tiket odnosi.

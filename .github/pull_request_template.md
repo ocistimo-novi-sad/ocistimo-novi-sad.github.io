@@ -5,8 +5,9 @@
 
 ## Tiket
 
-Closes #
-<!-- Ako je ovo ispravka za nešto što je već na stagingu: „Ispravka za #…“ -->
+Tiket #
+<!-- Ako je issue dobio labelu `rework`, ispravka ide pod istim brojem tiketa: „Tiket #44“. -->
+<!-- Ako je ovo ispravka za tiket koji je već zatvoren: „Ispravka za #…“ -->
 
 ## Kako testirati na stagingu
 

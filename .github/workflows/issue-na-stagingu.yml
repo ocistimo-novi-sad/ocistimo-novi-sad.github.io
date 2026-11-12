@@ -1,0 +1,45 @@
+name: Issue na stagingu
+
+on:
+  pull_request:
+    branches: [staging]
+    types: [closed]
+
+permissions:
+  issues: write
+
+jobs:
+  # After a merge the issue stays open for testing on staging (CONTRIBUTING.md, rule 2).
+  # QA closes it, or adds "rework" if something has to be fixed.
+  na-stagingu:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Label issues on staging
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BODY: ${{ github.event.pull_request.body }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          # Same issues as in pr-labela.yml: "Tiket #N" (or "Closes #N") lines and the number at the start of the branch name.
+          issues=$( { printf '%s\n' "$BODY" | grep -oiE '^[[:space:]]*(tiket|closes|fixes|resolves)[[:space:]]+#[0-9]+' | grep -oE '[0-9]+'; printf '%s\n' "$BRANCH" | grep -oE '^[0-9]+'; } | sort -un || true)
+
+          for n in $issues; do
+            # Skip numbers that are PRs or do not exist.
+            state=$(gh api "repos/$GH_REPO/issues/$n" --jq 'select(.pull_request == null) | .state' 2>/dev/null || true)
+            if [ -z "$state" ]; then
+              continue
+            fi
+
+            # "Closes #N" makes GitHub close the issue on merge, because staging is the default branch.
+            if [ "$state" = "closed" ]; then
+              gh api -X PATCH "repos/$GH_REPO/issues/$n" -f state=open > /dev/null
+              echo "::notice::Issue #$n je ponovo otvoren (zatvorio ga je „Closes #$n“)."
+            fi
+
+            # 404 when the issue does not have the label.
+            gh api -X DELETE "repos/$GH_REPO/issues/$n/labels/ready%20for%20review" > /dev/null 2>&1 || true
+            gh api "repos/$GH_REPO/issues/$n/labels" -f "labels[]=on staging" > /dev/null
+            echo "::notice::Issue #$n ima labelu „on staging“."
+          done
