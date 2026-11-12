@@ -83,7 +83,7 @@ Taster `/` prebacuje fokus na polje za pretragu. Prijave se učitavaju u delovim
 
 ### 4. Detalji i praćenje statusa
 
-Svaka prijava ima prikaz sa opisom, fotografijama (sa uvećanim prikazom), lokacijom i trenutnim statusom. Ispod naslova je tok prijave: Prijavljena → Objavljena → Akcija planirana (ili u toku) → Rešena, sa označenim korakom na kom je prijava. Lokaciju je moguće otvoriti i na OpenStreetMap mapi, a koordinate kopirati radi lakšeg deljenja. Ako je prijava uključena u akciju čišćenja, detalji prikazuju i povezanu akciju.
+Svaka prijava ima prikaz sa opisom, fotografijama (sa uvećanim prikazom), lokacijom i trenutnim statusom. Ispod naslova je tok prijave: Prijavljena → Objavljena → Akcija planirana (ili u toku) → Rešena, sa označenim korakom na kom je prijava. Lokaciju je moguće otvoriti i na OpenStreetMap mapi. Ako je prijava uključena u akciju čišćenja, detalji prikazuju i povezanu akciju.
 
 Statusi pomažu da se razlikuje tek prijavljen problem od potvrđenog problema ili onog koji je već uključen u plan akcije.
 

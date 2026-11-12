@@ -233,7 +233,7 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
   3. tok prijave, i kada prijava ima povezanu akciju (Prijavljena → Objavljena → Akcija planirana ili u toku → Rešena; prijava na pregledu umesto „Objavljena“ ima „Na pregledu“, odbijena ima samo „Prijavljena → Odbijena“, a prijava „Nije za akciju“ završava tim korakom);
   4. fotografije (klik = uvećan prikaz);
   5. opis i plan („Šta zajednica može sama“, „Za šta nam treba pomoć“);
-  6. lokaciju (adresa). Moderator vidi i koordinate.
+  6. lokaciju (adresa).
 - **Radnje:** „Prikaži na mapi“, „OpenStreetMap“, „Označi kao sporno“ (vidi UC-12).
 - **Deljenje:** dok je prijava otvorena, adresa u pregledaču sadrži `?prijava=…`. Taj link otvara istu prijavu. Ako prijava nije javna, a korisnik nije njen autor ni moderator, aplikacija javlja „Ova prijava još nije javna. Uloguj se ako si njen autor.“ (prijavljenom korisniku samo „Ova prijava još nije javna.“) Ako je obrisana: „Prijava nije pronađena. Možda je obrisana.“
 
