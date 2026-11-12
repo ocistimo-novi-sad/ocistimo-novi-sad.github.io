@@ -83,7 +83,7 @@ Taster `/` prebacuje fokus na polje za pretragu. Prijave se učitavaju u delovim
 
 ### 4. Detalji i praćenje statusa
 
-Svaka prijava ima prikaz sa opisom, fotografijama (sa uvećanim prikazom), lokacijom i trenutnim statusom. Ispod naslova je tok prijave: Prijavljena → Objavljena → Akcija planirana (ili u toku) → Rešena, sa označenim korakom na kom je prijava. Lokaciju je moguće otvoriti i na OpenStreetMap mapi, a koordinate kopirati radi lakšeg deljenja. Ako je prijava uključena u akciju čišćenja, detalji prikazuju i povezanu akciju.
+Svaka prijava ima prikaz sa opisom, fotografijama (sa uvećanim prikazom), lokacijom i trenutnim statusom. Ispod naslova je tok prijave: Prijavljena → Objavljena → Akcija planirana (ili u toku) → Rešena, sa označenim korakom na kom je prijava. Lokaciju je moguće otvoriti i na OpenStreetMap mapi. Ako je prijava uključena u akciju čišćenja, detalji prikazuju i povezanu akciju.
 
 Statusi pomažu da se razlikuje tek prijavljen problem od potvrđenog problema ili onog koji je već uključen u plan akcije.
 
@@ -146,7 +146,7 @@ Moderatori (koordinatori zajednice) u panelu „Moderacija“ mogu da:
 - menjaju statuse prijava i uređuju ili brišu bilo koju prijavu;
 - pregledaju označen sadržaj i odbace ga ili zatvore kao rešen.
 
-Moderatori takođe kreiraju, uređuju, otkazuju i brišu akcije čišćenja i povezuju ih sa prijavama, u panelu „Akcije čišćenja“ u meniju naloga. Administratori imaju sva prava moderatora; njihov panel se zove „Administracija“ i ima još deo „Korisnici i uloge“, gde dodeljuju i oduzimaju ulogu moderatora.
+Moderatori takođe kreiraju, uređuju, otkazuju i brišu akcije čišćenja i povezuju ih sa prijavama, u panelu „Akcije čišćenja“ u meniju naloga. Dugme „Nova akcija“ u prikazu Akcije i na telefonu otvara formu direktno. Administratori imaju sva prava moderatora; njihov panel se zove „Administracija“ i ima još deo „Korisnici i uloge“, gde dodeljuju i oduzimaju ulogu moderatora.
 
 Time se smanjuje mogućnost da neprimeren sadržaj ili netačne prijave ostanu bez reakcije. Ova pravila nisu samo u interfejsu — sprovode ih Firestore i Storage Security Rules (`firestore.rules`, `storage.rules`). Šta tačno koja uloga može opisano je u [Kako aplikacija radi → Uloge](docs/use-cases.md#2-uloge).
 
@@ -157,9 +157,15 @@ Aplikacija šalje kratka obaveštenja na adresu Google naloga:
 - **autoru prijave** — kada je prijava odobrena ili odbijena (uz razlog), kada joj moderator promeni status ili vrati prethodnu verziju posle izmene, kada je dokaz sanacije potvrđen ili odbijen, kada je prijava uključena u akciju čišćenja, kada se toj akciji promeni termin ili mesto okupljanja i kada je akcija otkazana;
 - **moderatorima i administratorima** — kada stigne nova ili ispravljena prijava, izmena objavljene prijave, dokaz sanacije ili oznaka spornog sadržaja.
 
-Niko ne dobija obaveštenje o sopstvenoj radnji. Potpun spisak poruka, sa tačnim uslovima kada se šalju i kada ne, nalazi se u [Kako aplikacija radi → Obaveštenja e-poštom](docs/use-cases.md#10-obaveštenja-e-poštom). Obaveštenja pravi Cloud Function iz foldera `functions/` i upisuje ih u kolekciju `mail`, a ekstenzija Trigger Email ih šalje preko Gmail SMTP-a. Upisani zapisi se brišu posle nedelju dana. Funkcije, ekstenzija i pravila se objavljuju sami posle spajanja: u `staging` na staging Firebase projekat, a u `main` na produkcijski (vidi [Objavljivanje Firebase-a](docs/firebase-deploy.md)).
+Niko ne dobija obaveštenje o sopstvenoj radnji. Obaveštenja su podrazumevano uključena, a svako ih može isključiti u meniju naloga, u delu „Obaveštenja e-poštom“. Potpun spisak poruka, sa tačnim uslovima kada se šalju i kada ne, nalazi se u [Kako aplikacija radi → Obaveštenja e-poštom](docs/use-cases.md#10-obaveštenja-e-poštom). Obaveštenja pravi Cloud Function iz foldera `functions/` i upisuje ih u kolekciju `mail`, a ekstenzija Trigger Email ih šalje preko Gmail SMTP-a. Upisani zapisi se brišu posle nedelju dana. Funkcije, ekstenzija i pravila se objavljuju ručno, jer GitHub Actions objavljuje samo sajt:
 
-Gmail app password stoji u Secret Manager-u svakog projekta. Lozinka se nikada ne upisuje u repozitorijum.
+```sh
+firebase deploy --only functions,extensions,firestore,storage --project ocistimo-novi-sad
+```
+
+Izmene se prvo objave i testiraju na staging projektu: ista komanda, sa `--project staging` umesto `--project ocistimo-novi-sad` (vidi [CONTRIBUTING → Staging baza](CONTRIBUTING.md#staging-baza)).
+
+Pri prvom objavljivanju ekstenzije Firebase CLI traži Gmail app password i čuva ga u Secret Manager-u. Lozinka se nikada ne upisuje u repozitorijum.
 
 Korisnici treba da objavljuju samo informacije relevantne za problem na javnom prostoru. Fotografije i opisi ne treba nepotrebno da otkrivaju lične podatke ili prikazuju ljude na način koji ugrožava njihovu privatnost.
 
@@ -178,7 +184,7 @@ Dizajn je usmeren na preglednost i brzo korišćenje: mapa ostaje u prvom planu,
 - Fotografije se čitaju preko javnih adresa sa nasumičnim imenima, a izlistavanje foldera je zabranjeno. Ko ima tačnu adresu fotografije može da je otvori, pa i fotografije „posle” u dokazu sanacije pre nego što ga moderator potvrdi.
 - Ako slanje forme ne uspe pošto su fotografije već otpremljene, pa korisnik odustane, te fotografije ostaju u Storage-u. Automatsko čišćenje takvih fotografija još ne postoji.
 - Aplikacija trenutno nema komentare ni evidenciju prisustva volontera.
-- Obaveštenja e-poštom rade samo uz Firebase (Cloud Functions i ekstenziju Trigger Email), ne u demonstracionom režimu. Korisnik ih za sada ne može isključiti.
+- Obaveštenja e-poštom rade samo uz Firebase (Cloud Functions i ekstenziju Trigger Email), ne u demonstracionom režimu. Svako ih može isključiti u meniju naloga (poruke o svojim prijavama, a moderatori i poruke za moderaciju).
 - Pretraga adresa nije automatska; korisnik označava lokaciju na mapi i, po potrebi, unosi adresu kao tekst.
 - Promene se ne osvežavaju automatski u realnom vremenu; podaci se osvežavaju nakon relevantnih radnji ili dugmetom za osvežavanje.
 - Prijave i akcije moraju biti unutar područja Novog Sada (približno 45.05–45.45° S, 19.55–20.05° I).

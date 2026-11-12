@@ -3,12 +3,20 @@ import {
   ChevronDown,
   ClipboardCheck,
   LogOut,
+  Mail,
   NotebookText,
   Settings,
   UserRound,
 } from 'lucide-react';
 import { ROLE_LABELS } from '../config';
 import { initials } from '../lib/format';
+import { toSerbianError } from '../services/errors';
+import {
+  fetchMailPrefs,
+  saveMailPref,
+  type MailKind,
+  type MailPrefs,
+} from '../services/profile';
 import { useApp } from '../state/app-context';
 
 export function AccountMenu() {
@@ -24,6 +32,41 @@ export function AccountMenu() {
   const attention = rejectedCount + reviewCount;
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const uid = auth.user?.uid ?? null;
+  // E-mail preferences (#79), loaded the first time the menu opens.
+  const [mailPrefs, setMailPrefs] = useState<{ uid: string; prefs: MailPrefs } | null>(null);
+  const [savingMail, setSavingMail] = useState<MailKind | null>(null);
+  const prefs = mailPrefs && mailPrefs.uid === uid ? mailPrefs.prefs : null;
+
+  useEffect(() => {
+    if (!open || !uid || prefs) return;
+    let cancelled = false;
+    fetchMailPrefs(uid)
+      .then((loaded) => {
+        if (!cancelled) setMailPrefs({ uid, prefs: loaded });
+      })
+      .catch(() => {
+        // The switches stay hidden; nothing else in the menu depends on them.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, uid, prefs]);
+
+  const toggleMail = async (kind: MailKind) => {
+    if (!uid || !prefs || savingMail) return;
+    const enabled = !prefs[kind];
+    setSavingMail(kind);
+    setMailPrefs({ uid, prefs: { ...prefs, [kind]: enabled } });
+    try {
+      await saveMailPref(uid, kind, enabled);
+    } catch (error) {
+      setMailPrefs({ uid, prefs });
+      notify('error', toSerbianError(error, 'Podešavanje nije sačuvano. Pokušaj ponovo.'));
+    } finally {
+      setSavingMail(null);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -145,6 +188,28 @@ export function AccountMenu() {
               {auth.isAdmin ? 'Administracija' : 'Akcije čišćenja'}
             </button>
           ) : null}
+          {prefs ? (
+            <div className="account__group" role="group" aria-labelledby="account-mail-label">
+              <span id="account-mail-label" className="account__group-label">
+                <Mail size={13} aria-hidden="true" />
+                Obaveštenja e-poštom
+              </span>
+              <MailSwitch
+                label="O mojim prijavama"
+                checked={prefs.myReports}
+                busy={savingMail === 'myReports'}
+                onToggle={() => void toggleMail('myReports')}
+              />
+              {auth.isModerator ? (
+                <MailSwitch
+                  label="Za moderaciju"
+                  checked={prefs.moderation}
+                  busy={savingMail === 'moderation'}
+                  onToggle={() => void toggleMail('moderation')}
+                />
+              ) : null}
+            </div>
+          ) : null}
           <button
             type="button"
             role="menuitem"
@@ -163,5 +228,33 @@ export function AccountMenu() {
         </div>
       ) : null}
     </div>
+  );
+}
+
+function MailSwitch({
+  label,
+  checked,
+  busy,
+  onToggle,
+}: {
+  label: string;
+  checked: boolean;
+  busy: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="menuitemcheckbox"
+      aria-checked={checked}
+      aria-busy={busy}
+      className="account__item account__switch"
+      onClick={onToggle}
+    >
+      <span className="account__switch-label">{label}</span>
+      <span className="account__switch-track" aria-hidden="true">
+        <span className="account__switch-thumb" />
+      </span>
+    </button>
   );
 }

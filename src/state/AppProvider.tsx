@@ -430,10 +430,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSelectedActionId(null);
   }, []);
 
-  /**
-   * ova funkcija sluzi da bi se nakon zahtjeva da se prikaze gdje je prijava izvrsena, 
-   * dok na telefonu gasi prijavu i (nadam se) prikaze na mapi gdje je prijava.
-   */
   const showReportOnMap = useCallback(
     (report: Report) => {
       if (window.innerWidth > 900) {
@@ -443,6 +439,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       clearSelection();
       window.requestAnimationFrame(() => flyTo(report, APP.focusZoom));
+    },
+    [clearSelection, flyTo],
+  );
+
+  /**
+   * Same behaviour as "Prikaži na mapi" on a report: on phones the action
+   * detail closes so the pin is not covered by the sheet.
+   */
+  const showActionOnMap = useCallback(
+    (action: CleanupAction) => {
+      if (window.innerWidth > 900) {
+        flyTo(action, APP.focusZoom, { accountForDrawer: true });
+        return;
+      }
+
+      clearSelection();
+      window.requestAnimationFrame(() => flyTo(action, APP.focusZoom));
     },
     [clearSelection, flyTo],
   );
@@ -1161,6 +1174,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       selectReport,
       showReportOnMap,
       selectAction,
+      showActionOnMap,
       clearSelection,
       closeSelection: clearSelection,
       layer,
@@ -1244,6 +1258,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       selectReport,
       showReportOnMap,
       selectAction,
+      showActionOnMap,
       clearSelection,
       layer,
       setLayer,

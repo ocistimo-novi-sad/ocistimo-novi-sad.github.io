@@ -284,15 +284,6 @@
   color: var(--forest);
 }
 
-.location-box__coords {
-  display: block;
-  margin-bottom: 9px;
-  color: var(--muted);
-  font-family: var(--font-mono);
-  font-size: var(--text-2xs);
-  letter-spacing: 0.02em;
-}
-
 .location-box__actions {
   display: flex;
   flex-wrap: wrap;
@@ -782,11 +773,6 @@
   border-top: 1px solid var(--line);
 }
 
-.action-hero__place .location-box__coords {
-  margin-bottom: 0;
-  padding-left: 24px;
-}
-
 .action-hero__state.is-muted {
   color: var(--amber);
 }
@@ -1018,7 +1004,6 @@
   border: 1px solid var(--line-strong);
   background: var(--surface-2);
   border-radius: var(--radius-md);
-  /* It is a button now (#38): full width, text on the left. */
   width: 100%;
   color: inherit;
   text-align: left;
@@ -1084,7 +1069,6 @@
   justify-content: space-between;
   gap: 8px;
   margin-top: 7px;
-  /* Air before the address field, as in the #38 mockup. */
   margin-bottom: 14px;
 }
 

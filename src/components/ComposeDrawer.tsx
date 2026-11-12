@@ -17,7 +17,6 @@ import {
   LIMITS,
 } from '../config';
 import { addDemoReport } from '../demo/store';
-import { formatCoordinates } from '../lib/format';
 import { isInServiceArea } from '../lib/geo';
 import { toSerbianError } from '../services/errors';
 import { isFirebaseConfigured } from '../services/firebase';
@@ -168,6 +167,7 @@ export function ComposeDrawer() {
   });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [triedUnchanged, setTriedUnchanged] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
   const [collapseSignal, setCollapseSignal] = useState(0);
@@ -188,7 +188,6 @@ export function ComposeDrawer() {
     photos.some((photo, index) => photo.url !== initial.imageUrls[index]) ||
     locationMoved;
 
-  // Wording for the three ways this drawer is used.
   const isModeratorEdit = Boolean(editing && auth.isModerator);
   const editsPublished = Boolean(editing && editing.moderation === 'approved');
 
@@ -278,6 +277,13 @@ export function ComposeDrawer() {
   };
 
   const submit = async () => {
+    // Saving an unchanged report would only send it to review again (#144).
+    if (editing && !dirty) {
+      setSubmitError(null);
+      setTriedUnchanged(true);
+      return;
+    }
+
     const nextErrors = validate();
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
@@ -440,12 +446,18 @@ export function ComposeDrawer() {
       ? 'Moderator pregleda prijavu pre objave. Ne unosi lične podatke.'
       : 'Ne unosi lične podatke. Demo režim: prijava se čuva samo u ovom pregledaču.';
 
+  const formAlert =
+    submitError ??
+    (triedUnchanged && !dirty
+      ? 'Ništa nije promenjeno. Izmeni ono što treba ili klikni „Otkaži“.'
+      : null);
+
   const footer = (
     <div className="compose-foot">
-      {submitError ? (
+      {formAlert ? (
         <div className="form-alert" role="alert">
           <TriangleAlert size={15} aria-hidden="true" />
-          <p>{submitError}</p>
+          <p>{formAlert}</p>
         </div>
       ) : null}
       <div className="compose-foot__row">
@@ -551,7 +563,7 @@ export function ComposeDrawer() {
           <span className="form-section__num">01</span>
           <h3 id="compose-location-label">Lokacija</h3>
           {composeLocation && !outsideArea ? (
-            <span className="form-section__done" aria-label="Lokacija je izabrana">
+            <span className="form-section__done" role="img" aria-label="Lokacija je izabrana">
               <Check size={12} aria-hidden="true" />
             </span>
           ) : null}
@@ -572,11 +584,7 @@ export function ComposeDrawer() {
             <strong>
               {composeLocation ? 'Lokacija je izabrana' : 'Lokacija nije izabrana'}
             </strong>
-            <span>
-              {composeLocation
-                ? formatCoordinates(composeLocation.latitude, composeLocation.longitude)
-                : 'Klikni na mapu da postaviš lokaciju'}
-            </span>
+            {composeLocation ? null : <span>Klikni na mapu da postaviš lokaciju</span>}
           </span>
         </button>
 
