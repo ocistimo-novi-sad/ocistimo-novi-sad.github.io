@@ -4,11 +4,6 @@ import { Modal } from '../modals/Modal';
 import { EmptyState } from '../ui/EmptyState';
 import { ActionForm } from './ActionForm';
 
-/**
- * The create/edit form can be opened directly from the Actions panel, the
- * mobile menu and the action details. The administration panel keeps the list
- * of all actions and the users tab.
- */
 export function ActionFormDialog() {
   const {
     auth,
