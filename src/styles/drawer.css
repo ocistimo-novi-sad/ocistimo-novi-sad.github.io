@@ -1004,7 +1004,6 @@
   border: 1px solid var(--line-strong);
   background: var(--surface-2);
   border-radius: var(--radius-md);
-  /* It is a button now (#38): full width, text on the left. */
   width: 100%;
   color: inherit;
   text-align: left;
@@ -1070,7 +1069,6 @@
   justify-content: space-between;
   gap: 8px;
   margin-top: 7px;
-  /* Air before the address field, as in the #38 mockup. */
   margin-bottom: 14px;
 }
 
