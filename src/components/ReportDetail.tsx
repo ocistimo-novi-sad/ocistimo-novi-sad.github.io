@@ -345,7 +345,6 @@ export function ReportDetail() {
           ) : (
             <span className="detail-foot__hint">Nije javno</span>
           )}
-          <span className="detail-foot__hint">Prijava zajednice</span>
         </div>
       }
     >
