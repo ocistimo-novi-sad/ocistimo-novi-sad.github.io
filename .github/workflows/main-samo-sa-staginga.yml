@@ -32,3 +32,36 @@ jobs:
         run: |
           gh label create objava --color 5319e7 --description "Spajanje staging → main" --force
           gh pr edit "$PR" --add-label objava
+
+  # Warns about issues that QA has not checked on staging yet (CONTRIBUTING.md, rule 4).
+  # A separate job, so it never blocks the required check above.
+  neprovereni-tiketi:
+    if: github.head_ref == 'staging'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment unverified issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          # One comment per PR, found by its first line and updated on every run.
+          marker='<!-- neprovereni-tiketi -->'
+          list=$(gh issue list --state open --label "on staging" --limit 200 --json number,title,labels \
+            --jq 'sort_by(.number)[] | "- #\(.number) \(.title)\(if any(.labels[]; .name == "rework") then " (**rework**)" else "" end)"')
+          comment_id=$(gh api --paginate "repos/$GH_REPO/issues/$PR/comments" --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | head -n1)
+
+          if [ -n "$list" ]; then
+            body=$(printf '%s\n⚠️ **Ovi tiketi su na stagingu, a QA ih još nije proverio:**\n\n%s\n\nPre odobrenja ih treba proveriti ili svesno pustiti na produkciju. Spisak se osvežava pri svakom push-u na `staging` ili ručno, sa **Re-run** job-a „neprovereni-tiketi“.' "$marker" "$list")
+            echo "::warning::Neki tiketi na stagingu još nisu provereni (vidi komentar na PR-u)."
+          elif [ -n "$comment_id" ]; then
+            body=$(printf '%s\n✅ Svi tiketi sa staginga su provereni.' "$marker")
+          else
+            exit 0
+          fi
+
+          if [ -n "$comment_id" ]; then
+            gh api -X PATCH "repos/$GH_REPO/issues/comments/$comment_id" -f body="$body" > /dev/null
+          else
+            gh api "repos/$GH_REPO/issues/$PR/comments" -f body="$body" > /dev/null
+          fi

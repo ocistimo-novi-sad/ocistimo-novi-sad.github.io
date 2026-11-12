@@ -5,8 +5,10 @@
 
 ## Tiket
 
-Closes #
-<!-- Ako je ovo ispravka za nešto što je već na stagingu: „Ispravka za #…“ -->
+Tiket #
+<!-- Nije obavezno ako ime grane počinje brojem tiketa (npr. `44-…`). Ne piši „Closes #…“, jer bi zatvorio tiket. -->
+<!-- Ispravka za tiket sa labelom `rework` ide pod istim brojem: „Tiket #44“. -->
+<!-- Ako je ovo ispravka za tiket koji je već zatvoren: „Ispravka za #…“ -->
 
 ## Kako testirati na stagingu
 
