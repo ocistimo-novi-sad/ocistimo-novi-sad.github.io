@@ -188,7 +188,6 @@ export function ComposeDrawer() {
     photos.some((photo, index) => photo.url !== initial.imageUrls[index]) ||
     locationMoved;
 
-  // Wording for the three ways this drawer is used.
   const isModeratorEdit = Boolean(editing && auth.isModerator);
   const editsPublished = Boolean(editing && editing.moderation === 'approved');
 
