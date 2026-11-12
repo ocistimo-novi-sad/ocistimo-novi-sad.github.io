@@ -11,7 +11,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { formatCoordinates, formatDateTime, formatWeekday, plural } from '../lib/format';
+import { formatDateTime, formatWeekday, plural } from '../lib/format';
 import { openStreetMapUrl } from '../lib/geo';
 import { updateActionStatus } from '../services/actions';
 import { toSerbianError } from '../services/errors';
@@ -30,7 +30,7 @@ export function ActionDetail() {
     actionReports,
     closeSelection,
     selectReport,
-    flyTo,
+    showActionOnMap,
     auth,
     openModal,
     reloadActions,
@@ -148,16 +148,11 @@ export function ActionDetail() {
               {action.meetingPoint || 'Novi Sad'}
             </strong>
           </div>
-          {auth.isModerator ? (
-            <code className="location-box__coords">
-              {formatCoordinates(action.latitude, action.longitude)}
-            </code>
-          ) : null}
           <div className="location-box__actions">
             <button
               type="button"
               className="btn btn--quiet btn--sm"
-              onClick={() => flyTo(action, undefined, { accountForDrawer: true })}
+              onClick={() => showActionOnMap(action)}
             >
               Prikaži na mapi
             </button>
@@ -307,7 +302,7 @@ export function ActionDetail() {
               <button
                 type="button"
                 className="btn btn--quiet btn--sm"
-                onClick={() => openModal({ kind: 'admin', editActionId: action.id })}
+                onClick={() => openModal({ kind: 'action-form', action })}
               >
                 <Pencil size={13} aria-hidden="true" /> Uredi akciju
               </button>

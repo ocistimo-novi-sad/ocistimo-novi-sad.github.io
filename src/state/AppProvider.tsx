@@ -447,6 +447,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [clearSelection, flyTo],
   );
 
+  /**
+   * Same behaviour as "Prikaži na mapi" on a report: on phones the action
+   * detail closes so the pin is not covered by the sheet.
+   */
+  const showActionOnMap = useCallback(
+    (action: CleanupAction) => {
+      if (window.innerWidth > 900) {
+        flyTo(action, APP.focusZoom, { accountForDrawer: true });
+        return;
+      }
+
+      clearSelection();
+      window.requestAnimationFrame(() => flyTo(action, APP.focusZoom));
+    },
+    [clearSelection, flyTo],
+  );
+
   const openCompose = useCallback(() => {
     composeSessionRef.current += 1;
     composeOpenRef.current = true;
@@ -1161,6 +1178,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       selectReport,
       showReportOnMap,
       selectAction,
+      showActionOnMap,
       clearSelection,
       closeSelection: clearSelection,
       layer,
@@ -1244,6 +1262,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       selectReport,
       showReportOnMap,
       selectAction,
+      showActionOnMap,
       clearSelection,
       layer,
       setLayer,

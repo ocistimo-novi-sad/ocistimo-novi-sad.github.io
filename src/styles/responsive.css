@@ -363,8 +363,7 @@
     flex: 1;
   }
 
-  .form-row,
-  .coord-row {
+  .form-row {
     grid-template-columns: 1fr;
   }
 

@@ -28,6 +28,7 @@ export type ModalState =
   | { kind: 'flag'; reportId: string }
   | { kind: 'info' }
   | { kind: 'admin'; editActionId?: string }
+  | { kind: 'action-form'; action?: CleanupAction }
   | { kind: 'moderation' }
   | { kind: 'my-reports' }
   | { kind: 'resolve'; reportId: string }
@@ -81,6 +82,7 @@ export interface AppContextValue {
   selectReport: (report: Report, options?: { fly?: boolean }) => void;
   showReportOnMap: (report: Report) => void;
   selectAction: (action: CleanupAction, options?: { fly?: boolean }) => void;
+  showActionOnMap: (action: CleanupAction) => void;
   clearSelection: () => void;
   closeSelection: () => void;
 

@@ -284,15 +284,6 @@
   color: var(--forest);
 }
 
-.location-box__coords {
-  display: block;
-  margin-bottom: 9px;
-  color: var(--muted);
-  font-family: var(--font-mono);
-  font-size: var(--text-2xs);
-  letter-spacing: 0.02em;
-}
-
 .location-box__actions {
   display: flex;
   flex-wrap: wrap;
@@ -780,11 +771,6 @@
   margin-top: 4px;
   padding-top: 10px;
   border-top: 1px solid var(--line);
-}
-
-.action-hero__place .location-box__coords {
-  margin-bottom: 0;
-  padding-left: 24px;
 }
 
 .action-hero__state.is-muted {
