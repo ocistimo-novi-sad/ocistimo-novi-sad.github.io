@@ -430,10 +430,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSelectedActionId(null);
   }, []);
 
-  /**
-   * ova funkcija sluzi da bi se nakon zahtjeva da se prikaze gdje je prijava izvrsena, 
-   * dok na telefonu gasi prijavu i (nadam se) prikaze na mapi gdje je prijava.
-   */
   const showReportOnMap = useCallback(
     (report: Report) => {
       if (window.innerWidth > 900) {
