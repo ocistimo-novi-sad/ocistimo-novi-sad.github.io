@@ -52,9 +52,17 @@ npm run dev
 
 Bez `.env.local` aplikacija radi u **demo režimu**: izmišljeni primeri, bez naloga, moderacije i e-pošte (vidi [Kako aplikacija radi → Demo režim](docs/use-cases.md#12-demo-režim)). To je dovoljno za većinu izmena u interfejsu.
 
-Za rad sa pravim podacima kopiraj [.env.example](.env.example) u `.env.local` i popuni vrednosti iz Firebase konzole (Project settings → Your apps). Te vrednosti nisu tajne; podatke štite `firestore.rules` i `storage.rules`.
+Za rad sa nalozima, moderacijom i e-poštom pokreni aplikaciju na **staging bazi** (vidi [Staging baza](#staging-baza)). Kopiraj [.env.staging.example](.env.staging.example) u `.env.staging.local`, popuni prazne vrednosti iz Firebase konzole staging projekta (Project settings → Your apps → „Kuka i Motika (staging)“) i pokreni:
 
-> **Važno:** aplikacija se ne povezuje na Firebase emulatore, iako su navedeni u `firebase.json`. Sa popunjenim `.env.local` lokalna verzija radi sa bazom projekta čije si vrednosti upisao. Za razvoj koristi **staging** projekat, nikako produkcijski (vidi [Objavljivanje Firebase-a](docs/firebase-deploy.md)). Posle testiranja obriši test podatke.
+```sh
+npm run dev:staging
+```
+
+`.env.staging.local` se ne commit-uje, a u ovom režimu ima prednost nad `.env.local`.
+
+`.env.local` sa vrednostima produkcijskog projekta (kopija [.env.example](.env.example), vrednosti iz Firebase konzole → Project settings → Your apps) koristi se samo kada nešto mora da se proveri baš na produkciji. Te vrednosti nisu tajne; podatke štite `firestore.rules` i `storage.rules`.
+
+> **Važno:** aplikacija se ne povezuje na Firebase emulatore, iako su navedeni u `firebase.json`. `npm run dev` sa popunjenim `.env.local` radi sa **produkcijskom bazom**, pa posle takvog testiranja obriši sve test podatke.
 
 Pre otvaranja PR-a proveri da prolazi build (uključuje i proveru tipova):
 
@@ -69,7 +77,27 @@ npm --prefix functions ci
 npm --prefix functions run build
 ```
 
-Ulogu administratora dodeljuje vlasnik projekta u Firebase konzoli: u Firestore-u napravi dokument `admins/{uid}`, gde je `uid` korisnikov ID iz Authentication. Sadržaj dokumenta nije bitan, proverava se samo da postoji. Moderatore posle toga dodeljuje administrator iz aplikacije.
+Ulogu administratora dodeljuje vlasnik projekta u Firebase konzoli: u Firestore-u napravi dokument `admins/{uid}`, gde je `uid` korisnikov ID iz Authentication. Sadržaj dokumenta nije bitan, proverava se samo da postoji. Moderatore posle toga dodeljuje administrator iz aplikacije. Na stagingu to radi i seed skripta (vidi ispod).
+
+### Staging baza
+
+Staging ima svoj Firebase projekat, **ocistimo-novi-sad-staging** (ID `project-7fe611ea-b32a-4a6e-85d`, u `.firebaserc` alias `staging`), sa posebnom bazom, nalozima, fotografijama i Cloud Functions. Na njega su povezani staging sajt na Vercelu i `npm run dev:staging`. Produkcijski projekat `ocistimo-novi-sad` (alias `prod`) se pri testiranju ne dira.
+
+Staging baza se puni test podacima (prijave i akcije iz demo režima, plus prijava na čekanju, odbijena prijava i otvorena oznaka spornog sadržaja) skriptom:
+
+```sh
+npm --prefix functions ci
+gcloud auth application-default login            # jednom, otvara pregledač
+npm --prefix functions run seed:staging          # dopiše/osveži test podatke
+npm --prefix functions run seed:staging -- --reset                  # prvo obriše prijave, akcije, oznake i mail
+npm --prefix functions run seed:staging -- --admin ime@gmail.com    # da ulogu administratora
+```
+
+Za `--admin` se tim Google nalogom prvo jednom prijavi na staging, jer skripta korisnika traži po e-pošti iz profila. Skripta radi samo na staging projektu i odbija svaki drugi. Za pokretanje je potreban [Google Cloud CLI](https://cloud.google.com/sdk/docs/install) i pristup staging projektu (dodaje ga vlasnik projekta).
+
+Staging šalje prava obaveštenja e-poštom, sa iste adrese kao produkcija. Pošiljalac je „Kuka i Motika (staging)“, naslov počinje sa `[STAGING]`, a linkovi vode na staging sajt. Te vrednosti su u `functions/.env.staging` i `extensions/firestore-send-email.env.project-7fe611ea-b32a-4a6e-85d`, a Gmail app password staginga je u Secret Manager-u staging projekta, odvojen od produkcijskog.
+
+Pravila, indeksi, funkcije i ekstenzija se na staging objavljuju isto kao na produkciju, samo sa `--project staging`. Izmene u `firestore.rules`, `storage.rules` i `functions/` prvo se objave na staging i tamo testiraju.
 
 ## Pravila
 
@@ -112,7 +140,7 @@ Sa GitHub CLI-jem prva dva reda zamenjuje `gh pr checkout <broj PR-a>`. PR se od
 
 Kada se nova verzija pojavi na Vercelu, Tijana (i svako ko želi da pomogne u testiranju) prolazi kroz PR-ove iz nacrta „Sledeća verzija“ i javlja da li je sve u redu. Ako nešto ne radi, otvara se novi issue (pravilo 5).
 
-> Staging ima **svoju bazu**, odvojenu od produkcijske, pa test podaci ne stižu do pravih korisnika. Ipak, posle testiranja obriši test podatke, da staging ostane pregledan za sledeće testiranje.
+Staging radi sa **staging bazom** (vidi [Staging baza](#staging-baza)), pa test podaci ne stižu do pravih korisnika i ne moraju da se brišu posle svakog testiranja. Kada se baza previše zatrpa, vraća se na poznato stanje sa `seed:staging -- --reset`.
 
 Produkcija ostaje na GitHub Pages i objavljuje se sama kada se `staging` spoji u `main`: prvo Firestore/Storage pravila, indeksi, Cloud Functions i ekstenzija za e-poštu na produkcijski Firebase projekat, pa tek onda sajt. Detalji su u [Objavljivanje Firebase-a](docs/firebase-deploy.md).
 

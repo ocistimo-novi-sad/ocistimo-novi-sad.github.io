@@ -159,7 +159,13 @@ Aplikacija šalje kratka obaveštenja na adresu Google naloga:
 
 Niko ne dobija obaveštenje o sopstvenoj radnji. Obaveštenja su podrazumevano uključena, a svako ih može isključiti u meniju naloga, u delu „Obaveštenja e-poštom“. Potpun spisak poruka, sa tačnim uslovima kada se šalju i kada ne, nalazi se u [Kako aplikacija radi → Obaveštenja e-poštom](docs/use-cases.md#10-obaveštenja-e-poštom). Obaveštenja pravi Cloud Function iz foldera `functions/` i upisuje ih u kolekciju `mail`, a ekstenzija Trigger Email ih šalje preko Gmail SMTP-a. Upisani zapisi se brišu posle nedelju dana. Funkcije, ekstenzija i pravila se objavljuju ručno, jer GitHub Actions objavljuje samo sajt:
 
-Gmail app password stoji u Secret Manager-u svakog projekta. Lozinka se nikada ne upisuje u repozitorijum.
+```sh
+firebase deploy --only functions,extensions,firestore,storage --project ocistimo-novi-sad
+```
+
+Izmene se prvo objave i testiraju na staging projektu: ista komanda, sa `--project staging` umesto `--project ocistimo-novi-sad` (vidi [CONTRIBUTING → Staging baza](CONTRIBUTING.md#staging-baza)).
+
+Pri prvom objavljivanju ekstenzije Firebase CLI traži Gmail app password i čuva ga u Secret Manager-u. Lozinka se nikada ne upisuje u repozitorijum.
 
 Korisnici treba da objavljuju samo informacije relevantne za problem na javnom prostoru. Fotografije i opisi ne treba nepotrebno da otkrivaju lične podatke ili prikazuju ljude na način koji ugrožava njihovu privatnost.
 
