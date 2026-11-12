@@ -31,7 +31,14 @@ jobs:
 
           for n in $issues; do
             # Skip numbers that are PRs or do not exist.
-            if [ -z "$(gh api "repos/$GH_REPO/issues/$n" --jq 'select(.pull_request == null) | .number' 2>/dev/null || true)" ]; then
+            state=$(gh api "repos/$GH_REPO/issues/$n" --jq 'select(.pull_request == null) | .state' 2>/dev/null || true)
+            if [ -z "$state" ]; then
+              continue
+            fi
+
+            # A closed ticket is not reopened (CONTRIBUTING.md, rule 5).
+            if [ "$state" = "closed" ]; then
+              echo "::warning::Issue #$n je zatvoren, pa ne dobija labelu. Za ispravku zatvorenog tiketa u opisu PR-a piše se „Ispravka za #$n“."
               continue
             fi
 
@@ -40,10 +47,8 @@ jobs:
               gh api -X DELETE "repos/$GH_REPO/issues/$n/labels/ready%20for%20review" > /dev/null 2>&1 || true
               echo "::notice::PR je draft, issue #$n nema labelu „ready for review“."
             else
+              # "on staging" and "rework" stay until the merge (issue-na-stagingu.yml).
               gh api "repos/$GH_REPO/issues/$n/labels" -f "labels[]=ready for review" > /dev/null
-              # A new PR for an issue already on staging (e.g. after rework) starts the review again.
-              gh api -X DELETE "repos/$GH_REPO/issues/$n/labels/on%20staging" > /dev/null 2>&1 || true
-              gh api -X DELETE "repos/$GH_REPO/issues/$n/labels/rework" > /dev/null 2>&1 || true
               echo "::notice::Issue #$n ima labelu „ready for review“."
             fi
           done

@@ -11,8 +11,8 @@ permissions:
 jobs:
   # After a merge the issue stays open for testing on staging (CONTRIBUTING.md, rule 2).
   # QA closes it, or adds "rework" if something has to be fixed.
+  # A PR closed without merging only drops "ready for review", so the issue is back where it was before the PR.
   na-stagingu:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Label issues on staging
@@ -21,25 +21,40 @@ jobs:
           GH_REPO: ${{ github.repository }}
           BODY: ${{ github.event.pull_request.body }}
           BRANCH: ${{ github.head_ref }}
+          MERGED: ${{ github.event.pull_request.merged }}
+          MERGED_AT: ${{ github.event.pull_request.merged_at }}
         run: |
           # Same issues as in pr-labela.yml: "Tiket #N" (or "Closes #N") lines and the number at the start of the branch name.
           issues=$( { printf '%s\n' "$BODY" | grep -oiE '^[[:space:]]*(tiket|closes|fixes|resolves)[[:space:]]+#[0-9]+' | grep -oE '[0-9]+'; printf '%s\n' "$BRANCH" | grep -oE '^[0-9]+'; } | sort -un || true)
 
           for n in $issues; do
-            # Skip numbers that are PRs or do not exist.
-            state=$(gh api "repos/$GH_REPO/issues/$n" --jq 'select(.pull_request == null) | .state' 2>/dev/null || true)
-            if [ -z "$state" ]; then
+            if [ "$MERGED" != "true" ]; then
+              # 404 when the issue does not have the label (or does not exist).
+              gh api -X DELETE "repos/$GH_REPO/issues/$n/labels/ready%20for%20review" > /dev/null 2>&1 || true
+              echo "::notice::PR je zatvoren bez spajanja, issue #$n nema labelu „ready for review“."
               continue
             fi
 
-            # "Closes #N" makes GitHub close the issue on merge, because staging is the default branch.
-            if [ "$state" = "closed" ]; then
+            # Skip numbers that are PRs or do not exist.
+            closed_at=$(gh api "repos/$GH_REPO/issues/$n" --jq 'select(.pull_request == null) | .closed_at // "open"' 2>/dev/null || true)
+            if [ -z "$closed_at" ]; then
+              continue
+            fi
+
+            if [ "$closed_at" != "open" ]; then
+              # "Closes #N" makes GitHub close the issue on merge, because staging is the default branch.
+              # Reopen only an issue this merge closed (60 s margin); one closed earlier stays closed (CONTRIBUTING.md, rule 5).
+              if [ "$(date -d "$closed_at" +%s)" -lt "$(( $(date -d "$MERGED_AT" +%s) - 60 ))" ]; then
+                echo "::warning::Issue #$n je zatvoren ranije, pa ostaje zatvoren. Za ispravku zatvorenog tiketa u opisu PR-a piše se „Ispravka za #$n“."
+                continue
+              fi
               gh api -X PATCH "repos/$GH_REPO/issues/$n" -f state=open > /dev/null
               echo "::notice::Issue #$n je ponovo otvoren (zatvorio ga je „Closes #$n“)."
             fi
 
             # 404 when the issue does not have the label.
             gh api -X DELETE "repos/$GH_REPO/issues/$n/labels/ready%20for%20review" > /dev/null 2>&1 || true
+            gh api -X DELETE "repos/$GH_REPO/issues/$n/labels/rework" > /dev/null 2>&1 || true
             gh api "repos/$GH_REPO/issues/$n/labels" -f "labels[]=on staging" > /dev/null
             echo "::notice::Issue #$n ima labelu „on staging“."
           done
