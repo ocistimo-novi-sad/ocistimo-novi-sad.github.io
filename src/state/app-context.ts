@@ -85,6 +85,7 @@ export interface AppContextValue {
   selectReport: (report: Report, options?: { fly?: boolean; fromDetail?: boolean }) => void;
   showReportOnMap: (report: Report) => void;
   selectAction: (action: CleanupAction, options?: { fly?: boolean; fromDetail?: boolean }) => void;
+  clearSelection: () => void;
   openReport: (report: Report) => void;
   showActionOnMap: (action: CleanupAction) => void;
   
