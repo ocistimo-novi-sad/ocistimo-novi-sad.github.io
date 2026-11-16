@@ -220,6 +220,35 @@
     padding: 26px 16px 16px;
   }
 
+  /* Back to the list the detail was opened from (#156), opposite the X. */
+  .drawer__back {
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    height: 32px;
+    padding: 0 10px 0 4px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink-2);
+    border-radius: var(--radius);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .drawer__back:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+
+  .drawer.has-back .drawer__scroll {
+    padding-top: 48px;
+  }
+
   .drawer__foot {
     padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
   }

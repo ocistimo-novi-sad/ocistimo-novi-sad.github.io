@@ -5,7 +5,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react';
-import { ChevronDown, ChevronUp, X } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronUp, X } from 'lucide-react';
 import { useIsMobile } from '../hooks/useMediaQuery';
 
 /** The three heights of the drawer on a phone. CSS owns the actual values. */
@@ -45,6 +45,7 @@ export function Drawer({
   footer,
   className = '',
   collapseSignal,
+  onBack,
 }: {
   label: string;
   onClose: () => void;
@@ -52,6 +53,8 @@ export function Drawer({
   footer?: ReactNode;
   className?: string;
   collapseSignal?: number;
+  /** Phone only: a "Lista" button that closes the drawer back to the list. */
+  onBack?: () => void;
 }) {
   const isMobile = useIsMobile();
   const [snap, setSnap] = useState<Snap>('normal');
@@ -154,7 +157,7 @@ export function Drawer({
   return (
     <aside
       ref={drawerRef}
-      className={`drawer${SNAP_CLASS[snap]}${className ? ` ${className}` : ''}`}
+      className={`drawer${SNAP_CLASS[snap]}${isMobile && onBack ? ' has-back' : ''}${className ? ` ${className}` : ''}`}
       role="dialog"
       aria-label={label}
     >
@@ -175,6 +178,13 @@ export function Drawer({
           ) : (
             <ChevronUp size={14} aria-hidden="true" />
           )}
+        </button>
+      ) : null}
+
+      {isMobile && onBack ? (
+        <button type="button" className="drawer__back" onClick={onBack}>
+          <ChevronLeft size={16} aria-hidden="true" />
+          Lista
         </button>
       ) : null}
 
