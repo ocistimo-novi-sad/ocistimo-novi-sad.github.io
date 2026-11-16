@@ -1,5 +1,3 @@
-/** Serbian (Latin) formatting helpers. */
-
 const dateFormatter = new Intl.DateTimeFormat('sr-Latn-RS', {
   day: 'numeric',
   month: 'short',

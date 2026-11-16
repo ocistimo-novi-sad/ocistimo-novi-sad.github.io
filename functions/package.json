@@ -6,7 +6,8 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "seed:staging": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/seed-staging.ts"
   },
   "engines": {
     "node": "22"

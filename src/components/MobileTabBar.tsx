@@ -103,7 +103,7 @@ export function MobileTabBar() {
               role="menuitem"
               onClick={() => {
                 setMenuOpen(false);
-                openModal({ kind: 'admin' });
+                openModal({ kind: 'action-form' });
               }}
             >
               <CalendarPlus size={15} aria-hidden="true" /> Nova akcija

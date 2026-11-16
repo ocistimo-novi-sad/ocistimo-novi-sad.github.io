@@ -233,7 +233,7 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
   3. tok prijave, i kada prijava ima povezanu akciju (Prijavljena → Objavljena → Akcija planirana ili u toku → Rešena; prijava na pregledu umesto „Objavljena“ ima „Na pregledu“, odbijena ima samo „Prijavljena → Odbijena“, a prijava „Nije za akciju“ završava tim korakom);
   4. fotografije (klik = uvećan prikaz);
   5. opis i plan („Šta zajednica može sama“, „Za šta nam treba pomoć“);
-  6. lokaciju (adresa). Moderator vidi i koordinate.
+  6. lokaciju (adresa).
 - **Radnje:** „Prikaži na mapi“, „OpenStreetMap“, „Označi kao sporno“ (vidi UC-12).
 - **Deljenje:** dok je prijava otvorena, adresa u pregledaču sadrži `?prijava=…`. Taj link otvara istu prijavu. Ako prijava nije javna, a korisnik nije njen autor ni moderator, aplikacija javlja „Ova prijava još nije javna. Uloguj se ako si njen autor.“ (prijavljenom korisniku samo „Ova prijava još nije javna.“) Ako je obrisana: „Prijava nije pronađena. Možda je obrisana.“
 
@@ -248,7 +248,7 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
   4. Detalji, redom:
      - status, naslov, organizator i njegova napomena;
      - naslovna fotografija;
-     - kartica sa datumom i vremenom, stanjem akcije, mestom okupljanja i dugmadima „Prikaži na mapi“ i „OpenStreetMap“ (moderator vidi i koordinate);
+     - kartica sa datumom i vremenom, stanjem akcije, mestom okupljanja i dugmadima „Prikaži na mapi“ i „OpenStreetMap“;
      - opis, a za završene akcije i fotografije sa akcije;
      - šta poneti;
      - povezane prijave (klik vodi na prijavu).
@@ -445,11 +445,11 @@ Moderator ima sve što i član zajednice, plus stavku **Moderacija** u meniju na
 
 ## 9. Slučajevi korišćenja — administrator
 
-Administrator ima sva prava moderatora, plus tab „Korisnici i uloge“ u stavci **Administracija** u meniju naloga. Kreiranje, uređivanje, otkazivanje i brisanje akcija (UC-21 do UC-24) mogu i moderatori: njima se ista stavka zove „Akcije čišćenja“. I moderatori i administratori vide dugme „Nova akcija“ u prikazu Akcije i okvir „Upravljanje akcijom“ u detaljima akcije.
+Administrator ima sva prava moderatora, plus tab „Korisnici i uloge“ u stavci **Administracija** u meniju naloga. Kreiranje, uređivanje, otkazivanje i brisanje akcija (UC-21 do UC-24) mogu i moderatori: njima se ista stavka zove „Akcije čišćenja“. I moderatori i administratori vide dugme „Nova akcija“ u prikazu Akcije i okvir „Upravljanje akcijom“ u detaljima akcije. Dugme „Nova akcija“ u prikazu Akcije i na telefonu otvara formu direktno, a panel „Administracija“ ostaje za listu svih akcija i korisnike.
 
 ### UC-21 Kreiranje akcije čišćenja
 
-- **Gde:** Administracija → Akcije čišćenja → „Nova akcija“. Dugme „Nova akcija“ u prikazu Akcije i, na telefonu, „＋ Prijavi“ → „Nova akcija“ otvaraju taj isti panel.
+- **Gde:** dugme „Nova akcija“ u prikazu Akcije; ili, na telefonu, „＋ Prijavi“ → „Nova akcija“; ili Administracija → Akcije čišćenja → „Nova akcija“. Forma se otvara direktno.
 - **Tok:**
   1. **Osnovno:** naziv, opis i plan rada, status (podrazumevano „Planirano“).
   2. **Fotografije:** naslovna slika (opciono); fotografije sa akcije (do 6) tek kada je status „Završeno“ ili kada akcija već ima takve fotografije.

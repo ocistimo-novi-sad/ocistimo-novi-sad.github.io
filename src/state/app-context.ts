@@ -28,6 +28,7 @@ export type ModalState =
   | { kind: 'flag'; reportId: string }
   | { kind: 'info' }
   | { kind: 'admin'; editActionId?: string }
+  | { kind: 'action-form'; action?: CleanupAction }
   | { kind: 'moderation' }
   | { kind: 'my-reports' }
   | { kind: 'resolve'; reportId: string }
@@ -75,13 +76,18 @@ export interface AppContextValue {
   resetFilters: () => void;
 
   selectedReport: Report | null;
+  /** Phones: the report "Prikaži na mapi" closed, still drawn as a highlighted pin. */
+  focusedReport: Report | null;
   selectedAction: CleanupAction | null;
   relatedAction: CleanupAction | null;
   actionReports: Report[];
+
   selectReport: (report: Report, options?: { fly?: boolean; fromDetail?: boolean }) => void;
   showReportOnMap: (report: Report) => void;
   selectAction: (action: CleanupAction, options?: { fly?: boolean; fromDetail?: boolean }) => void;
-  clearSelection: () => void;
+  openReport: (report: Report) => void;
+  showActionOnMap: (action: CleanupAction) => void;
+  
   closeSelection: () => void;
   /** The open detail was opened from the mobile list and closing it goes back there. */
   detailFromList: boolean;

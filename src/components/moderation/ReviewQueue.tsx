@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { REJECT_REASONS } from '../../config';
 import { useIsMobile } from '../../hooks/useMediaQuery';
-import { formatCoordinates, formatDateTime, formatRelativeTime } from '../../lib/format';
+import { formatDateTime, formatRelativeTime } from '../../lib/format';
 import { distanceInMeters, openStreetMapUrl } from '../../lib/geo';
 import { withTimeout } from '../../lib/timeout';
 import { toSerbianError } from '../../services/errors';
@@ -43,7 +43,7 @@ export function ReviewQueue() {
     approvePendingReport,
     rejectPendingReport,
     refreshModerationCounts,
-    selectReport,
+    openReport,
     editReport,
     closeModal,
   } = useApp();
@@ -315,9 +315,6 @@ export function ReviewQueue() {
                   <MapPin size={14} aria-hidden="true" />
                   <span>{active.address ?? 'Novi Sad'}</span>
                 </div>
-                <code className="location-box__coords">
-                  {formatCoordinates(active.latitude, active.longitude)}
-                </code>
                 <div className="location-box__actions">
                   <a
                     className="btn btn--quiet btn--sm"
@@ -331,7 +328,7 @@ export function ReviewQueue() {
                     type="button"
                     className="btn btn--quiet btn--sm"
                     onClick={() => {
-                      selectReport(active);
+                      openReport(active);
                       closeModal();
                     }}
                   >

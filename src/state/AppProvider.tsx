@@ -154,6 +154,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }));
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
+  // On phones "Prikaži na mapi" closes the detail so the sheet does not cover
+  // the pin. This keeps that pin drawn even when the public layer would not
+  // show it (a pending report, or one hidden by the filters).
+  const [focusedReportId, setFocusedReportId] = useState<string | null>(null);
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeLocation, setComposeLocationState] = useState<Coordinates | null>(null);
   const [composeEditing, setComposeEditing] = useState<Report | null>(null);
@@ -236,6 +240,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const selectedReport = useMemo(
     () => knownReports.find((report) => report.id === selectedReportId) ?? null,
     [knownReports, selectedReportId],
+  );
+  const focusedReport = useMemo(
+    () => knownReports.find((report) => report.id === focusedReportId) ?? null,
+    [knownReports, focusedReportId],
   );
   const selectedAction = useMemo(
     () => actions.find((action) => action.id === selectedActionId) ?? null,
@@ -413,6 +421,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       rememberWhereDetailOpened(options?.fromDetail);
       setSelectedReportId(report.id);
       setSelectedActionId(null);
+      setFocusedReportId(null);
       // On mobile this makes the map the surface behind the detail sheet, and
       // it also makes sure report markers (not action markers) are rendered.
       setLayerState('reports');
@@ -430,6 +439,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       rememberWhereDetailOpened(options?.fromDetail);
       setSelectedActionId(action.id);
       setSelectedReportId(null);
+      setFocusedReportId(null);
       setLayerState('actions');
       // Keep the map behind the mobile sheet so the meeting point is visible.
       setMobileTabState('map');
@@ -462,7 +472,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
 
       clearSelection();
+      setFocusedReportId(report.id);
       window.requestAnimationFrame(() => flyTo(report, APP.focusZoom));
+    },
+    [clearSelection, flyTo],
+  );
+
+  /**
+   * Same behaviour as "Prikaži na mapi" on a report: on phones the action
+   * detail closes so the pin is not covered by the sheet.
+   */
+  const showActionOnMap = useCallback(
+    (action: CleanupAction) => {
+      if (window.innerWidth > 900) {
+        flyTo(action, APP.focusZoom, { accountForDrawer: true });
+        return;
+      }
+
+      clearSelection();
+      window.requestAnimationFrame(() => flyTo(action, APP.focusZoom));
     },
     [clearSelection, flyTo],
   );
@@ -472,6 +500,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     composeOpenRef.current = true;
     setSelectedReportId(null);
     setSelectedActionId(null);
+    setFocusedReportId(null);
     setComposeOpen(true);
     setComposeSubmitted(false);
     setComposeEditing(null);
@@ -581,6 +610,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     },
     [signedInUid, upsertReport],
+  );
+
+  /**
+   * Opens a report that may come from outside the loaded map pages, such as a
+   * moderation queue. Without storing it first the selection points at nothing:
+   * no detail opens, no pin is drawn, and the map still shifts for a drawer.
+   */
+  const openReport = useCallback(
+    (report: Report) => {
+      applyReport(report);
+      selectReport(report);
+    },
+    [applyReport, selectReport],
   );
 
   const dropReport = useCallback(
@@ -1175,12 +1217,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleCategory,
       resetFilters,
       selectedReport,
+      focusedReport,
       selectedAction,
       relatedAction,
       actionReports,
       selectReport,
+      openReport,
       showReportOnMap,
       selectAction,
+      showActionOnMap,
       clearSelection,
       closeSelection,
       detailFromList,
@@ -1259,12 +1304,15 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleCategory,
       resetFilters,
       selectedReport,
+      focusedReport,
       selectedAction,
       relatedAction,
       actionReports,
       selectReport,
+      openReport,
       showReportOnMap,
       selectAction,
+      showActionOnMap,
       clearSelection,
       closeSelection,
       detailFromList,

@@ -10,15 +10,15 @@ export const GUIDE_EVENT = 'kim:guide';
 const STEPS = [
   {
     target: 'create',
-    text: 'Vidiš problem u kraju? Ovde ga prijaviš: tačka na mapi, par reči i fotografija ako je imaš.',
+    text: 'Primećuješ problem u kraju? Dodirni „Prijavi“, označi mesto na mapi i opiši problem. Ako imaš fotografiju, dodaj je.',
   },
   {
     target: 'layer',
-    text: 'Prijave su problemi koje su ljudi primetili. Akcije su okupljanja za čišćenje. Ovde biraš šta mapa prikazuje.',
+    text: 'Izaberi „Prijave“ da vidiš koje su probleme drugi prijavili ili „Akcije“ da vidiš gde se organizuju sanacije problema.',
   },
   {
     target: 'list',
-    text: 'Ista mesta možeš da pregledaš i kao spisak, sa pretragom i filterima.',
+    text: 'Otvori „Listu“ da pregledaš prijave ili akcije na jednom mestu. Koristi pretragu i filtere da brže pronađeš ono što tražiš.',
   },
 ];
 

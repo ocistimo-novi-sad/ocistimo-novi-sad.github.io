@@ -129,6 +129,7 @@ export function MapCanvas() {
     toggleCategory,
     resetFilters,
     selectedReport,
+    focusedReport,
     selectedAction,
     actionReports,
     selectReport,
@@ -146,6 +147,8 @@ export function MapCanvas() {
     locateForCompose,
     locating,
   } = app;
+  // The open report, or on phones the one "Prikaži na mapi" just closed.
+  const highlightedReport = selectedReport ?? focusedReport;
 
   const [zoom, setZoom] = useState<number>(APP.initialZoom);
   const [pointer, setPointer] = useState<{ lat: number; lng: number } | null>(null);
@@ -304,13 +307,13 @@ export function MapCanvas() {
           <>
             <DraftMarkers
               reports={myUnpublishedReports}
-              selectedReportId={selectedReport?.id ?? null}
+              selectedReportId={highlightedReport?.id ?? null}
               onSelect={handleReportSelect}
               interactive={!composeOpen}
             />
             <ReportMarkers
               reports={filteredReports}
-              selectedReport={selectedReport}
+              selectedReport={highlightedReport}
               onSelect={handleReportSelect}
               interactive={!composeOpen}
             />
@@ -447,12 +450,10 @@ export function MapCanvas() {
           <div className="pick-banner__text">
             <strong>
               {composeLocation
-                ? 'Klikni na drugu tačku da pomeriš marker'
+                ? 'Dodirni mapu da promeniš lokaciju.'
                 : 'Klikni na mapu da postaviš lokaciju'}
             </strong>
-            {composeLocation ? (
-              <span>{formatCoordinates(composeLocation.latitude, composeLocation.longitude)}</span>
-            ) : (
+            {composeLocation ? null : (
               <span>Možeš i da prevučeš marker radi preciznijeg položaja.</span>
             )}
           </div>

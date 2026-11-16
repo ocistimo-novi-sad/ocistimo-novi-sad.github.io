@@ -7,7 +7,13 @@ import { createActionRecord, updateActionRecord } from '../../services/actions';
 import { toSerbianError } from '../../services/errors';
 import { droppedImages, imagesEnabled, removeImages } from '../../services/images';
 import { useApp } from '../../state/app-context';
-import type { ActionStatus, CleanupAction, NewActionInput, Report } from '../../types';
+import type {
+  ActionStatus,
+  CleanupAction,
+  Coordinates,
+  NewActionInput,
+  Report,
+} from '../../types';
 import { CategoryGlyph } from '../ui/CategoryGlyph';
 import { Spinner } from '../ui/EmptyState';
 import { PhotoPicker } from '../ui/PhotoPicker';
@@ -62,11 +68,10 @@ export function ActionForm({
     formatDateInput(action?.date ?? defaultDate()),
   );
   const [meetingPoint, setMeetingPoint] = useState(action?.meetingPoint ?? '');
-  const [latitude, setLatitude] = useState(
-    action ? action.latitude.toFixed(6) : APP.center.latitude.toFixed(6),
-  );
-  const [longitude, setLongitude] = useState(
-    action ? action.longitude.toFixed(6) : APP.center.longitude.toFixed(6),
+  const [point, setPoint] = useState<Coordinates>(() =>
+    action
+      ? { latitude: action.latitude, longitude: action.longitude }
+      : { ...APP.center },
   );
   const [status, setStatus] = useState<ActionStatus>(action?.status ?? 'planned');
   const [suppliesText, setSuppliesText] = useState(action?.supplies.join('\n') ?? '');
@@ -90,10 +95,6 @@ export function ActionForm({
   const [errors, setErrors] = useState<Errors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
-  const latNumber = Number(latitude.replace(',', '.'));
-  const lngNumber = Number(longitude.replace(',', '.'));
-  const coordinatesValid = Number.isFinite(latNumber) && Number.isFinite(lngNumber);
 
   const toggleReport = (reportId: string) => {
     setSelectedReports((current) =>
@@ -121,13 +122,12 @@ export function ActionForm({
       next.meetingPoint = 'Unesi mesto okupljanja.';
     }
     if (
-      !coordinatesValid ||
-      latNumber < APP.bounds.south ||
-      latNumber > APP.bounds.north ||
-      lngNumber < APP.bounds.west ||
-      lngNumber > APP.bounds.east
+      point.latitude < APP.bounds.south ||
+      point.latitude > APP.bounds.north ||
+      point.longitude < APP.bounds.west ||
+      point.longitude > APP.bounds.east
     ) {
-      next.coordinates = 'Koordinate moraju biti unutar područja Novog Sada.';
+      next.coordinates = 'Mesto okupljanja mora biti unutar područja Novog Sada.';
     }
     if (!organizerName.trim()) {
       next.organizer = 'Unesi naziv organizatora.';
@@ -179,8 +179,8 @@ export function ActionForm({
       description: description.trim(),
       date: new Date(dateValue),
       meetingPoint: meetingPoint.trim(),
-      latitude: latNumber,
-      longitude: lngNumber,
+      latitude: point.latitude,
+      longitude: point.longitude,
       status,
       reportIds: selectedReports,
       supplies,
@@ -380,44 +380,16 @@ export function ActionForm({
           </div>
 
           <div className={`field${errors.coordinates ? ' has-error' : ''}`}>
-            <span className="field__label">Koordinate mesta okupljanja</span>
-            <div className="coord-row">
-              <label className="coord-input">
-                <span>Geografska širina</span>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={latitude}
-                  onChange={(event) => setLatitude(event.target.value)}
-                  disabled={saving}
-                />
-              </label>
-              <label className="coord-input">
-                <span>Geografska dužina</span>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={longitude}
-                  onChange={(event) => setLongitude(event.target.value)}
-                  disabled={saving}
-                />
-              </label>
-            </div>
+            <span className="field__label">Mesto okupljanja na mapi</span>
+            <LocationPicker
+              latitude={point.latitude}
+              longitude={point.longitude}
+              onChange={setPoint}
+            />
             {errors.coordinates ? (
               <p className="field__error">{errors.coordinates}</p>
             ) : null}
           </div>
-
-          {coordinatesValid ? (
-            <LocationPicker
-              latitude={latNumber}
-              longitude={lngNumber}
-              onChange={(point) => {
-                setLatitude(point.latitude.toFixed(6));
-                setLongitude(point.longitude.toFixed(6));
-              }}
-            />
-          ) : null}
         </div>
 
         <div className="admin-form__section">

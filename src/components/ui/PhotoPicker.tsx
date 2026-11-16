@@ -40,7 +40,7 @@ export function PhotoPicker({
               </span>
             ) : null}
             {photo.status === 'done' ? (
-              <span className="photo-draft__done" aria-label="Fotografija je otpremljena">
+              <span className="photo-draft__done" role="img" aria-label="Fotografija je otpremljena">
                 <Check size={11} aria-hidden="true" />
               </span>
             ) : null}

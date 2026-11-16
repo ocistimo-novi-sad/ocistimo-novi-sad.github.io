@@ -86,7 +86,6 @@ class DisabledStorage implements ImageStorage {
   }
 
   async remove(): Promise<void> {
-    // Nothing was ever uploaded.
   }
 }
 
@@ -187,7 +186,6 @@ export function removeImages(urls: string[]): Promise<void> {
   return urls.length > 0 ? imageStorage.remove(urls) : Promise.resolve();
 }
 
-/** Photos in `before` that `after` no longer uses. */
 export function droppedImages(before: string[], after: string[]): string[] {
   const kept = new Set(after);
   return before.filter((url) => !kept.has(url));

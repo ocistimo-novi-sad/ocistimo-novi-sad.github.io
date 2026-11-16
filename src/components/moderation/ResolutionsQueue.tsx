@@ -18,7 +18,7 @@ export function ResolutionsQueue() {
     approveReportResolution,
     rejectReportResolution,
     refreshModerationCounts,
-    selectReport,
+    openReport,
     closeModal,
   } = useApp();
   const isMobile = useIsMobile();
@@ -218,7 +218,7 @@ export function ResolutionsQueue() {
               type="button"
               className="btn btn--quiet btn--sm"
               onClick={() => {
-                selectReport(active);
+                openReport(active);
                 closeModal();
               }}
             >

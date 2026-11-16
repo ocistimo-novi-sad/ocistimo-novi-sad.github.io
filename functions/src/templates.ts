@@ -1,7 +1,10 @@
 import type { ActionEvent, ReportEvent } from './events.js';
 import type { Message } from './mail.js';
 
-const SITE_URL = 'https://ocistimo-novi-sad.github.io/';
+// Production values. functions/.env.staging overrides them when deploying to
+// the staging project, so its mail links to the staging site and is labelled.
+const SITE_URL = process.env.SITE_URL || 'https://ocistimo-novi-sad.github.io/';
+const MAIL_TAG = process.env.MAIL_TAG ?? '';
 const APP_NAME = 'Kuka i Motika';
 
 /** Same labels as FLAG_REASONS in src/config.ts. */
@@ -55,13 +58,18 @@ function reportUrl(reportId: string): string {
 /** Plain paragraphs and one link, as both text and simple HTML. */
 function compose(subject: string, paragraphs: string[], link: { url: string; label: string }): Message {
   const footer = `Ovu poruku šalje aplikacija ${APP_NAME}. Na nju ne treba odgovarati.`;
-  const text = [...paragraphs, `${link.label}: ${link.url}`, '--', footer].join('\n\n');
+  const notice = MAIL_TAG
+    ? [`[${MAIL_TAG}] Ova poruka stiže sa test verzije aplikacije, ne sa prave ${APP_NAME}.`]
+    : [];
+  const body = [...notice, ...paragraphs];
+  const text = [...body, `${link.label}: ${link.url}`, '--', footer].join('\n\n');
   const html = [
-    ...paragraphs.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`),
+    ...body.map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`),
     `<p><a href="${escapeHtml(link.url)}">${escapeHtml(link.label)}</a></p>`,
     `<p style="color:#6b7280;font-size:12px">${escapeHtml(footer)}</p>`,
   ].join('\n');
-  return { subject: `${subject} – ${APP_NAME}`, text, html };
+  const tag = MAIL_TAG ? `[${MAIL_TAG}] ` : '';
+  return { subject: `${tag}${subject} – ${APP_NAME}`, text, html };
 }
 
 function formatDate(date: Date | null): string {
