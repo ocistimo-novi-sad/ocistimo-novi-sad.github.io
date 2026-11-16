@@ -129,6 +129,7 @@ export function MapCanvas() {
     toggleCategory,
     resetFilters,
     selectedReport,
+    focusedReport,
     selectedAction,
     actionReports,
     selectReport,
@@ -146,6 +147,8 @@ export function MapCanvas() {
     locateForCompose,
     locating,
   } = app;
+  // The open report, or on phones the one "Prikaži na mapi" just closed.
+  const highlightedReport = selectedReport ?? focusedReport;
 
   const [zoom, setZoom] = useState<number>(APP.initialZoom);
   const [pointer, setPointer] = useState<{ lat: number; lng: number } | null>(null);
@@ -304,13 +307,13 @@ export function MapCanvas() {
           <>
             <DraftMarkers
               reports={myUnpublishedReports}
-              selectedReportId={selectedReport?.id ?? null}
+              selectedReportId={highlightedReport?.id ?? null}
               onSelect={handleReportSelect}
               interactive={!composeOpen}
             />
             <ReportMarkers
               reports={filteredReports}
-              selectedReport={selectedReport}
+              selectedReport={highlightedReport}
               onSelect={handleReportSelect}
               interactive={!composeOpen}
             />

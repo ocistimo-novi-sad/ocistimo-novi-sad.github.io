@@ -76,10 +76,14 @@ export interface AppContextValue {
   resetFilters: () => void;
 
   selectedReport: Report | null;
+  /** Phones: the report "Prikaži na mapi" closed, still drawn as a highlighted pin. */
+  focusedReport: Report | null;
   selectedAction: CleanupAction | null;
   relatedAction: CleanupAction | null;
   actionReports: Report[];
   selectReport: (report: Report, options?: { fly?: boolean }) => void;
+  /** Stores a report fetched elsewhere (e.g. a moderation queue), then selects it. */
+  openReport: (report: Report) => void;
   showReportOnMap: (report: Report) => void;
   selectAction: (action: CleanupAction, options?: { fly?: boolean }) => void;
   showActionOnMap: (action: CleanupAction) => void;

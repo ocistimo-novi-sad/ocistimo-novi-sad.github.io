@@ -43,7 +43,7 @@ export function ReviewQueue() {
     approvePendingReport,
     rejectPendingReport,
     refreshModerationCounts,
-    selectReport,
+    openReport,
     editReport,
     closeModal,
   } = useApp();
@@ -328,7 +328,7 @@ export function ReviewQueue() {
                     type="button"
                     className="btn btn--quiet btn--sm"
                     onClick={() => {
-                      selectReport(active);
+                      openReport(active);
                       closeModal();
                     }}
                   >
