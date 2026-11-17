@@ -221,10 +221,14 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.auth.uid == uid
         && request.resource.data.keys().hasOnly([
-             'displayName', 'email', 'photoURL', 'createdAt', 'lastSeenAt'
+             'displayName', 'publicName', 'email', 'photoURL', 'createdAt', 'lastSeenAt'
            ])
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() <= 80
+        && (!('publicName' in request.resource.data)
+            || (request.resource.data.publicName is string
+                && request.resource.data.publicName.size() >= 2
+                && request.resource.data.publicName.size() <= 40))
         && request.resource.data.createdAt == request.time
         && request.resource.data.lastSeenAt == request.time
         && validProfileEmail(request.resource.data)
@@ -234,9 +238,15 @@ service cloud.firestore {
       allow update: if signedIn()
         && request.auth.uid == uid
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['displayName', 'email', 'photoURL', 'lastSeenAt', 'mailPrefs'])
+             .hasOnly([
+               'displayName', 'publicName', 'email', 'photoURL', 'lastSeenAt', 'mailPrefs'
+             ])
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() <= 80
+        && (!('publicName' in request.resource.data)
+            || (request.resource.data.publicName is string
+                && request.resource.data.publicName.size() >= 2
+                && request.resource.data.publicName.size() <= 40))
         && request.resource.data.lastSeenAt == request.time
         && validProfileEmail(request.resource.data)
         && validMailPrefs(request.resource.data)
@@ -321,6 +331,15 @@ service cloud.firestore {
         && request.resource.data.resolution.note.size() <= 500
         && request.resource.data.resolution.submittedAt == request.time
         && request.resource.data.resolution.submittedBy == request.auth.uid;
+
+      // Author, case 4: the public author name changed in "Lični podaci"
+      // (#161). It is only a display snapshot, so content and the moderation
+      // state stay untouched.
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['createdByName'])
+        && request.resource.data.createdByName is string
+        && request.resource.data.createdByName.size() >= 2
+        && request.resource.data.createdByName.size() <= 60;
 
       // Moderators may change anything except authorship and creation time,
       // and every change is attributed to them.

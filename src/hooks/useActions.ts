@@ -38,5 +38,19 @@ export function useActions() {
     void load();
   }, [load]);
 
-  return { actions, phase, error, load };
+  /** Keeps an action's organizer in step with a new public name (#161). */
+  const renameOrganizer = useCallback(
+    (uid: string, previousNames: string[], publicName: string) => {
+      setActions((current) =>
+        current.map((action) =>
+          action.createdBy === uid && previousNames.includes(action.organizerName)
+            ? { ...action, organizerName: publicName }
+            : action,
+        ),
+      );
+    },
+    [],
+  );
+
+  return { actions, phase, error, load, renameOrganizer };
 }

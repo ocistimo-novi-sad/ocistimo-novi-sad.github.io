@@ -21,6 +21,7 @@ import {
 } from 'firebase/firestore';
 import { requireAuth, requireDb } from './firebase';
 import { AppError } from './errors';
+import { publicNameOr } from './profile';
 import type {
   Category,
   ModerationState,
@@ -293,6 +294,30 @@ export async function fetchMyReports(uid: string): Promise<Report[]> {
   return mapSnapshots(snapshot.docs);
 }
 
+/**
+ * Rewrites the stored author snapshot after a public name change (#161), so
+ * older reports show the new name too. Firestore rules allow an author to
+ * change only createdByName; content and moderation state stay untouched.
+ */
+export async function updateOwnReportAuthorName(
+  uid: string,
+  publicName: string,
+): Promise<void> {
+  const db = requireDb();
+  const snapshot = await getDocs(
+    query(collection(db, 'reports'), where('createdBy', '==', uid), limit(500)),
+  );
+  const batch = writeBatch(db);
+  let changed = 0;
+  for (const document of snapshot.docs) {
+    if (document.get('createdByName') !== publicName) {
+      batch.update(document.ref, { createdByName: publicName });
+      changed += 1;
+    }
+  }
+  if (changed > 0) await batch.commit();
+}
+
 const QUEUE_LIMIT = 50;
 
 function pendingQuery() {
@@ -316,7 +341,7 @@ function moderationStamp(user: { uid: string; displayName: string | null }) {
   return {
     moderatedAt: serverTimestamp(),
     moderatedBy: user.uid,
-    moderatedByName: (user.displayName ?? 'Moderator').slice(0, 80),
+    moderatedByName: (publicNameOr(user.displayName) ?? 'Moderator').slice(0, 80),
   };
 }
 

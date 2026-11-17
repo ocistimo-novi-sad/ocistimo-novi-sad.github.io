@@ -1,18 +1,51 @@
 import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { LIMITS } from '../config';
 import { db, isFirebaseConfigured, requireDb } from './firebase';
+
+export interface EnsuredProfile {
+  /** The public author name, or null until the person picks one (#161). */
+  publicName: string | null;
+}
+
+// Mirrored from useAuth so service-layer name stamps ("Odobrio", "Organizator")
+// use the same public name as the rest of the app. It is per browser session,
+// like the signed-in Firebase user the services already rely on.
+let activePublicName: string | null = null;
+
+export function setActivePublicName(value: string | null): void {
+  activePublicName = value;
+}
+
+/** The public name when there is one, otherwise the Google display name. */
+export function publicNameOr(displayName: string | null): string | null {
+  return activePublicName ?? displayName;
+}
+
+/** A trimmed, single-spaced public name, capped at the allowed length. */
+export function cleanPublicName(value: string): string {
+  return value.trim().replace(/\s+/g, ' ').slice(0, LIMITS.publicNameMax);
+}
+
+function storedPublicName(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const cleaned = cleanPublicName(value);
+  return cleaned.length >= LIMITS.publicNameMin ? cleaned : null;
+}
 
 /**
  * Minimal profile. The e-mail address is private (readable by its owner and
  * admins) so admins can find people when assigning roles. Best effort:
- * failing here must never block sign-in or report creation.
+ * failing here must never block sign-in or report creation. Returns null when
+ * the profile could not be read or written, so the caller does not mistake an
+ * offline failure for a person who has not chosen a public name yet.
  */
 export async function ensureProfile(
   uid: string,
   displayName: string,
   email: string | null,
   photoURL: string | null,
-): Promise<void> {
-  if (!isFirebaseConfigured || !db) return;
+): Promise<EnsuredProfile | null> {
+  if (!isFirebaseConfigured || !db) return { publicName: null };
   try {
     const reference = doc(db, 'users', uid);
     const snapshot = await getDoc(reference);
@@ -25,14 +58,25 @@ export async function ensureProfile(
     if (photoURL) payload.photoURL = photoURL;
 
     if (snapshot.exists()) {
+      const publicName = storedPublicName(snapshot.get('publicName'));
       await updateDoc(reference, payload);
-      return;
+      return { publicName };
     }
 
     await setDoc(reference, { ...payload, createdAt: serverTimestamp() });
+    return { publicName: null };
   } catch {
     // Profiles are non-essential; ignore permission or offline errors.
+    return null;
   }
+}
+
+/** Saves the name shown with the person's reports and actions (#161). */
+export async function savePublicName(uid: string, publicName: string): Promise<void> {
+  await updateDoc(doc(requireDb(), 'users', uid), {
+    publicName: cleanPublicName(publicName),
+    lastSeenAt: serverTimestamp(),
+  });
 }
 
 /**

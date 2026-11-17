@@ -67,6 +67,7 @@ export async function listUsers(): Promise<UserProfile[]> {
     return {
       uid: document.id,
       displayName: asOptionalString(data.displayName) ?? 'Član zajednice',
+      publicName: asOptionalString(data.publicName),
       email: asOptionalString(data.email),
       photoURL: asOptionalString(data.photoURL),
       createdAt: asDate(data.createdAt),
@@ -90,7 +91,7 @@ export async function setModerator(user: UserProfile, enabled: boolean): Promise
   }
 
   const payload: Record<string, unknown> = {
-    displayName: user.displayName.slice(0, 80),
+    displayName: (user.publicName ?? user.displayName).slice(0, 80),
     addedBy: admin.uid,
     addedAt: serverTimestamp(),
   };

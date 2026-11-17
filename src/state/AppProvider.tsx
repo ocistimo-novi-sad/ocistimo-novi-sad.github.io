@@ -14,9 +14,10 @@ import { useActions } from '../hooks/useActions';
 import { isUpcomingAction } from '../lib/counts';
 import { isInServiceArea, isWithinBounds } from '../lib/geo';
 import { distanceInMeters } from '../lib/geo';
-import { toSerbianError } from '../services/errors';
+import { AppError, toSerbianError } from '../services/errors';
 import { isFirebaseConfigured } from '../services/firebase';
-import { deleteActionRecord } from '../services/actions';
+import { deleteActionRecord, syncActionOrganizerName } from '../services/actions';
+import { cleanPublicName } from '../services/profile';
 import { droppedImages, removeImages } from '../services/images';
 import {
   acceptEdit,
@@ -35,6 +36,7 @@ import {
   revertEdit,
   submitResolution,
   updateOwnReport,
+  updateOwnReportAuthorName,
   updateReportAsModerator,
   updateReportStatus,
   type ResolveKind,
@@ -110,6 +112,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateReport,
     upsertReport,
     removeReport,
+    renameAuthor,
   } = useReports();
 
   // The signed-in author's own reports, published or not. Kept apart from the
@@ -135,6 +138,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     phase: actionsPhase,
     error: actionsError,
     load: loadActions,
+    renameOrganizer,
   } = useActions();
 
   const [layer, setLayerState] = useState<Layer>('reports');
@@ -178,6 +182,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const composeOpenRef = useRef(false);
   const positionRequestRef = useRef<Promise<PositionFix | null> | null>(null);
   const pendingIntentRef = useRef<PendingIntent | null>(null);
+  // The first-login name dialog is offered once per session; a person who
+  // closes it is asked again on the next sign-in.
+  const namePromptedRef = useRef(false);
   const toastTimers = useRef<Map<string, number>>(new Map());
   const toastCounter = useRef(0);
   const deepLinkRef = useRef<string | null>(
@@ -209,6 +216,60 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (timer) window.clearTimeout(timer);
     toastTimers.current.delete(id);
   }, []);
+
+  /**
+   * Saves the public author name and rewrites the name snapshot on the
+   * person's existing reports and actions (#161), so an older Google name does
+   * not stay visible next to their content.
+   */
+  const savePublicName = useCallback(
+    async (value: string): Promise<void> => {
+      const user = auth.user;
+      if (!user) throw new AppError('unauthenticated', 'Uloguj se ponovo.');
+
+      const name = cleanPublicName(value);
+      const previousNames = [
+        auth.publicName,
+        user.displayName,
+      ].filter((item): item is string => Boolean(item));
+
+      await auth.updatePublicName(name);
+      renameAuthor(user.uid, name);
+      setMyReports((current) =>
+        current.map((report) =>
+          report.createdBy === user.uid ? { ...report, createdByName: name } : report,
+        ),
+      );
+
+      try {
+        await updateOwnReportAuthorName(user.uid, name);
+      } catch {
+        notify('error', 'Ime je sačuvano, ali starije prijave nisu ažurirane.');
+      }
+
+      if (auth.isModerator) {
+        try {
+          await syncActionOrganizerName(user.uid, previousNames, name);
+          renameOrganizer(user.uid, previousNames, name);
+        } catch {
+          // The organizer field stays as it was; it can be edited with the action.
+        }
+      }
+    },
+    [auth, notify, renameAuthor, renameOrganizer],
+  );
+
+  // First sign-in: ask for the public name before the person creates anything.
+  useEffect(() => {
+    if (!isFirebaseConfigured) return;
+    if (!auth.user) {
+      namePromptedRef.current = false;
+      return;
+    }
+    if (!auth.profileReady || auth.publicName || namePromptedRef.current) return;
+    namePromptedRef.current = true;
+    setModal({ kind: 'profile', mode: 'first' });
+  }, [auth.profileReady, auth.publicName, auth.user]);
 
   const flyTo = useCallback(
     (
@@ -753,7 +814,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         rejectionReason: undefined,
         moderatedAt: new Date(),
         moderatedBy: auth.user?.uid,
-        moderatedByName: auth.user?.displayName ?? undefined,
+        moderatedByName: auth.publicName ?? auth.user?.displayName ?? undefined,
       });
       if (report.moderation === 'pending') {
         setPendingCount((count) => Math.max(0, count - 1));
@@ -778,7 +839,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         rejectionReason: reason,
         moderatedAt: new Date(),
         moderatedBy: auth.user?.uid,
-        moderatedByName: auth.user?.displayName ?? undefined,
+        moderatedByName: auth.publicName ?? auth.user?.displayName ?? undefined,
       });
       if (report.moderation === 'pending') {
         setPendingCount((count) => Math.max(0, count - 1));
@@ -792,7 +853,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     (): Partial<Report> => ({
       moderatedAt: new Date(),
       moderatedBy: auth.user?.uid,
-      moderatedByName: auth.user?.displayName ?? undefined,
+      moderatedByName: auth.publicName ?? auth.user?.displayName ?? undefined,
     }),
     [auth.user],
   );
@@ -1243,6 +1304,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       editReport,
       submitReportEdit,
       deleteReport,
+      savePublicName,
       myReports,
       myUnpublishedReports,
       reloadMyReports,
@@ -1330,6 +1392,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       editReport,
       submitReportEdit,
       deleteReport,
+      savePublicName,
       myReports,
       myUnpublishedReports,
       reloadMyReports,

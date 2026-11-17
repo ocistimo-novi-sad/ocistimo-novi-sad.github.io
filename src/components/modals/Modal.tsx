@@ -9,6 +9,7 @@ export function Modal({
   children,
   footer,
   size = 'md',
+  dismissible = true,
 }: {
   title: string;
   description?: string;
@@ -16,6 +17,8 @@ export function Modal({
   children: ReactNode;
   footer?: ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  /** A required first-run dialog ignores Escape, the backdrop and the X. */
+  dismissible?: boolean;
 }) {
   const titleId = useId();
   const descriptionId = useId();
@@ -44,7 +47,7 @@ export function Modal({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.stopPropagation();
-        closeRef.current();
+        if (dismissible) closeRef.current();
         return;
       }
       if (event.key !== 'Tab') return;
@@ -69,13 +72,13 @@ export function Modal({
       document.removeEventListener('keydown', handleKeyDown, true);
       previous?.focus();
     };
-  }, []);
+  }, [dismissible]);
 
   return createPortal(
     <div
       className="modal-overlay"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (dismissible && event.target === event.currentTarget) onClose();
       }}
     >
       <div
@@ -92,9 +95,11 @@ export function Modal({
             <h2 id={titleId}>{title}</h2>
             {description ? <p id={descriptionId}>{description}</p> : null}
           </div>
-          <button type="button" className="modal__close" onClick={onClose} aria-label="Zatvori">
-            <X size={16} aria-hidden="true" />
-          </button>
+          {dismissible ? (
+            <button type="button" className="modal__close" onClick={onClose} aria-label="Zatvori">
+              <X size={16} aria-hidden="true" />
+            </button>
+          ) : null}
         </header>
         <div className="modal__body">{children}</div>
         {footer ? <footer className="modal__foot">{footer}</footer> : null}

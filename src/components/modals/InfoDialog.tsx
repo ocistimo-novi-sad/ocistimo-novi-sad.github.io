@@ -78,7 +78,10 @@ export function InfoDialog() {
 
       <div className="info-block">
         <h4>Podaci i privatnost</h4>
-        <p>Prijave su javne. Uz prijavu se prikazuje ime iz naloga, ali ne i mejl adresa.</p>
+        <p>
+          Prijave su javne. Uz prijavu se prikazuje javno ime koje sam izabereš, ali ne i mejl
+          adresa.
+        </p>
       </div>
 
       <p className="info-links">

@@ -30,6 +30,7 @@ export type ModalState =
   | { kind: 'admin'; editActionId?: string }
   | { kind: 'action-form'; action?: CleanupAction }
   | { kind: 'moderation' }
+  | { kind: 'profile'; mode: 'first' | 'edit' }
   | { kind: 'my-reports' }
   | { kind: 'resolve'; reportId: string }
   | { kind: 'lightbox'; images: string[]; index: number }
@@ -111,6 +112,9 @@ export interface AppContextValue {
   /** Saves an edit; throws so the form can show the error. */
   submitReportEdit: (report: Report, content: ReportContent) => Promise<void>;
   deleteReport: (report: Report) => Promise<void>;
+
+  /** Saves the public author name and renames the person's existing entries. */
+  savePublicName: (name: string) => Promise<void>;
 
   /** The signed-in author's reports, published or not. */
   myReports: Report[];

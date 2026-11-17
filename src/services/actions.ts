@@ -19,6 +19,7 @@ import { ACTION_REPORT_STATUS } from '../config';
 import { requireAuth, requireDb } from './firebase';
 import { AppError } from './errors';
 import { removeImages } from './images';
+import { publicNameOr } from './profile';
 import { resolveChanges, resolveDroppedImages, resolveKind } from './reports';
 import type { ActionStatus, CleanupAction, NewActionInput, ReportStatus } from '../types';
 
@@ -91,6 +92,32 @@ export async function fetchActions(): Promise<CleanupAction[]> {
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
+/**
+ * Rewrites the organizer name on actions the person created, but only where it
+ * still matches their old display name. A custom organization name is kept.
+ * Only moderators and admins create actions, which the rules already check.
+ */
+export async function syncActionOrganizerName(
+  uid: string,
+  previousNames: string[],
+  publicName: string,
+): Promise<void> {
+  const db = requireDb();
+  const snapshot = await getDocs(
+    query(collection(db, 'actions'), where('createdBy', '==', uid), limit(100)),
+  );
+  const batch = writeBatch(db);
+  let changed = 0;
+  for (const document of snapshot.docs) {
+    const organizer = asString(document.get('organizerName'));
+    if (organizer !== publicName && previousNames.includes(organizer)) {
+      batch.update(document.ref, { organizerName: publicName, updatedBy: uid });
+      changed += 1;
+    }
+  }
+  if (changed > 0) await batch.commit();
+}
+
 function actionPayload(input: NewActionInput): Record<string, unknown> {
   return {
     title: input.title,
@@ -123,7 +150,7 @@ function moderationStamp(user: ActionUser) {
   return {
     moderatedAt: serverTimestamp(),
     moderatedBy: user.uid,
-    moderatedByName: (user.displayName ?? 'Administrator').slice(0, 80),
+    moderatedByName: (publicNameOr(user.displayName) ?? 'Administrator').slice(0, 80),
   };
 }
 

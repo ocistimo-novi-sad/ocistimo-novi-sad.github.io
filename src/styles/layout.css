@@ -193,6 +193,11 @@
   white-space: nowrap;
 }
 
+.account__email strong {
+  color: var(--ink-2);
+  font-weight: 700;
+}
+
 .account__role {
   align-self: flex-start;
   margin-top: 4px;

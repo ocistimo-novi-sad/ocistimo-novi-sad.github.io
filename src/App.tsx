@@ -16,6 +16,7 @@ import { AuthDialog } from './components/modals/AuthDialog';
 import { FlagDialog } from './components/modals/FlagDialog';
 import { InfoDialog } from './components/modals/InfoDialog';
 import { Lightbox } from './components/modals/Lightbox';
+import { ProfileDialog } from './components/modals/ProfileDialog';
 import { ResolveDialog } from './components/modals/ResolveDialog';
 import { AppProvider } from './state/AppProvider';
 import { useApp } from './state/app-context';
@@ -37,6 +38,8 @@ function ModalHost() {
       return <ActionFormDialog />;
     case 'moderation':
       return <ModerationPanel />;
+    case 'profile':
+      return <ProfileDialog mode={modal.mode} />;
     case 'my-reports':
       return <MyReportsPanel />;
     case 'resolve':

@@ -71,7 +71,7 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 - **Uloga se proverava pri prijavi i pri učitavanju stranice.** Ako administrator nekome dodeli ili oduzme ulogu moderatora, ta osoba novi meni vidi kada ponovo učita stranicu. Oduzeta prava prestaju da rade odmah, čak i ako je stari meni još na ekranu.
 - **Administrator je u spisku korisnika zaključan** (ikonica katanca). Ne može mu se promeniti uloga iz aplikacije.
 - **Moderatori ne vide spisak korisnika** niti tuđe adrese e-pošte.
-- **Javno se prikazuje samo ime** iz Google naloga uz prijavu. Adresa e-pošte se nikada ne prikazuje javno; vide je samo vlasnik naloga i administratori.
+- **Javno se prikazuje samo javno ime** koje korisnik izabere pri prvom logovanju. Adresa e-pošte se nikada ne prikazuje javno; vide je samo vlasnik naloga i administratori.
 - **Moderator i administrator nisu iznad pravila za sopstvene prijave**: i njihova nova prijava ide na pregled. Mogu je, međutim, sami odobriti.
 - **Izmena moderatora ne ide na pregled, ni za sopstvenu prijavu.** Kao i kod tuđih prijava (UC-19), izmena se primenjuje odmah. Prijava koja je na pregledu ili odbijena ostaje u tom stanju dok je neko ne odobri; UC-08 i UC-09 važe samo za članove zajednice.
 
@@ -92,7 +92,8 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 
 | Stavka | Ko je vidi | Šta otvara |
 |---|---|---|
-| Ime, e-pošta, oznaka uloge | Svi prijavljeni (oznaka samo za moderatora/administratora) | — |
+| Javno ime, e-pošta (javno ime je boldovano u zagradi), oznaka uloge | Svi prijavljeni (oznaka samo za moderatora/administratora) | — |
+| **Lični podaci** | Svi prijavljeni | Dijalog za promenu javnog imena koje se prikazuje uz prijave i akcije. |
 | **Moje prijave** | Svi prijavljeni | Lista sopstvenih prijava i njihovog stanja. Crveni broj = prijave koje treba ispraviti. |
 | **Moderacija** | Moderator, administrator | Redovi za pregled: Nove prijave, Izmene, Sanacije, Označen sadržaj. Broj = nove prijave, izmene i sanacije koje čekaju (označen sadržaj se ne broji). |
 | **Administracija** (moderatoru: „Akcije čišćenja“) | Moderator, administrator | Akcije čišćenja; Korisnici i uloge (samo administrator) |
@@ -260,8 +261,9 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
 - **Tok:**
   1. Otvara se prozor „Uloguj se da nastaviš“ sa objašnjenjem zašto je nalog potreban.
   2. „Nastavi sa Google“ → izbor Google naloga.
-  3. Aplikacija čuva ime, profilnu sliku i adresu e-pošte iz Google naloga. Na tu adresu stižu obaveštenja.
-  4. Ako je prijava pokrenuta iz neke radnje, ta radnja se nastavlja (otvara se forma za prijavu ili prozor za prijavu sadržaja).
+  3. Aplikacija čuva Google ime, profilnu sliku i adresu e-pošte. Na tu adresu stižu obaveštenja.
+  4. Pri prvom logovanju otvara se dijalog „Lični podaci“ sa poljem „Javno ime“. Ime je obavezno i koristi se kao ime autora svih prijava i akcija; kasnije se menja iz menija naloga.
+  5. Ako je prijava pokrenuta iz neke radnje, ta radnja se nastavlja (otvara se forma za prijavu ili prozor za prijavu sadržaja).
 - **Alternativno:** ako pregledač blokira iskačući prozor, prijava se obavlja preusmeravanjem na Google stranicu.
 
 ---

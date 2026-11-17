@@ -320,7 +320,7 @@ export function ComposeDrawer() {
       latitude: composeLocation.latitude,
       longitude: composeLocation.longitude,
       address: address.trim() || undefined,
-      createdByName: auth.user?.displayName ?? undefined,
+      createdByName: auth.publicName ?? auth.user?.displayName ?? undefined,
     };
 
     try {
