@@ -17,7 +17,6 @@ import { distanceInMeters } from '../lib/geo';
 import { AppError, toSerbianError } from '../services/errors';
 import { isFirebaseConfigured } from '../services/firebase';
 import { deleteActionRecord, syncActionOrganizerName } from '../services/actions';
-import { cleanPublicName } from '../services/profile';
 import { droppedImages, removeImages } from '../services/images';
 import {
   acceptEdit,
@@ -138,7 +137,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     phase: actionsPhase,
     error: actionsError,
     load: loadActions,
-    renameOrganizer,
   } = useActions();
 
   const [layer, setLayerState] = useState<Layer>('reports');
@@ -227,49 +225,64 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const user = auth.user;
       if (!user) throw new AppError('unauthenticated', 'Uloguj se ponovo.');
 
-      const name = cleanPublicName(value);
-      const previousNames = [
-        auth.publicName,
-        user.displayName,
-      ].filter((item): item is string => Boolean(item));
-
-      await auth.updatePublicName(name);
-      renameAuthor(user.uid, name);
-      setMyReports((current) =>
-        current.map((report) =>
-          report.createdBy === user.uid ? { ...report, createdByName: name } : report,
-        ),
+      const previousNames = [auth.publicName, user.displayName].filter(
+        (item): item is string => Boolean(item),
       );
+      const name = await auth.updatePublicName(value);
 
+      // Rename the local copies only after the database write succeeded, or
+      // the UI would show a name that a reload takes away again.
+      let reportsSynced = true;
       try {
         await updateOwnReportAuthorName(user.uid, name);
       } catch {
-        notify('error', 'Ime je sačuvano, ali starije prijave nisu ažurirane.');
+        reportsSynced = false;
+      }
+      if (reportsSynced) {
+        renameAuthor(user.uid, name);
+        setMyReports((current) =>
+          current.map((report) =>
+            report.createdBy === user.uid ? { ...report, createdByName: name } : report,
+          ),
+        );
       }
 
+      let actionsSynced = true;
       if (auth.isModerator) {
         try {
-          await syncActionOrganizerName(user.uid, previousNames, name);
-          renameOrganizer(user.uid, previousNames, name);
+          const result = await syncActionOrganizerName(user.uid, previousNames, name);
+          actionsSynced = result.failed === 0;
+          if (result.updated > 0) await loadActions();
         } catch {
-          // The organizer field stays as it was; it can be edited with the action.
+          actionsSynced = false;
         }
       }
+
+      if (!reportsSynced) {
+        notify('error', 'Ime je sačuvano, ali starije prijave nisu ažurirane.');
+      } else if (!actionsSynced) {
+        notify('info', 'Ime je sačuvano. Starije akcije možda nisu ažurirane.');
+      } else {
+        notify('success', 'Lični podaci su sačuvani.');
+      }
     },
-    [auth, notify, renameAuthor, renameOrganizer],
+    [auth, loadActions, notify, renameAuthor],
   );
 
   // First sign-in: ask for the public name before the person creates anything.
+  // While another dialog is open (for example a flag from the sign-in intent),
+  // wait instead of replacing it.
   useEffect(() => {
     if (!isFirebaseConfigured) return;
     if (!auth.user) {
       namePromptedRef.current = false;
       return;
     }
+    if (modal !== null) return;
     if (!auth.profileReady || auth.publicName || namePromptedRef.current) return;
     namePromptedRef.current = true;
     setModal({ kind: 'profile', mode: 'first' });
-  }, [auth.profileReady, auth.publicName, auth.user]);
+  }, [auth.profileReady, auth.publicName, auth.user, modal]);
 
   const flyTo = useCallback(
     (
@@ -765,14 +778,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     async (reportId: string, status: ReportStatus) => {
       try {
         await updateReportStatus(reportId, status);
-        updateReport(reportId, { status, moderatedAt: new Date() });
+        updateReport(reportId, {
+          status,
+          moderatedAt: new Date(),
+          moderatedBy: auth.user?.uid,
+          moderatedByName: auth.publicName ?? 'Moderator',
+        });
         notify('success', 'Status prijave je ažuriran.');
       } catch (error) {
         notify('error', toSerbianError(error, 'Status nije moguće sačuvati.'));
         throw error;
       }
     },
-    [notify, updateReport],
+    [auth.publicName, auth.user, notify, updateReport],
   );
 
   const refreshModerationCounts = useCallback(async () => {
@@ -814,14 +832,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         rejectionReason: undefined,
         moderatedAt: new Date(),
         moderatedBy: auth.user?.uid,
-        moderatedByName: auth.publicName ?? auth.user?.displayName ?? undefined,
+        moderatedByName: auth.publicName ?? 'Moderator',
       });
       if (report.moderation === 'pending') {
         setPendingCount((count) => Math.max(0, count - 1));
       }
       notify('success', 'Prijava je odobrena i objavljena na mapi.');
     },
-    [applyReport, auth.user, notify],
+    [applyReport, auth.publicName, auth.user, notify],
   );
 
   const rejectPendingReport = useCallback(
@@ -839,23 +857,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
         rejectionReason: reason,
         moderatedAt: new Date(),
         moderatedBy: auth.user?.uid,
-        moderatedByName: auth.publicName ?? auth.user?.displayName ?? undefined,
+        moderatedByName: auth.publicName ?? 'Moderator',
       });
       if (report.moderation === 'pending') {
         setPendingCount((count) => Math.max(0, count - 1));
       }
       notify('success', 'Prijava je odbijena. Autor vidi razlog u aplikaciji.');
     },
-    [applyReport, auth.user, notify],
+    [applyReport, auth.publicName, auth.user, notify],
   );
 
   const moderatorStamp = useCallback(
     (): Partial<Report> => ({
       moderatedAt: new Date(),
       moderatedBy: auth.user?.uid,
-      moderatedByName: auth.publicName ?? auth.user?.displayName ?? undefined,
+      moderatedByName: auth.publicName ?? 'Moderator',
     }),
-    [auth.user],
+    [auth.publicName, auth.user],
   );
 
   const submitReportEdit = useCallback(
