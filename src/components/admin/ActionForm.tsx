@@ -76,7 +76,7 @@ export function ActionForm({
   const [status, setStatus] = useState<ActionStatus>(action?.status ?? 'planned');
   const [suppliesText, setSuppliesText] = useState(action?.supplies.join('\n') ?? '');
   const [organizerName, setOrganizerName] = useState(
-    action?.organizerName ?? auth.publicName ?? auth.user?.displayName ?? '',
+    action?.organizerName ?? auth.publicName ?? '',
   );
   const [organizerNote, setOrganizerNote] = useState(action?.organizerNote ?? '');
   const [selectedReports, setSelectedReports] = useState<string[]>(action?.reportIds ?? []);
