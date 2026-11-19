@@ -138,6 +138,7 @@ export function ComposeDrawer() {
     flyTo,
     notify,
     auth,
+    openModal,
     mapRef,
     locating,
     locateForCompose,
@@ -297,6 +298,14 @@ export function ComposeDrawer() {
       return;
     }
 
+    // Never publish a new report under the Google name. The first-login
+    // dialog normally prevents this; it also covers a failed profile read.
+    if (isFirebaseConfigured && !editing && !auth.publicName) {
+      setSubmitError('Prvo izaberi javno ime u „Ličnim podacima“.');
+      openModal({ kind: 'profile', mode: 'first' });
+      return;
+    }
+
     setSubmitting(true);
     setSubmitError(null);
     setConfirmClose(false);
@@ -320,7 +329,7 @@ export function ComposeDrawer() {
       latitude: composeLocation.latitude,
       longitude: composeLocation.longitude,
       address: address.trim() || undefined,
-      createdByName: auth.publicName ?? auth.user?.displayName ?? undefined,
+      createdByName: auth.publicName ?? undefined,
     };
 
     try {
