@@ -25,6 +25,8 @@ export function Modal({
   const panelRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
+  const dismissibleRef = useRef(dismissible);
+  dismissibleRef.current = dismissible;
 
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
@@ -47,7 +49,7 @@ export function Modal({
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.stopPropagation();
-        if (dismissible) closeRef.current();
+        if (dismissibleRef.current) closeRef.current();
         return;
       }
       if (event.key !== 'Tab') return;
@@ -72,7 +74,7 @@ export function Modal({
       document.removeEventListener('keydown', handleKeyDown, true);
       previous?.focus();
     };
-  }, [dismissible]);
+  }, []);
 
   return createPortal(
     <div
