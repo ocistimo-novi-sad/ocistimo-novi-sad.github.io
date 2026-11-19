@@ -16,20 +16,26 @@ export function setActivePublicName(value: string | null): void {
   activePublicName = value;
 }
 
-/** The public name when there is one, otherwise the Google display name. */
-export function publicNameOr(displayName: string | null): string | null {
-  return activePublicName ?? displayName;
+/** The public name, or null if the person has not chosen one yet. */
+export function currentPublicName(): string | null {
+  return activePublicName;
+}
+
+/** Counts characters, not UTF-16 units, matching Firestore's string size. */
+export function publicNameLength(value: string): number {
+  return Array.from(value).length;
 }
 
 /** A trimmed, single-spaced public name, capped at the allowed length. */
 export function cleanPublicName(value: string): string {
-  return value.trim().replace(/\s+/g, ' ').slice(0, LIMITS.publicNameMax);
+  const normalised = value.trim().replace(/\s+/g, ' ');
+  return Array.from(normalised).slice(0, LIMITS.publicNameMax).join('');
 }
 
 function storedPublicName(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const cleaned = cleanPublicName(value);
-  return cleaned.length >= LIMITS.publicNameMin ? cleaned : null;
+  return publicNameLength(cleaned) >= LIMITS.publicNameMin ? cleaned : null;
 }
 
 /**
@@ -59,7 +65,10 @@ export async function ensureProfile(
 
     if (snapshot.exists()) {
       const publicName = storedPublicName(snapshot.get('publicName'));
-      await updateDoc(reference, payload);
+      // Keep the already-read name even if this best-effort write fails or is
+      // waiting for the network. Otherwise a profile that was read correctly
+      // would look like one without a public name.
+      void updateDoc(reference, payload).catch(() => {});
       return { publicName };
     }
 
@@ -71,12 +80,14 @@ export async function ensureProfile(
   }
 }
 
-/** Saves the name shown with the person's reports and actions (#161). */
-export async function savePublicName(uid: string, publicName: string): Promise<void> {
+/** Saves the public name and returns the cleaned value that was stored. */
+export async function savePublicName(uid: string, publicName: string): Promise<string> {
+  const name = cleanPublicName(publicName);
   await updateDoc(doc(requireDb(), 'users', uid), {
-    publicName: cleanPublicName(publicName),
+    publicName: name,
     lastSeenAt: serverTimestamp(),
   });
+  return name;
 }
 
 /**

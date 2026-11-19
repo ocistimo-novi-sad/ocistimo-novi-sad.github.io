@@ -21,7 +21,7 @@ import {
 } from 'firebase/firestore';
 import { requireAuth, requireDb } from './firebase';
 import { AppError } from './errors';
-import { publicNameOr } from './profile';
+import { currentPublicName } from './profile';
 import type {
   Category,
   ModerationState,
@@ -307,15 +307,20 @@ export async function updateOwnReportAuthorName(
   const snapshot = await getDocs(
     query(collection(db, 'reports'), where('createdBy', '==', uid), limit(500)),
   );
-  const batch = writeBatch(db);
-  let changed = 0;
-  for (const document of snapshot.docs) {
-    if (document.get('createdByName') !== publicName) {
+  const changed = snapshot.docs.filter(
+    (document) => document.get('createdByName') !== publicName,
+  );
+  // Each report costs a profile lookup, and a failed author rule may also
+  // evaluate the moderator rule's two existence checks. Five writes per batch
+  // stay below Firestore's twenty-access-call limit for batched writes.
+  const CHUNK = 5;
+  for (let start = 0; start < changed.length; start += CHUNK) {
+    const batch = writeBatch(db);
+    for (const document of changed.slice(start, start + CHUNK)) {
       batch.update(document.ref, { createdByName: publicName });
-      changed += 1;
     }
+    await batch.commit();
   }
-  if (changed > 0) await batch.commit();
 }
 
 const QUEUE_LIMIT = 50;
@@ -337,11 +342,11 @@ export async function countPendingReports(): Promise<number> {
   return snapshot.data().count;
 }
 
-function moderationStamp(user: { uid: string; displayName: string | null }) {
+function moderationStamp(user: { uid: string }) {
   return {
     moderatedAt: serverTimestamp(),
     moderatedBy: user.uid,
-    moderatedByName: (publicNameOr(user.displayName) ?? 'Moderator').slice(0, 80),
+    moderatedByName: (currentPublicName() ?? 'Moderator').slice(0, 80),
   };
 }
 
@@ -615,7 +620,7 @@ export function resolveDroppedImages(report: ResolvableReport, kind: ResolveKind
  */
 export function resolveChanges(
   kind: ResolveKind,
-  user: { uid: string; displayName: string | null },
+  user: { uid: string },
 ): Record<string, unknown> {
   const proof =
     kind === 'confirm-proof'
