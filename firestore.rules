@@ -334,12 +334,15 @@ service cloud.firestore {
 
       // Author, case 4: the public author name changed in "Lični podaci"
       // (#161). It is only a display snapshot, so content and the moderation
-      // state stay untouched.
+      // state stay untouched. The value must be the profile's current name,
+      // not any string the client sends.
       allow update: if isOwner()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['createdByName'])
         && request.resource.data.createdByName is string
         && request.resource.data.createdByName.size() >= 2
-        && request.resource.data.createdByName.size() <= 60;
+        && request.resource.data.createdByName
+             == get(/databases/$(database)/documents/users/$(request.auth.uid))
+                  .data.get('publicName', '');
 
       // Moderators may change anything except authorship and creation time,
       // and every change is attributed to them.
