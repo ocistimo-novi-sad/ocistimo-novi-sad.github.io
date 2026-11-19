@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { UserRound } from 'lucide-react';
 import { LIMITS } from '../../config';
 import { toSerbianError } from '../../services/errors';
-import { cleanPublicName } from '../../services/profile';
+import { cleanPublicName, publicNameLength } from '../../services/profile';
 import { useApp } from '../../state/app-context';
 import { Spinner } from '../ui/EmptyState';
 import { Modal } from './Modal';
@@ -12,7 +12,7 @@ import { Modal } from './Modal';
  * account menu opens it later under "Lični podaci".
  */
 export function ProfileDialog({ mode }: { mode: 'first' | 'edit' }) {
-  const { auth, closeModal, savePublicName, notify } = useApp();
+  const { auth, closeModal, savePublicName } = useApp();
   const [name, setName] = useState(auth.publicName ?? '');
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -30,7 +30,7 @@ export function ProfileDialog({ mode }: { mode: 'first' | 'edit' }) {
       document.getElementById('public-name')?.focus();
       return;
     }
-    if (clean.length < LIMITS.publicNameMin) {
+    if (publicNameLength(clean) < LIMITS.publicNameMin) {
       setError(`Javno ime mora imati najmanje ${LIMITS.publicNameMin} znaka.`);
       document.getElementById('public-name')?.focus();
       return;
@@ -41,7 +41,6 @@ export function ProfileDialog({ mode }: { mode: 'first' | 'edit' }) {
     try {
       await savePublicName(clean);
       closeModal();
-      notify('success', first ? 'Javno ime je sačuvano.' : 'Lični podaci su sačuvani.');
     } catch (saveError) {
       setError(toSerbianError(saveError, 'Ime nije sačuvano. Pokušaj ponovo.'));
       setCanClose(true);
@@ -93,19 +92,22 @@ export function ProfileDialog({ mode }: { mode: 'first' | 'edit' }) {
         <div className="field__top">
           <label htmlFor="public-name">{label}</label>
           <span className="field__counter">
-            {clean.length}/{LIMITS.publicNameMax}
+            {publicNameLength(clean)}/{LIMITS.publicNameMax}
           </span>
         </div>
         <input
           id="public-name"
           type="text"
           value={name}
-          maxLength={LIMITS.publicNameMax}
+          maxLength={LIMITS.publicNameMax * 2}
           required
           autoComplete="nickname"
           placeholder="Na primer: Komšija sa Limana"
           onChange={(event) => {
-            setName(event.target.value);
+            // Count characters, not UTF-16 units, so an emoji is one character.
+            setName(
+              Array.from(event.target.value).slice(0, LIMITS.publicNameMax).join(''),
+            );
             if (error) setError(null);
           }}
           onKeyDown={(event) => {
