@@ -1331,6 +1331,34 @@
   margin-top: 8px;
 }
 
+.flag-row__count {
+  flex-shrink: 0;
+  color: var(--muted-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+/* Each flag on one report: reason, age and note. */
+.flag-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.flag-item {
+  padding-left: 8px;
+  border-left: 2px solid var(--line-strong);
+}
+
+.flag-item .flag-row__head {
+  margin-bottom: 0;
+}
+
+.flag-items + .reject-form {
+  margin-top: 10px;
+}
+
 .info-guide {
   margin: -8px 0 18px;
 }

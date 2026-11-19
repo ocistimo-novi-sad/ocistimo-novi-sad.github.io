@@ -27,7 +27,9 @@ import {
   deleteReportRecord,
   fetchMyReports,
   fetchReport,
+  keepFlaggedReport as keepFlaggedReportRecord,
   rejectReport as rejectReportRecord,
+  removeFlaggedReport as removeFlaggedReportRecord,
   rejectResolution,
   resolveDroppedImages,
   resolveKind,
@@ -788,6 +790,45 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [applyReport, auth.user, notify],
   );
 
+  const removeFlaggedReport = useCallback(
+    async (reportId: string, reason: string) => {
+      try {
+        await removeFlaggedReportRecord(reportId, reason);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Prijavu nije moguće ukloniti sa mape.'));
+        throw error;
+      }
+
+      // A report outside the loaded pages has nothing to update here.
+      const report = knownReports.find((item) => item.id === reportId);
+      if (report) {
+        applyReport({
+          ...report,
+          moderation: 'rejected',
+          rejectionReason: reason,
+          moderatedAt: new Date(),
+          moderatedBy: auth.user?.uid,
+          moderatedByName: auth.user?.displayName ?? undefined,
+        });
+      }
+      notify('success', 'Prijava je uklonjena sa mape. Autor vidi razlog u aplikaciji.');
+    },
+    [applyReport, auth.user, knownReports, notify],
+  );
+
+  const keepFlaggedReport = useCallback(
+    async (reportId: string) => {
+      try {
+        await keepFlaggedReportRecord(reportId);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Oznake nije moguće zatvoriti.'));
+        throw error;
+      }
+      notify('success', 'Oznake su zatvorene. Prijava ostaje na mapi.');
+    },
+    [notify],
+  );
+
   const moderatorStamp = useCallback(
     (): Partial<Report> => ({
       moderatedAt: new Date(),
@@ -1264,6 +1305,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       rejectPendingReport,
       acceptReportEdit,
       revertReportEdit,
+      removeFlaggedReport,
+      keepFlaggedReport,
       resolutionCount,
       submitReportResolution,
       approveReportResolution,
@@ -1350,6 +1393,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       rejectPendingReport,
       acceptReportEdit,
       revertReportEdit,
+      removeFlaggedReport,
+      keepFlaggedReport,
       resolutionCount,
       submitReportResolution,
       approveReportResolution,

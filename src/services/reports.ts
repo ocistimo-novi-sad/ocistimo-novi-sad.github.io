@@ -18,6 +18,7 @@ import {
   writeBatch,
   type DocumentData,
   type QueryDocumentSnapshot,
+  type WriteBatch,
 } from 'firebase/firestore';
 import { requireAuth, requireDb } from './firebase';
 import { AppError } from './errors';
@@ -443,23 +444,61 @@ export async function deleteReportRecord(reportId: string, asModerator: boolean)
   }
 
   const user = currentUser();
+  const batch = writeBatch(db);
+  batch.delete(reference);
+  await closeOpenFlags(batch, reportId, 'resolved', user.uid);
+  await batch.commit();
+}
+
+/** Adds the closing of every open content flag on a report to a batch. */
+async function closeOpenFlags(
+  batch: WriteBatch,
+  reportId: string,
+  status: 'dismissed' | 'resolved',
+  uid: string,
+): Promise<number> {
   const flags = await getDocs(
     query(
-      collection(db, 'flags'),
+      collection(requireDb(), 'flags'),
       where('reportId', '==', reportId),
       where('status', '==', 'open'),
     ),
   );
-  const batch = writeBatch(db);
-  batch.delete(reference);
   for (const flag of flags.docs) {
     batch.update(flag.ref, {
-      status: 'resolved',
+      status,
       reviewedAt: serverTimestamp(),
-      reviewedBy: user.uid,
+      reviewedBy: uid,
     });
   }
+  return flags.size;
+}
+
+/**
+ * Moderator agrees with the flags: the report leaves the map as rejected, with
+ * a reason the author sees, and its open flags close as resolved. The author
+ * can fix it and send it for review again.
+ */
+export async function removeFlaggedReport(reportId: string, reason: string): Promise<void> {
+  const db = requireDb();
+  const user = currentUser();
+  const batch = writeBatch(db);
+  batch.update(doc(db, 'reports', reportId), {
+    moderation: 'rejected',
+    rejectionReason: reason,
+    ...moderationStamp(user),
+  });
+  await closeOpenFlags(batch, reportId, 'resolved', user.uid);
   await batch.commit();
+}
+
+/** Moderator finds the report fine: its open flags close as dismissed. */
+export async function keepFlaggedReport(reportId: string): Promise<void> {
+  const db = requireDb();
+  const user = currentUser();
+  const batch = writeBatch(db);
+  const closed = await closeOpenFlags(batch, reportId, 'dismissed', user.uid);
+  if (closed > 0) await batch.commit();
 }
 
 function editsQuery() {
