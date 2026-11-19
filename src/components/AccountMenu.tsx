@@ -132,7 +132,6 @@ export function AccountMenu() {
       {open ? (
         <div className="account__menu" role="menu">
           <div className="account__identity">
-            <span className="account__name">{name}</span>
             <span className="account__email">
               {auth.user.email}
               {publicName ? (
