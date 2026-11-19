@@ -39,6 +39,7 @@ import {
   updateOwnReport,
   updateReportAsModerator,
   updateReportStatus,
+  type RemovedReport,
   type ResolveKind,
 } from '../services/reports';
 import {
@@ -790,45 +791,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [applyReport, auth.user, notify],
   );
 
-  const removeFlaggedReport = useCallback(
-    async (reportId: string, reason: string) => {
-      try {
-        await removeFlaggedReportRecord(reportId, reason);
-      } catch (error) {
-        notify('error', toSerbianError(error, 'Prijavu nije moguće ukloniti sa mape.'));
-        throw error;
-      }
-
-      // A report outside the loaded pages has nothing to update here.
-      const report = knownReports.find((item) => item.id === reportId);
-      if (report) {
-        applyReport({
-          ...report,
-          moderation: 'rejected',
-          rejectionReason: reason,
-          moderatedAt: new Date(),
-          moderatedBy: auth.user?.uid,
-          moderatedByName: auth.user?.displayName ?? undefined,
-        });
-      }
-      notify('success', 'Prijava je uklonjena sa mape. Autor vidi razlog u aplikaciji.');
-    },
-    [applyReport, auth.user, knownReports, notify],
-  );
-
-  const keepFlaggedReport = useCallback(
-    async (reportId: string) => {
-      try {
-        await keepFlaggedReportRecord(reportId);
-      } catch (error) {
-        notify('error', toSerbianError(error, 'Oznake nije moguće zatvoriti.'));
-        throw error;
-      }
-      notify('success', 'Oznake su zatvorene. Prijava ostaje na mapi.');
-    },
-    [notify],
-  );
-
   const moderatorStamp = useCallback(
     (): Partial<Report> => ({
       moderatedAt: new Date(),
@@ -836,6 +798,48 @@ export function AppProvider({ children }: { children: ReactNode }) {
       moderatedByName: auth.user?.displayName ?? undefined,
     }),
     [auth.user],
+  );
+
+  const removeFlaggedReport = useCallback(
+    async (reportId: string, reason: string) => {
+      let removed: RemovedReport;
+      try {
+        removed = await removeFlaggedReportRecord(reportId, reason);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Prijavu nije moguće ukloniti sa mape.'));
+        throw error;
+      }
+
+      if (!removed.found) {
+        dropReport(reportId);
+        notify('info', 'Prijava je već obrisana. Oznake su zatvorene.');
+        return;
+      }
+
+      // A report outside the loaded pages has nothing to update here.
+      const report = knownReports.find((item) => item.id === reportId);
+      if (report) {
+        applyReport({ ...report, ...removed.changes, ...moderatorStamp() });
+      }
+      void removeImages(removed.droppedImages);
+      if (removed.editClosed) setEditCount((count) => Math.max(0, count - 1));
+      if (removed.proofDropped) setResolutionCount((count) => Math.max(0, count - 1));
+      notify('success', 'Prijava je uklonjena sa mape. Autor vidi razlog u aplikaciji.');
+    },
+    [applyReport, dropReport, knownReports, moderatorStamp, notify],
+  );
+
+  const keepFlaggedReport = useCallback(
+    async (flagIds: string[]) => {
+      try {
+        await keepFlaggedReportRecord(flagIds);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Oznake nije moguće zatvoriti.'));
+        throw error;
+      }
+      notify('success', 'Oznake su zatvorene. Prijava ostaje na mapi.');
+    },
+    [notify],
   );
 
   const submitReportEdit = useCallback(

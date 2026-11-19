@@ -154,7 +154,7 @@ Status opisuje stanje problema na terenu. Menja ga moderator ručno; automatski 
 | **Rešeno** | Problem je uklonjen |
 | **Nije za akciju** | Problem nije pogodan za volontersko čišćenje |
 
-> Status akcije se automatski prenosi na sve povezane prijave: „Planirano“ → „Akcija planirana“, „U toku“ → „Akcija u toku“, „Završeno“ → „Rešeno“. Izuzetak su prijave „Rešeno“ i „Nije za akciju“: one zadržavaju svoj status pri svakom čuvanju akcije, osim ako im je taj status dala baš ta akcija (npr. završena akcija vraćena na „Planirano“ vraća i svoje prijave na „Akcija planirana“). „Rešeno“ od akcije radi isto kao kad prijavu reši moderator (UC-16, UC-17): dokaz sanacije koji čeka potvrdu se potvrđuje, a odbijen dokaz se briše. Kada se akcija otkaže ili obriše, ili se prijava ukloni iz nje, prijava se vraća na „Nova prijava“. Ako je prijava i u drugoj planiranoj akciji ili akciji u toku, dobija status te akcije (najbliže po datumu). Status koji je moderator ručno postavio (UC-18) se ne dira, kao ni „Rešeno“.
+> Status akcije se automatski prenosi na sve povezane objavljene prijave (prijava na pregledu ili uklonjena sa mape se preskače): „Planirano“ → „Akcija planirana“, „U toku“ → „Akcija u toku“, „Završeno“ → „Rešeno“. Izuzetak su prijave „Rešeno“ i „Nije za akciju“: one zadržavaju svoj status pri svakom čuvanju akcije, osim ako im je taj status dala baš ta akcija (npr. završena akcija vraćena na „Planirano“ vraća i svoje prijave na „Akcija planirana“). „Rešeno“ od akcije radi isto kao kad prijavu reši moderator (UC-16, UC-17): dokaz sanacije koji čeka potvrdu se potvrđuje, a odbijen dokaz se briše. Kada se akcija otkaže ili obriše, ili se prijava ukloni iz nje, prijava se vraća na „Nova prijava“. Ako je prijava i u drugoj planiranoj akciji ili akciji u toku, dobija status te akcije (najbliže po datumu). Status koji je moderator ručno postavio (UC-18) se ne dira, kao ni „Rešeno“.
 
 ### 4.3 Izmena objavljene prijave
 
@@ -351,7 +351,7 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
   1. Izbor razloga: Spam ili reklama; Dupla prijava; Netačna ili obmanjujuća prijava; Neprimeren sadržaj; Drugo.
   2. Opciona napomena.
   3. „Pošalji oznaku“ → „Oznaka je poslata administratorima.“
-- **Ograničenje:** jedan korisnik može istu prijavu da označi **samo jednom**. Drugi pokušaj javlja grešku.
+- **Ograničenje:** jedan korisnik može istu prijavu da označi **samo jednom dok moderator ne odluči**. Drugi pokušaj pre odluke javlja grešku. Kada moderator zatvori oznaku, isti korisnik može ponovo da označi prijavu (npr. kada je uklonjena prijava ispravljena i ponovo objavljena), i moderatori opet dobijaju E-5.
 - **E-pošta:** svim moderatorima i administratorima, osim onome ko je označio, **„Prijavljen sporan sadržaj“** (E-5). Autor označene prijave **ne dobija** obaveštenje, osim ako je i sam moderator ili administrator; tada dobija E-5 kao i ostali.
 
 ### UC-13 Odjava
@@ -437,7 +437,7 @@ Moderator ima sve što i član zajednice, plus stavku **Moderacija** u meniju na
 - **Tok:**
   1. Jedna kartica po prijavi: naslov, broj oznaka i, za svaku oznaku, razlog, koliko je stara i napomena. Najskorije označena prijava je prva.
   2. **Otvori prijavu** → detalji, gde moderator po potrebi izmeni ili trajno obriše prijavu (UC-19).
-  3. **Prijava je u redu** → oznake nisu opravdane. Prijava ostaje objavljena, a sve njene otvorene oznake se zatvaraju.
+  3. **Prijava je u redu** → oznake nisu opravdane. Prijava ostaje objavljena, a zatvaraju se oznake koje je moderator video. Oznaka koja je stigla u međuvremenu ostaje otvorena.
   4. **Ukloni sa mape…** → upis razloga (najmanje 10 znakova) ili izbor čestog razloga; prvo se nudi razlog koji odgovara razlogu oznaka:
      - Prijava je spam ili reklama.
      - Dupla prijava, problem je već prijavljen.
@@ -446,6 +446,12 @@ Moderator ima sve što i član zajednice, plus stavku **Moderacija** u meniju na
      - Prijava sadrži lične podatke.
 
      „Ukloni sa mape“ → prijava dobija stanje „Odbijena“ sa tim razlogom i nestaje sa mape, a sve njene otvorene oznake se zatvaraju. Autor vidi razlog u „Moje prijave“ i može da ispravi prijavu i ponovo je pošalje na pregled (UC-08). Moderator može i da je ipak odobri (UC-14).
+
+     Uklonjena prijava ne ostaje u drugim redovima i akcijama:
+     - izmena autora koja čeka pregled (UC-15) ostaje kao sadržaj prijave, a prethodna verzija se briše; ne šalje se E-13;
+     - dokaz sanacije koji čeka potvrdu (UC-16) se briše, zajedno sa fotografijama; ne šalje se E-9;
+     - status „Akcija planirana“ ili „Akcija u toku“ se vraća na „Nova prijava“. Akcija ne menja status prijavi koja nije objavljena, pa je završena akcija ne označava kao rešenu; kada se prijava ponovo objavi, sledeće čuvanje akcije joj ponovo daje status akcije.
+- **Obrisana prijava:** ako je autor obrisao prijavu, a oznake su ostale, „Ukloni sa mape“ samo zatvara oznake i javlja „Prijava je već obrisana. Oznake su zatvorene.“
 - **E-pošta:**
   - „Prijava je u redu“ ne šalje poruku ni onome ko je označio ni autoru;
   - „Ukloni sa mape“ šalje autoru **„Prijava je uklonjena sa mape“** sa razlogom (E-7). Onaj ko je označio ne dobija poruku.

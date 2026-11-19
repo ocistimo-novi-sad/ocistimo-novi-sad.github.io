@@ -143,8 +143,8 @@ export interface AppContextValue {
   revertReportEdit: (report: Report) => Promise<void>;
   /** Flags were right: the report leaves the map with a reason, its flags close. */
   removeFlaggedReport: (reportId: string, reason: string) => Promise<void>;
-  /** Flags were wrong: the report stays published, its flags close. */
-  keepFlaggedReport: (reportId: string) => Promise<void>;
+  /** Flags were wrong: the report stays published, the flags shown close. */
+  keepFlaggedReport: (flagIds: string[]) => Promise<void>;
 
   /** Proofs of a fix waiting for confirmation (moderators only). */
   resolutionCount: number;

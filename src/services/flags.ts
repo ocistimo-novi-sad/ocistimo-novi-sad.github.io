@@ -3,6 +3,7 @@ import {
   doc,
   getDocs,
   limit,
+  orderBy,
   query,
   serverTimestamp,
   setDoc,
@@ -65,11 +66,16 @@ function mapFlags(docs: { id: string; data: () => DocumentData }[]): ContentFlag
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
 
-/** Moderators: open flags, newest first. */
+/** Moderators: the 50 newest open flags, newest first. */
 export async function fetchOpenFlags(): Promise<ContentFlag[]> {
   const db = requireDb();
   const snapshot = await getDocs(
-    query(collection(db, 'flags'), where('status', '==', 'open'), limit(50)),
+    query(
+      collection(db, 'flags'),
+      where('status', '==', 'open'),
+      orderBy('createdAt', 'desc'),
+      limit(50),
+    ),
   );
   return mapFlags(snapshot.docs);
 }

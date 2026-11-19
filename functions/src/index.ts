@@ -1,7 +1,11 @@
 import { initializeApp } from 'firebase-admin/app';
 import { getFirestore, Timestamp, type DocumentData } from 'firebase-admin/firestore';
 import { setGlobalOptions } from 'firebase-functions';
-import { onDocumentCreated, onDocumentWritten } from 'firebase-functions/v2/firestore';
+import {
+  onDocumentCreated,
+  onDocumentUpdated,
+  onDocumentWritten,
+} from 'firebase-functions/v2/firestore';
 import { actionEvents, isForStaff, reportEvents } from './events.js';
 import { queueMail } from './mail.js';
 import { authorUids, reportAuthors, staffUids } from './recipients.js';
@@ -43,19 +47,34 @@ export const onReportWritten = onDocumentWritten('reports/{reportId}', async (ev
   }
 });
 
-export const onFlagCreated = onDocumentCreated('flags/{flagId}', async (event) => {
-  const flag = event.data?.data();
+/** Tells moderators about a new open flag. */
+async function announceFlag(mailId: string, flag: DocumentData | undefined): Promise<void> {
   const reportId = asString(flag?.reportId);
   if (!flag || !reportId) return;
 
   const report = await getFirestore().doc(`reports/${reportId}`).get();
-  await queueMail(event.id, {
+  await queueMail(mailId, {
     bccUids: await staffUids(asString(flag.createdBy)),
     message: flagMessage(summarize(reportId, report.data()), {
       reason: asString(flag.reason),
       note: asString(flag.note),
     }),
   });
+}
+
+export const onFlagCreated = onDocumentCreated('flags/{flagId}', async (event) => {
+  await announceFlag(event.id, event.data?.data());
+});
+
+/**
+ * A flag id is one per user per report, so flagging a report again after its
+ * flag was closed rewrites that flag as open. That is a new flag for moderators.
+ */
+export const onFlagReopened = onDocumentUpdated('flags/{flagId}', async (event) => {
+  const before = event.data?.before.data();
+  const after = event.data?.after.data();
+  if (before?.status === 'open' || after?.status !== 'open') return;
+  await announceFlag(event.id, after);
 });
 
 /** Authors of linked reports hear when an action is planned, moved or cancelled. */

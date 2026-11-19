@@ -90,7 +90,7 @@ export function FlagDecision({
           <button
             type="button"
             className="btn btn--quiet btn--sm"
-            onClick={() => void run(() => keepFlaggedReport(reportId))}
+            onClick={() => void run(() => keepFlaggedReport(flags.map((flag) => flag.id)))}
             disabled={busy}
           >
             {busy ? <Spinner size={12} /> : <Check size={12} aria-hidden="true" />}
