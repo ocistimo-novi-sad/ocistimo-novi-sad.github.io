@@ -10,7 +10,6 @@ import {
 } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from '../services/firebase';
 import {
-  cleanPublicName,
   ensureProfile,
   savePublicName as savePublicNameRecord,
   setActivePublicName,
@@ -52,9 +51,12 @@ export function useAuth() {
           return;
         }
 
+        const stillCurrent = () =>
+          !cancelled && auth?.currentUser?.uid === nextUser.uid;
+
         setProfileReady(false);
         void fetchRole(nextUser.uid).then((nextRole) => {
-          if (!cancelled) setRole(nextRole);
+          if (stillCurrent()) setRole(nextRole);
         });
         void ensureProfile(
           nextUser.uid,
@@ -62,7 +64,8 @@ export function useAuth() {
           nextUser.email,
           nextUser.photoURL,
         ).then((profile) => {
-          if (cancelled) return;
+          // A slow reply for user A must not overwrite user B after a switch.
+          if (!stillCurrent()) return;
           const name = profile?.publicName ?? null;
           setPublicName(name);
           setActivePublicName(name);
@@ -116,14 +119,14 @@ export function useAuth() {
     }
   }, []);
 
-  /** Saves the public author name and keeps it available to the whole app. */
+  /** Saves the public author name and returns the stored value. */
   const updatePublicName = useCallback(
-    async (value: string): Promise<void> => {
+    async (value: string): Promise<string> => {
       if (!user) throw new AppError('unauthenticated', 'Uloguj se ponovo.');
-      const name = cleanPublicName(value);
-      await savePublicNameRecord(user.uid, name);
+      const name = await savePublicNameRecord(user.uid, value);
       setPublicName(name);
       setActivePublicName(name);
+      return name;
     },
     [user],
   );
