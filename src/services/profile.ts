@@ -1,18 +1,57 @@
 import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
+import { LIMITS } from '../config';
 import { db, isFirebaseConfigured, requireDb } from './firebase';
+
+export interface EnsuredProfile {
+  /** The public author name, or null until the person picks one (#161). */
+  publicName: string | null;
+}
+
+// Mirrored from useAuth so service-layer name stamps ("Odobrio", "Organizator")
+// use the same public name as the rest of the app. It is per browser session,
+// like the signed-in Firebase user the services already rely on.
+let activePublicName: string | null = null;
+
+export function setActivePublicName(value: string | null): void {
+  activePublicName = value;
+}
+
+/** The public name, or null if the person has not chosen one yet. */
+export function currentPublicName(): string | null {
+  return activePublicName;
+}
+
+/** Counts characters, not UTF-16 units, matching Firestore's string size. */
+export function publicNameLength(value: string): number {
+  return Array.from(value).length;
+}
+
+/** A trimmed, single-spaced public name, capped at the allowed length. */
+export function cleanPublicName(value: string): string {
+  const normalised = value.trim().replace(/\s+/g, ' ');
+  return Array.from(normalised).slice(0, LIMITS.publicNameMax).join('');
+}
+
+function storedPublicName(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const cleaned = cleanPublicName(value);
+  return publicNameLength(cleaned) >= LIMITS.publicNameMin ? cleaned : null;
+}
 
 /**
  * Minimal profile. The e-mail address is private (readable by its owner and
  * admins) so admins can find people when assigning roles. Best effort:
- * failing here must never block sign-in or report creation.
+ * failing here must never block sign-in or report creation. Returns null when
+ * the profile could not be read or written, so the caller does not mistake an
+ * offline failure for a person who has not chosen a public name yet.
  */
 export async function ensureProfile(
   uid: string,
   displayName: string,
   email: string | null,
   photoURL: string | null,
-): Promise<void> {
-  if (!isFirebaseConfigured || !db) return;
+): Promise<EnsuredProfile | null> {
+  if (!isFirebaseConfigured || !db) return { publicName: null };
   try {
     const reference = doc(db, 'users', uid);
     const snapshot = await getDoc(reference);
@@ -25,14 +64,30 @@ export async function ensureProfile(
     if (photoURL) payload.photoURL = photoURL;
 
     if (snapshot.exists()) {
-      await updateDoc(reference, payload);
-      return;
+      const publicName = storedPublicName(snapshot.get('publicName'));
+      // Keep the already-read name even if this best-effort write fails or is
+      // waiting for the network. Otherwise a profile that was read correctly
+      // would look like one without a public name.
+      void updateDoc(reference, payload).catch(() => {});
+      return { publicName };
     }
 
     await setDoc(reference, { ...payload, createdAt: serverTimestamp() });
+    return { publicName: null };
   } catch {
     // Profiles are non-essential; ignore permission or offline errors.
+    return null;
   }
+}
+
+/** Saves the public name and returns the cleaned value that was stored. */
+export async function savePublicName(uid: string, publicName: string): Promise<string> {
+  const name = cleanPublicName(publicName);
+  await updateDoc(doc(requireDb(), 'users', uid), {
+    publicName: name,
+    lastSeenAt: serverTimestamp(),
+  });
+  return name;
 }
 
 /**

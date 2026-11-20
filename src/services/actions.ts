@@ -9,6 +9,7 @@ import {
   query,
   serverTimestamp,
   Timestamp,
+  updateDoc,
   where,
   writeBatch,
   type DocumentData,
@@ -19,6 +20,7 @@ import { ACTION_REPORT_STATUS } from '../config';
 import { requireAuth, requireDb } from './firebase';
 import { AppError } from './errors';
 import { removeImages } from './images';
+import { currentPublicName } from './profile';
 import { resolveChanges, resolveDroppedImages, resolveKind } from './reports';
 import type { ActionStatus, CleanupAction, NewActionInput, ReportStatus } from '../types';
 
@@ -91,6 +93,42 @@ export async function fetchActions(): Promise<CleanupAction[]> {
     .sort((a, b) => a.date.getTime() - b.date.getTime());
 }
 
+export interface ActionNameSync {
+  updated: number;
+  failed: number;
+}
+
+/**
+ * Rewrites the organizer name on actions the person created, but only where it
+ * still matches their old display name. A custom organization name is kept.
+ * Only moderators and admins create actions, which the rules already check.
+ */
+export async function syncActionOrganizerName(
+  uid: string,
+  previousNames: string[],
+  publicName: string,
+): Promise<ActionNameSync> {
+  const db = requireDb();
+  const snapshot = await getDocs(
+    query(collection(db, 'actions'), where('createdBy', '==', uid), limit(100)),
+  );
+  const targets = snapshot.docs.filter((document) => {
+    const organizer = asString(document.get('organizerName'));
+    return organizer !== publicName && previousNames.includes(organizer);
+  });
+  // Older actions may no longer satisfy the action validation rules. Updating
+  // them one by one keeps one such document from failing the whole rename.
+  const results = await Promise.allSettled(
+    targets.map((document) =>
+      updateDoc(document.ref, { organizerName: publicName, updatedBy: uid }),
+    ),
+  );
+  return {
+    updated: results.filter((result) => result.status === 'fulfilled').length,
+    failed: results.filter((result) => result.status === 'rejected').length,
+  };
+}
+
 function actionPayload(input: NewActionInput): Record<string, unknown> {
   return {
     title: input.title,
@@ -110,7 +148,6 @@ function actionPayload(input: NewActionInput): Record<string, unknown> {
 
 interface ActionUser {
   uid: string;
-  displayName: string | null;
 }
 
 /** Report statuses an action gives while it is still ahead or under way. */
@@ -123,7 +160,7 @@ function moderationStamp(user: ActionUser) {
   return {
     moderatedAt: serverTimestamp(),
     moderatedBy: user.uid,
-    moderatedByName: (user.displayName ?? 'Administrator').slice(0, 80),
+    moderatedByName: (currentPublicName() ?? 'Administrator').slice(0, 80),
   };
 }
 

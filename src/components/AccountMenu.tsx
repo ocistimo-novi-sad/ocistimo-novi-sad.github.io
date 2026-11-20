@@ -105,7 +105,8 @@ export function AccountMenu() {
     );
   }
 
-  const name = auth.user.displayName ?? 'Član zajednice';
+  const publicName = auth.publicName;
+  const name = publicName ?? auth.user.displayName ?? 'Član zajednice';
 
   return (
     <div className="account" ref={wrapperRef}>
@@ -131,14 +132,33 @@ export function AccountMenu() {
       {open ? (
         <div className="account__menu" role="menu">
           <div className="account__identity">
-            <span className="account__name">{name}</span>
-            <span className="account__email">{auth.user.email}</span>
+            <span className="account__email">
+              {auth.user.email}
+              {publicName ? (
+                <>
+                  {' '}
+                  (<strong>{publicName}</strong>)
+                </>
+              ) : null}
+            </span>
             {auth.role !== 'user' ? (
               <span className={`account__role account__role--${auth.role}`}>
                 {ROLE_LABELS[auth.role]}
               </span>
             ) : null}
           </div>
+          <button
+            type="button"
+            role="menuitem"
+            className="account__item"
+            onClick={() => {
+              setOpen(false);
+              openModal({ kind: 'profile', mode: 'edit' });
+            }}
+          >
+            <UserRound size={15} aria-hidden="true" />
+            Lični podaci
+          </button>
           <button
             type="button"
             role="menuitem"

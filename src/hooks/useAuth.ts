@@ -9,9 +9,13 @@ import {
   type User,
 } from 'firebase/auth';
 import { auth, isFirebaseConfigured } from '../services/firebase';
-import { ensureProfile } from '../services/profile';
+import {
+  ensureProfile,
+  savePublicName as savePublicNameRecord,
+  setActivePublicName,
+} from '../services/profile';
 import { fetchRole } from '../services/roles';
-import { errorCode, toSerbianError } from '../services/errors';
+import { AppError, errorCode, toSerbianError } from '../services/errors';
 import type { UserRole } from '../types';
 
 export function useAuth() {
@@ -20,6 +24,9 @@ export function useAuth() {
   const [ready, setReady] = useState(!isFirebaseConfigured);
   const [signingIn, setSigningIn] = useState(false);
   const [signInError, setSignInError] = useState<string | null>(null);
+  // Null until the person chooses one, or when the profile could not be read.
+  const [publicName, setPublicName] = useState<string | null>(null);
+  const [profileReady, setProfileReady] = useState(!isFirebaseConfigured);
 
   useEffect(() => {
     if (!isFirebaseConfigured || !auth) {
@@ -38,18 +45,33 @@ export function useAuth() {
 
         if (!nextUser) {
           setRole('user');
+          setPublicName(null);
+          setActivePublicName(null);
+          setProfileReady(true);
           return;
         }
 
+        const stillCurrent = () =>
+          !cancelled && auth?.currentUser?.uid === nextUser.uid;
+
+        setProfileReady(false);
         void fetchRole(nextUser.uid).then((nextRole) => {
-          if (!cancelled) setRole(nextRole);
+          if (stillCurrent()) setRole(nextRole);
         });
         void ensureProfile(
           nextUser.uid,
           nextUser.displayName ?? 'Član zajednice',
           nextUser.email,
           nextUser.photoURL,
-        );
+        ).then((profile) => {
+          // A slow reply for user A must not overwrite user B after a switch.
+          if (!stillCurrent()) return;
+          const name = profile?.publicName ?? null;
+          setPublicName(name);
+          setActivePublicName(name);
+          // A failed profile read must not look like a missing public name.
+          setProfileReady(profile !== null);
+        });
       },
       (error) => {
         if (cancelled) return;
@@ -97,6 +119,18 @@ export function useAuth() {
     }
   }, []);
 
+  /** Saves the public author name and returns the stored value. */
+  const updatePublicName = useCallback(
+    async (value: string): Promise<string> => {
+      if (!user) throw new AppError('unauthenticated', 'Uloguj se ponovo.');
+      const name = await savePublicNameRecord(user.uid, value);
+      setPublicName(name);
+      setActivePublicName(name);
+      return name;
+    },
+    [user],
+  );
+
   const signOutUser = useCallback(async (): Promise<void> => {
     if (!auth) return;
     await signOut(auth);
@@ -109,6 +143,9 @@ export function useAuth() {
     /** Admins hold every moderator right as well. */
     isModerator: role !== 'user',
     ready,
+    publicName,
+    profileReady,
+    updatePublicName,
     signingIn,
     signInError,
     signIn,

@@ -207,6 +207,8 @@ export const LIMITS = {
   rejectReasonMax: 500,
   resolutionNoteMax: 500,
   addressMax: 160,
+  publicNameMin: 2,
+  publicNameMax: 40,
   imagesMax: 3,
   /** Largest original accepted; photos are shrunk in the browser before upload. */
   imageMaxBytes: 20 * 1024 * 1024,

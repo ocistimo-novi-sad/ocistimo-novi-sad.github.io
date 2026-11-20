@@ -14,9 +14,9 @@ import { useActions } from '../hooks/useActions';
 import { isUpcomingAction } from '../lib/counts';
 import { isInServiceArea, isWithinBounds } from '../lib/geo';
 import { distanceInMeters } from '../lib/geo';
-import { toSerbianError } from '../services/errors';
+import { AppError, toSerbianError } from '../services/errors';
 import { isFirebaseConfigured } from '../services/firebase';
-import { deleteActionRecord } from '../services/actions';
+import { deleteActionRecord, syncActionOrganizerName } from '../services/actions';
 import { droppedImages, removeImages } from '../services/images';
 import {
   acceptEdit,
@@ -35,6 +35,7 @@ import {
   revertEdit,
   submitResolution,
   updateOwnReport,
+  updateOwnReportAuthorName,
   updateReportAsModerator,
   updateReportStatus,
   type ResolveKind,
@@ -110,6 +111,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateReport,
     upsertReport,
     removeReport,
+    renameAuthor,
   } = useReports();
 
   // The signed-in author's own reports, published or not. Kept apart from the
@@ -178,6 +180,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const composeOpenRef = useRef(false);
   const positionRequestRef = useRef<Promise<PositionFix | null> | null>(null);
   const pendingIntentRef = useRef<PendingIntent | null>(null);
+  // The first-login name dialog is offered once per session; a person who
+  // closes it is asked again on the next sign-in.
+  const namePromptedRef = useRef(false);
   const toastTimers = useRef<Map<string, number>>(new Map());
   const toastCounter = useRef(0);
   const deepLinkRef = useRef<string | null>(
@@ -209,6 +214,75 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (timer) window.clearTimeout(timer);
     toastTimers.current.delete(id);
   }, []);
+
+  /**
+   * Saves the public author name and rewrites the name snapshot on the
+   * person's existing reports and actions (#161), so an older Google name does
+   * not stay visible next to their content.
+   */
+  const savePublicName = useCallback(
+    async (value: string): Promise<void> => {
+      const user = auth.user;
+      if (!user) throw new AppError('unauthenticated', 'Uloguj se ponovo.');
+
+      const previousNames = [auth.publicName, user.displayName].filter(
+        (item): item is string => Boolean(item),
+      );
+      const name = await auth.updatePublicName(value);
+
+      // Rename the local copies only after the database write succeeded, or
+      // the UI would show a name that a reload takes away again.
+      let reportsSynced = true;
+      try {
+        await updateOwnReportAuthorName(user.uid, name);
+      } catch {
+        reportsSynced = false;
+      }
+      if (reportsSynced) {
+        renameAuthor(user.uid, name);
+        setMyReports((current) =>
+          current.map((report) =>
+            report.createdBy === user.uid ? { ...report, createdByName: name } : report,
+          ),
+        );
+      }
+
+      let actionsSynced = true;
+      if (auth.isModerator) {
+        try {
+          const result = await syncActionOrganizerName(user.uid, previousNames, name);
+          actionsSynced = result.failed === 0;
+          if (result.updated > 0) await loadActions();
+        } catch {
+          actionsSynced = false;
+        }
+      }
+
+      if (!reportsSynced) {
+        notify('error', 'Ime je sačuvano, ali starije prijave nisu ažurirane.');
+      } else if (!actionsSynced) {
+        notify('info', 'Ime je sačuvano. Starije akcije možda nisu ažurirane.');
+      } else {
+        notify('success', 'Lični podaci su sačuvani.');
+      }
+    },
+    [auth, loadActions, notify, renameAuthor],
+  );
+
+  // First sign-in: ask for the public name before the person creates anything.
+  // While another dialog is open (for example a flag from the sign-in intent),
+  // wait instead of replacing it.
+  useEffect(() => {
+    if (!isFirebaseConfigured) return;
+    if (!auth.user) {
+      namePromptedRef.current = false;
+      return;
+    }
+    if (modal !== null) return;
+    if (!auth.profileReady || auth.publicName || namePromptedRef.current) return;
+    namePromptedRef.current = true;
+    setModal({ kind: 'profile', mode: 'first' });
+  }, [auth.profileReady, auth.publicName, auth.user, modal]);
 
   const flyTo = useCallback(
     (
@@ -704,14 +778,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     async (reportId: string, status: ReportStatus) => {
       try {
         await updateReportStatus(reportId, status);
-        updateReport(reportId, { status, moderatedAt: new Date() });
+        updateReport(reportId, {
+          status,
+          moderatedAt: new Date(),
+          moderatedBy: auth.user?.uid,
+          moderatedByName: auth.publicName ?? 'Moderator',
+        });
         notify('success', 'Status prijave je ažuriran.');
       } catch (error) {
         notify('error', toSerbianError(error, 'Status nije moguće sačuvati.'));
         throw error;
       }
     },
-    [notify, updateReport],
+    [auth.publicName, auth.user, notify, updateReport],
   );
 
   const refreshModerationCounts = useCallback(async () => {
@@ -753,14 +832,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         rejectionReason: undefined,
         moderatedAt: new Date(),
         moderatedBy: auth.user?.uid,
-        moderatedByName: auth.user?.displayName ?? undefined,
+        moderatedByName: auth.publicName ?? 'Moderator',
       });
       if (report.moderation === 'pending') {
         setPendingCount((count) => Math.max(0, count - 1));
       }
       notify('success', 'Prijava je odobrena i objavljena na mapi.');
     },
-    [applyReport, auth.user, notify],
+    [applyReport, auth.publicName, auth.user, notify],
   );
 
   const rejectPendingReport = useCallback(
@@ -778,23 +857,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
         rejectionReason: reason,
         moderatedAt: new Date(),
         moderatedBy: auth.user?.uid,
-        moderatedByName: auth.user?.displayName ?? undefined,
+        moderatedByName: auth.publicName ?? 'Moderator',
       });
       if (report.moderation === 'pending') {
         setPendingCount((count) => Math.max(0, count - 1));
       }
       notify('success', 'Prijava je odbijena. Autor vidi razlog u aplikaciji.');
     },
-    [applyReport, auth.user, notify],
+    [applyReport, auth.publicName, auth.user, notify],
   );
 
   const moderatorStamp = useCallback(
     (): Partial<Report> => ({
       moderatedAt: new Date(),
       moderatedBy: auth.user?.uid,
-      moderatedByName: auth.user?.displayName ?? undefined,
+      moderatedByName: auth.publicName ?? 'Moderator',
     }),
-    [auth.user],
+    [auth.publicName, auth.user],
   );
 
   const submitReportEdit = useCallback(
@@ -1243,6 +1322,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       editReport,
       submitReportEdit,
       deleteReport,
+      savePublicName,
       myReports,
       myUnpublishedReports,
       reloadMyReports,
@@ -1330,6 +1410,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       editReport,
       submitReportEdit,
       deleteReport,
+      savePublicName,
       myReports,
       myUnpublishedReports,
       reloadMyReports,

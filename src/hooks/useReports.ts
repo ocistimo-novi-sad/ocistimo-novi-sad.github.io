@@ -102,6 +102,15 @@ export function useReports() {
     setReports((current) => current.filter((report) => report.id !== reportId));
   }, []);
 
+  /** Keeps the author's public name visible without reloading the map (#161). */
+  const renameAuthor = useCallback((uid: string, publicName: string) => {
+    setReports((current) =>
+      current.map((report) =>
+        report.createdBy === uid ? { ...report, createdByName: publicName } : report,
+      ),
+    );
+  }, []);
+
   return {
     reports,
     phase,
@@ -114,5 +123,6 @@ export function useReports() {
     updateReport,
     upsertReport,
     removeReport,
+    renameAuthor,
   };
 }
