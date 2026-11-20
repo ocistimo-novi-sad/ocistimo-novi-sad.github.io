@@ -18,6 +18,7 @@ import {
   writeBatch,
   type DocumentData,
   type QueryDocumentSnapshot,
+  type WriteBatch,
 } from 'firebase/firestore';
 import { requireAuth, requireDb } from './firebase';
 import { AppError } from './errors';
@@ -89,6 +90,12 @@ function asDate(value: unknown): Date | null {
 
 function asString(value: unknown): string {
   return typeof value === 'string' ? value : '';
+}
+
+function stringList(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item: unknown): item is string => typeof item === 'string')
+    : [];
 }
 
 function mapContent(data: DocumentData): ReportContent | null {
@@ -443,18 +450,125 @@ export async function deleteReportRecord(reportId: string, asModerator: boolean)
   }
 
   const user = currentUser();
+  const batch = writeBatch(db);
+  batch.delete(reference);
+  await closeOpenFlags(batch, reportId, 'resolved', user.uid);
+  await batch.commit();
+}
+
+/** Adds the closing of every open content flag on a report to a batch. */
+async function closeOpenFlags(
+  batch: WriteBatch,
+  reportId: string,
+  status: 'dismissed' | 'resolved',
+  uid: string,
+): Promise<number> {
   const flags = await getDocs(
     query(
-      collection(db, 'flags'),
+      collection(requireDb(), 'flags'),
       where('reportId', '==', reportId),
       where('status', '==', 'open'),
     ),
   );
-  const batch = writeBatch(db);
-  batch.delete(reference);
   for (const flag of flags.docs) {
     batch.update(flag.ref, {
-      status: 'resolved',
+      status,
+      reviewedAt: serverTimestamp(),
+      reviewedBy: uid,
+    });
+  }
+  return flags.size;
+}
+
+export interface RemovedReport {
+  /** False when the report was already deleted; only its flags were closed. */
+  found: boolean;
+  /** The author's edit that waited for review was kept as the current content. */
+  editClosed: boolean;
+  /** The author's pending proof of a fix was dropped. */
+  proofDropped: boolean;
+  /** The local fields the write changed, for the copy on the map. */
+  changes: Partial<Report>;
+  /** Photos nothing points at any more; the caller removes them. */
+  droppedImages: string[];
+}
+
+/**
+ * Moderator agrees with the flags: the report leaves the map as rejected, with
+ * a reason the author sees, and all its open flags close as resolved. The
+ * author can fix it and send it for review again.
+ *
+ * A rejected report must not linger in other queues or actions, so the same
+ * batch closes them: a waiting edit stays as the content (no rollback mail),
+ * a pending proof is dropped, and a status an action gave goes back to "new"
+ * (actions skip reports that are not published).
+ */
+export async function removeFlaggedReport(
+  reportId: string,
+  reason: string,
+): Promise<RemovedReport> {
+  const db = requireDb();
+  const user = currentUser();
+  const reference = doc(db, 'reports', reportId);
+  const data = (await getDoc(reference)).data();
+  const batch = writeBatch(db);
+  await closeOpenFlags(batch, reportId, 'resolved', user.uid);
+
+  if (!data) {
+    await batch.commit();
+    return { found: false, editClosed: false, proofDropped: false, changes: {}, droppedImages: [] };
+  }
+
+  const write: Record<string, unknown> = {
+    moderation: 'rejected',
+    rejectionReason: reason,
+    ...moderationStamp(user),
+  };
+  const changes: Partial<Report> = { moderation: 'rejected', rejectionReason: reason };
+  const dropped: string[] = [];
+  const current = stringList(data.imageUrls);
+
+  const editClosed = data.editReview === 'pending';
+  if (editClosed) {
+    write.editReview = deleteField();
+    write.previousVersion = deleteField();
+    changes.editReview = undefined;
+    changes.previousVersion = undefined;
+    const previous = data.previousVersion as DocumentData | undefined;
+    dropped.push(...stringList(previous?.imageUrls).filter((url) => !current.includes(url)));
+  }
+
+  const resolution = data.resolution as DocumentData | undefined;
+  const proofDropped = resolution?.state === 'pending';
+  if (proofDropped) {
+    write.resolution = deleteField();
+    changes.resolution = undefined;
+    dropped.push(...stringList(resolution?.imageUrls).filter((url) => !current.includes(url)));
+  }
+
+  if (data.status === 'planned' || data.status === 'in_progress') {
+    write.status = 'new';
+    write.statusActionId = deleteField();
+    changes.status = 'new';
+  }
+
+  batch.update(reference, write);
+  await batch.commit();
+  return { found: true, editClosed, proofDropped, changes, droppedImages: [...new Set(dropped)] };
+}
+
+/**
+ * Moderator finds the report fine: the flags they were shown close as
+ * dismissed. A flag that came in meanwhile stays open for its own look.
+ */
+export async function keepFlaggedReport(flagIds: string[]): Promise<void> {
+  const db = requireDb();
+  const user = currentUser();
+  if (flagIds.length === 0) return;
+  const batch = writeBatch(db);
+  for (const flagId of flagIds) {
+    batch.update(doc(db, 'flags', flagId), {
+      status: 'dismissed',
       reviewedAt: serverTimestamp(),
       reviewedBy: user.uid,
     });

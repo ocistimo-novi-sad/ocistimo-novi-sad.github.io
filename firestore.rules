@@ -353,7 +353,29 @@ service cloud.firestore {
     // Content flags: one flag per user per report, moderators handle them.
     // ---------------------------------------------------------------------
     match /flags/{flagId} {
-      allow create: if signedIn()
+      allow create: if newFlag(flagId);
+
+      // The id keeps one flag per user per report, so flagging a report again
+      // after a moderator closed the first flag (e.g. the report was fixed and
+      // published again) overwrites the closed flag with a new open one.
+      allow update: if resource.data.createdBy == request.auth.uid
+        && resource.data.status != 'open'
+        && newFlag(flagId);
+
+      allow read: if isModerator();
+      // Closing a flag: the report stays as it is (dismissed) or was handled
+      // (resolved), attributed to the moderator.
+      allow update: if isModerator()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status', 'reviewedAt', 'reviewedBy'])
+        && request.resource.data.status in ['dismissed', 'resolved']
+        && request.resource.data.reviewedAt == request.time
+        && request.resource.data.reviewedBy == request.auth.uid;
+      allow delete: if isModerator();
+    }
+
+    function newFlag(flagId) {
+      return signedIn()
         && request.resource.data.keys().hasOnly([
              'reportId', 'reason', 'note', 'status', 'createdBy', 'createdAt'
            ])
@@ -367,10 +389,6 @@ service cloud.firestore {
         && request.resource.data.status == 'open'
         && request.resource.data.createdBy == request.auth.uid
         && request.resource.data.createdAt == request.time;
-
-      allow read: if isModerator();
-      allow update: if isModerator();
-      allow delete: if isModerator();
     }
 
     // ---------------------------------------------------------------------

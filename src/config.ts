@@ -2,6 +2,7 @@ import type {
   ActionStatus,
   Category,
   Coordinates,
+  FlagReason,
   ModerationState,
   ReportStatus,
   SortMode,
@@ -187,6 +188,19 @@ export const REJECT_REASONS = [
   'Lokacija nije tačna.',
   'Prijava sadrži lične podatke.',
   'Problem nije u javnom prostoru.',
+];
+
+/** Reason offered when a flagged report is removed, matched to the flag reason. */
+export const REMOVE_REASON_BY_FLAG: Record<Exclude<FlagReason, 'other'>, string> = {
+  spam: 'Prijava je spam ili reklama.',
+  duplicate: 'Dupla prijava, problem je već prijavljen.',
+  misleading: 'Prijava je netačna ili obmanjujuća.',
+  inappropriate: 'Prijava sadrži neprimeren sadržaj.',
+};
+
+export const REMOVE_REASONS = [
+  ...Object.values(REMOVE_REASON_BY_FLAG),
+  'Prijava sadrži lične podatke.',
 ];
 
 export const RESOLUTION_REJECT_REASONS = [
