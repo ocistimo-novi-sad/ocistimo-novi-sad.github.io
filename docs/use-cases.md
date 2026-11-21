@@ -277,7 +277,7 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
 - **Gde:** „Prijavi problem“ u zaglavlju (računar) ili „＋ Prijavi“ u donjoj traci (telefon); „Nova prijava“ u praznoj listi „Moje prijave“
 - **Preduslov:** korisnik je prijavljen (inače se prvo traži prijava, UC-05)
 - **Tok:**
-  1. **Lokacija:** korisnik klikne na mapu ili koristi svoju lokaciju. Tačka mora biti u Novom Sadu.
+  1. **Lokacija:** korisnik klikne na mapu ili koristi svoju lokaciju. Tačka mora biti u Novom Sadu. Na telefonu forma zauzima donjih oko 45% ekrana, a traka na vrhu mape ima jedan red („Klikni na mapu da postaviš lokaciju“), tako da je mapa za biranje što veća. Kada se tačka izabere preko „Koristi moju lokaciju“ ili klikom na karticu lokacije, mapa se pomera tako da marker bude na sredini vidljivog dela mape (između trake i forme).
   2. **Detalji:** naslov, kategorija, opis, adresa ili orijentir (opciono).
   3. **Kako možemo da rešimo:** „Šta zajednica može sama“ i „Za šta nam treba pomoć“ — oba opciona, mogu se popuniti brzim izborom ponuđenih odgovora.
   4. **Fotografije:** do 3, opciono. Aplikacija ih smanjuje i uklanja podatke iz fotografije (uključujući GPS lokaciju telefona) pre slanja.
@@ -467,19 +467,21 @@ Administrator ima sva prava moderatora, plus tab „Korisnici i uloge“ u stavc
 ### UC-21 Kreiranje akcije čišćenja
 
 - **Gde:** dugme „Nova akcija“ u prikazu Akcije; ili, na telefonu, „＋ Prijavi“ → „Nova akcija“; ili Administracija → Akcije čišćenja → „Nova akcija“. Forma se otvara direktno.
+- **Forma:** iz prikaza Akcije i sa telefona forma se otvara kao i forma za prijavu (UC-06): list odozdo (na računaru panel sa strane), a tačka okupljanja se bira na velikoj mapi, na kojoj se vide prijave u okolini. Važi isto kao kod prijave: traka „Klikni na mapu da postaviš lokaciju“, marker se može prevući, „Koristi moju lokaciju“, marker na sredini vidljivog dela mape. Zatvaranje forme sa unetim podacima traži potvrdu. U panelu „Administracija“ forma ostaje u prozoru, sa malom mapom.
 - **Tok:**
-  1. **Osnovno:** naziv, opis i plan rada, status (podrazumevano „Planirano“).
-  2. **Fotografije:** naslovna slika (opciono); fotografije sa akcije (do 6) tek kada je status „Završeno“ ili kada akcija već ima takve fotografije.
-  3. **Termin i mesto:** datum i vreme (podrazumevano za nedelju dana u 10:00), mesto okupljanja, tačka na mapi (mora biti u Novom Sadu).
-  4. **Povezane prijave:** izbor do 50 objavljenih prijava koje akcija rešava. Sve izabrane prijave dobijaju status akcije, osim prijava „Rešeno“ i „Nije za akciju“ (vidi napomenu u 4.2).
-  5. **Oprema i organizator:** šta poneti (jedna stavka po redu, do 20 stavki, svaka do 80 karaktera), naziv organizatora, napomena za učesnike (opciono).
-  6. „Objavi akciju“ → akcija je odmah javna.
+  1. **Lokacija:** tačka na mapi (mora biti u Novom Sadu) i opis mesta okupljanja. U panelu „Administracija“ ovo je deo koraka „Termin i mesto“.
+  2. **Osnovno:** naziv, opis i plan rada, status (podrazumevano „Planirano“).
+  3. **Termin:** datum i vreme (podrazumevano za nedelju dana u 10:00).
+  4. **Fotografije:** naslovna slika (opciono); fotografije sa akcije (do 6) tek kada je status „Završeno“ ili kada akcija već ima takve fotografije.
+  5. **Povezane prijave:** izbor do 50 objavljenih prijava koje akcija rešava. Sve izabrane prijave dobijaju status akcije, osim prijava „Rešeno“ i „Nije za akciju“ (vidi napomenu u 4.2).
+  6. **Oprema i organizator:** šta poneti (jedna stavka po redu, do 20 stavki, svaka do 80 karaktera), naziv organizatora, napomena za učesnike (opciono).
+  7. „Objavi akciju“ → akcija je odmah javna.
 - **E-pošta:** ako je status **„Planirano“** i povezane su prijave → autorima tih prijava **„Akcija čišćenja za tvoju prijavu“** (E-10). Ako je akcija napravljena odmah kao „U toku“ ili „Završeno“, poruka se ne šalje. Prelazak prijava u „Akcija planirana“ ne šalje E-12, jer to već javlja E-10. Prelazak u „Akcija u toku“ šalje E-12, a u „Rešeno“ E-8 (osim za prijavu koja je već bila rešena, pa joj je status vraćen: tada E-12, kao u UC-17).
 
 ### UC-22 Uređivanje akcije
 
 - **Gde:** Administracija → Akcije čišćenja → „Uredi“; ili detalji akcije → „Uredi akciju“
-- **Tok:** ista forma kao UC-21. Najčešće izmene: dodavanje prijava, pomeranje termina, promena statusa u „U toku“ / „Završeno“, dodavanje fotografija sa akcije. Sve povezane prijave dobijaju novi status akcije, osim prijava „Rešeno“ i „Nije za akciju“ koje nije rešila ova akcija (vidi napomenu u 4.2). Prijava uklonjena iz akcije vraća se kao pri otkazivanju (UC-23).
+- **Tok:** ista forma kao UC-21; iz detalja akcije otvara se preko mape, a posle čuvanja ili otkazivanja vraćaju se detalji akcije. Najčešće izmene: dodavanje prijava, pomeranje termina, promena statusa u „U toku“ / „Završeno“, dodavanje fotografija sa akcije. Sve povezane prijave dobijaju novi status akcije, osim prijava „Rešeno“ i „Nije za akciju“ koje nije rešila ova akcija (vidi napomenu u 4.2). Prijava uklonjena iz akcije vraća se kao pri otkazivanju (UC-23).
 - **E-pošta** se šalje samo dok je akcija „Planirano“:
 
   | Izmena | Poruka | Ko je dobija |

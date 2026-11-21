@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from 'react';
 import type { Map as LeafletMap } from 'leaflet';
+import { settledDrawerHeight } from '../components/Drawer';
 import { APP, CATEGORY_MAP, DEFAULT_FILTERS, STATUS_MAP } from '../config';
 import { useAuth } from '../hooks/useAuth';
 import { renamedReport, useReports, type RenameScope } from '../hooks/useReports';
@@ -47,6 +48,7 @@ import {
 import {
   AppContext,
   type AppContextValue,
+  type ComposeKind,
   type MobileTab,
   type ModalState,
   type Toast,
@@ -67,6 +69,30 @@ import type {
 
 type PendingIntent = { kind: 'create' } | { kind: 'flag'; reportId: string };
 type PositionFix = Coordinates & { accuracy: number };
+
+/** Used when no drawer can be measured, roughly half of a phone drawer. */
+const FALLBACK_DRAWER_SHIFT = 220;
+
+/**
+ * Phone: how many pixels the map center must move down so that a point at the
+ * center ends up in the middle of the part of the map that is still visible:
+ * below the location banner or the search bar, above the drawer.
+ */
+function visibleCenterShift(map: LeafletMap): number {
+  const drawerHeight = settledDrawerHeight();
+  if (drawerHeight === null) return FALLBACK_DRAWER_SHIFT;
+
+  const rect = map.getContainer().getBoundingClientRect();
+  let top = rect.top;
+  for (const selector of ['.pick-banner', '.map-mobile-bar']) {
+    const overlay = document.querySelector(selector);
+    if (overlay) top = Math.max(top, overlay.getBoundingClientRect().bottom);
+  }
+  const bottom = Math.min(rect.bottom, window.innerHeight - drawerHeight);
+  if (bottom - top < 40) return FALLBACK_DRAWER_SHIFT;
+
+  return rect.top + rect.height / 2 - (top + bottom) / 2;
+}
 
 const RESOLVE_MESSAGES: Record<ResolveKind, { error: string; success: string }> = {
   'confirm-proof': {
@@ -167,6 +193,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeLocation, setComposeLocationState] = useState<Coordinates | null>(null);
   const [composeEditing, setComposeEditing] = useState<Report | null>(null);
+  // The same drawer and map picking serve a report and a cleanup action (#184).
+  const [composeKind, setComposeKind] = useState<ComposeKind>('report');
+  const [composeEditingAction, setComposeEditingAction] = useState<CleanupAction | null>(null);
   const [composeSubmitted, setComposeSubmitted] = useState(false);
   const composePicking = composeOpen && !composeSubmitted;
   const [modal, setModal] = useState<ModalState>(null);
@@ -308,23 +337,46 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const map = mapRef.current;
       if (!map) return;
 
+      const target: [number, number] = [coordinates.latitude, coordinates.longitude];
+
       // The detail/compose drawer overlays part of the map. Shift the target so
       // the pin stays in the area that is still visible: to the left on desktop,
-      // above the bottom sheet on mobile.
-      let projected = map.project([coordinates.latitude, coordinates.longitude], zoom);
+      // between the banner and the drawer on mobile.
+      if (options?.accountForDrawer && window.innerWidth <= 900) {
+        // Wait a frame, so a drawer that is just opening or changing height is
+        // measured where it comes to rest (#184).
+        window.requestAnimationFrame(() => {
+          const current = mapRef.current;
+          if (!current) return;
+          const projected = current.project(target, zoom).add([0, visibleCenterShift(current)]);
+          current.flyTo(current.unproject(projected, zoom), zoom, { duration: 0.65 });
+        });
+        return;
+      }
+
+      let projected = map.project(target, zoom);
       if (options?.accountForDrawer) {
-        if (window.innerWidth > 900) {
-          const drawerWidth = window.innerWidth > 1150 ? 428 : 384;
-          projected = projected.add([drawerWidth / 2, 0]);
-        } else {
-          projected = projected.add([0, 220]);
-        }
+        const drawerWidth = window.innerWidth > 1150 ? 428 : 384;
+        projected = projected.add([drawerWidth / 2, 0]);
       }
 
       map.flyTo(map.unproject(projected, zoom), zoom, { duration: 0.65 });
     },
     [],
   );
+
+  /**
+   * Phone: a form opening over the map would cover what was in the middle of
+   * it. Move the map so that point is in the visible part instead.
+   */
+  const keepCenterVisible = useCallback(() => {
+    if (window.innerWidth > 900) return;
+    window.requestAnimationFrame(() => {
+      const map = mapRef.current;
+      if (!map) return;
+      map.panBy([0, visibleCenterShift(map)], { duration: 0.4 });
+    });
+  }, []);
 
   const selectedReport = useMemo(
     () => knownReports.find((report) => report.id === selectedReportId) ?? null,
@@ -592,11 +644,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setFocusedReportId(null);
     setComposeOpen(true);
     setComposeSubmitted(false);
+    setComposeKind('report');
     setComposeEditing(null);
+    setComposeEditingAction(null);
     setComposeLocationState(null);
     setLayerState('reports');
     setMobileTabState('map');
-  }, []);
+    keepCenterVisible();
+  }, [keepCenterVisible]);
 
   const startCompose = useCallback(() => {
     if (composeOpen) return;
@@ -613,23 +668,79 @@ export function AppProvider({ children }: { children: ReactNode }) {
     composeOpenRef.current = false;
     setComposeOpen(false);
     setComposeEditing(null);
+    setComposeEditingAction(null);
     setComposeLocationState(null);
-  }, []);
+    // An action is edited from its detail; closing the form goes back there.
+    if (composeKind === 'action' && composeEditingAction) {
+      setSelectedActionId(composeEditingAction.id);
+    }
+  }, [composeEditingAction, composeKind]);
 
   /** Opens the report form prefilled with an existing report. */
-  const editReport = useCallback((report: Report) => {
-    composeSessionRef.current += 1;
-    composeOpenRef.current = true;
-    setSelectedReportId(null);
-    setSelectedActionId(null);
-    setModal(null);
-    setComposeEditing(report);
-    setComposeLocationState({ latitude: report.latitude, longitude: report.longitude });
-    setComposeOpen(true);
-    setComposeSubmitted(false);
-    setLayerState('reports');
-    setMobileTabState('map');
-  }, []);
+  const editReport = useCallback(
+    (report: Report) => {
+      composeSessionRef.current += 1;
+      composeOpenRef.current = true;
+      setSelectedReportId(null);
+      setSelectedActionId(null);
+      setModal(null);
+      setComposeKind('report');
+      setComposeEditing(report);
+      setComposeEditingAction(null);
+      setComposeLocationState({ latitude: report.latitude, longitude: report.longitude });
+      setComposeOpen(true);
+      setComposeSubmitted(false);
+      setLayerState('reports');
+      setMobileTabState('map');
+      // The form is lower than the detail, so the pin moves to the new visible middle.
+      const zoom = Math.max(mapRef.current?.getZoom() ?? 0, APP.focusZoom);
+      flyTo(report, zoom, { accountForDrawer: true });
+    },
+    [flyTo],
+  );
+
+  /**
+   * Opens the action form in the same drawer as a report, with the meeting
+   * point picked on the big map (#184). The layer stays as it is, so the list
+   * beside the map does not switch; the map shows reports while picking.
+   */
+  const startActionCompose = useCallback(
+    (action?: CleanupAction) => {
+      // Shows the "no access" message instead of the form.
+      if (!auth.isModerator) {
+        setModal({ kind: 'action-form', action });
+        return;
+      }
+      // On a computer "Nova akcija" stays visible beside an open report form;
+      // switching would silently drop what was typed there.
+      if (composeOpenRef.current) {
+        notify('info', 'Prvo pošalji ili zatvori formu koja je otvorena.');
+        return;
+      }
+      composeSessionRef.current += 1;
+      composeOpenRef.current = true;
+      setSelectedReportId(null);
+      setSelectedActionId(null);
+      setFocusedReportId(null);
+      setModal(null);
+      setComposeKind('action');
+      setComposeEditing(null);
+      setComposeEditingAction(action ?? null);
+      setComposeLocationState(
+        action ? { latitude: action.latitude, longitude: action.longitude } : null,
+      );
+      setComposeOpen(true);
+      setComposeSubmitted(false);
+      setMobileTabState('map');
+      if (action) {
+        const zoom = Math.max(mapRef.current?.getZoom() ?? 0, APP.focusZoom);
+        flyTo(action, zoom, { accountForDrawer: true });
+      } else {
+        keepCenterVisible();
+      }
+    },
+    [auth.isModerator, flyTo, keepCenterVisible, notify],
+  );
 
   const setComposeLocation = useCallback((coordinates: Coordinates) => {
     setComposeLocationState(coordinates);
@@ -1373,7 +1484,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       composePicking,
       composeLocation,
       composeEditing,
+      composeKind,
+      composeEditingAction,
       startCompose,
+      startActionCompose,
       cancelCompose,
       setComposeLocation,
       editReport,
@@ -1463,7 +1577,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       composePicking,
       composeLocation,
       composeEditing,
+      composeKind,
+      composeEditingAction,
       startCompose,
+      startActionCompose,
       cancelCompose,
       setComposeLocation,
       editReport,

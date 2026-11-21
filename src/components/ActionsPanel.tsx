@@ -92,7 +92,7 @@ export function ActionsPanel() {
     reloadActions,
     selectedAction,
     auth,
-    openModal,
+    startActionCompose,
     setLayer,
     upcomingActions: upcoming,
     pastActions: past,
@@ -149,7 +149,7 @@ export function ActionsPanel() {
           <button
             type="button"
             className="btn btn--quiet btn--sm btn--block"
-            onClick={() => openModal({ kind: 'action-form' })}
+            onClick={() => startActionCompose()}
           >
             <Plus size={14} aria-hidden="true" /> Nova akcija
           </button>

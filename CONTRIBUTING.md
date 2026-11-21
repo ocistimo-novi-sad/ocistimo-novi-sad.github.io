@@ -78,19 +78,19 @@ npm ci
 npm run dev
 ```
 
-Bez `.env.local` aplikacija radi u **demo režimu**: izmišljeni primeri, bez naloga, moderacije i e-pošte (vidi [Kako aplikacija radi → Demo režim](docs/use-cases.md#12-demo-režim)). To je dovoljno za većinu izmena u interfejsu.
+`npm run dev` radi sa **staging bazom** (vidi [Staging baza](#staging-baza)). Kopiraj [.env.staging.example](.env.staging.example) u `.env.staging.local` i popuni prazne vrednosti iz Firebase konzole staging projekta (Project settings → Your apps → „Kuka i Motika (staging)“). `.env.staging.local` se ne commit-uje.
 
-Za rad sa nalozima, moderacijom i e-poštom pokreni aplikaciju na **staging bazi** (vidi [Staging baza](#staging-baza)). Kopiraj [.env.staging.example](.env.staging.example) u `.env.staging.local`, popuni prazne vrednosti iz Firebase konzole staging projekta (Project settings → Your apps → „Kuka i Motika (staging)“) i pokreni:
+Bez `.env.staging.local` aplikacija radi u **demo režimu**: izmišljeni primeri, bez naloga, moderacije i e-pošte (vidi [Kako aplikacija radi → Demo režim](docs/use-cases.md#12-demo-režim)). To je dovoljno za većinu izmena u interfejsu.
+
+Samo kada nešto mora da se proveri baš na produkciji: kopiraj [.env.example](.env.example) u `.env.production.local` (vrednosti iz Firebase konzole produkcijskog projekta → Project settings → Your apps) i pokreni:
 
 ```sh
-npm run dev:staging
+npm run dev:prod
 ```
 
-`.env.staging.local` se ne commit-uje, a u ovom režimu ima prednost nad `.env.local`.
+Te vrednosti nisu tajne; podatke štite `firestore.rules` i `storage.rules`.
 
-`.env.local` sa vrednostima produkcijskog projekta (kopija [.env.example](.env.example), vrednosti iz Firebase konzole → Project settings → Your apps) koristi se samo kada nešto mora da se proveri baš na produkciji. Te vrednosti nisu tajne; podatke štite `firestore.rules` i `storage.rules`.
-
-> **Važno:** aplikacija se ne povezuje na Firebase emulatore, iako su navedeni u `firebase.json`. `npm run dev` sa popunjenim `.env.local` radi sa **produkcijskom bazom**, pa posle takvog testiranja obriši sve test podatke.
+> **Važno:** produkcijske vrednosti ne stavljaj u `.env.local`. Taj fajl se učitava u svakom režimu, pa bi i `npm run dev` tada mogao da radi sa **produkcijskom bazom**. Aplikacija se ne povezuje na Firebase emulatore, iako su navedeni u `firebase.json`. Posle testiranja na produkciji (`npm run dev:prod`) obriši sve test podatke.
 
 Pre otvaranja PR-a proveri da prolazi build (uključuje i proveru tipova):
 
@@ -109,7 +109,7 @@ Ulogu administratora dodeljuje vlasnik projekta u Firebase konzoli: u Firestore-
 
 ### Staging baza
 
-Staging ima svoj Firebase projekat, **ocistimo-novi-sad-staging** (ID `project-7fe611ea-b32a-4a6e-85d`, u `.firebaserc` alias `staging`), sa posebnom bazom, nalozima, fotografijama i Cloud Functions. Na njega su povezani staging sajt na Vercelu i `npm run dev:staging`. Produkcijski projekat `ocistimo-novi-sad` (alias `prod`) se pri testiranju ne dira.
+Staging ima svoj Firebase projekat, **ocistimo-novi-sad-staging** (ID `project-7fe611ea-b32a-4a6e-85d`, u `.firebaserc` alias `staging`), sa posebnom bazom, nalozima, fotografijama i Cloud Functions. Na njega su povezani staging sajt na Vercelu i `npm run dev`. Produkcijski projekat `ocistimo-novi-sad` (alias `prod`) se pri testiranju ne dira.
 
 Staging baza se puni test podacima (prijave i akcije iz demo režima, plus prijava na čekanju, odbijena prijava i otvorena oznaka spornog sadržaja) skriptom:
 

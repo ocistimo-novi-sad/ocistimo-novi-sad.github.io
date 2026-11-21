@@ -34,6 +34,7 @@ export function ActionDetail() {
     showActionOnMap,
     auth,
     openModal,
+    startActionCompose,
     reloadActions,
     reloadReports,
     deleteAction,
@@ -304,7 +305,7 @@ export function ActionDetail() {
               <button
                 type="button"
                 className="btn btn--quiet btn--sm"
-                onClick={() => openModal({ kind: 'action-form', action })}
+                onClick={() => startActionCompose(action)}
               >
                 <Pencil size={13} aria-hidden="true" /> Uredi akciju
               </button>

@@ -170,8 +170,9 @@
     height: 92vh;
   }
 
+  /* Lower than a detail: the map above it is where the location is picked (#184). */
   .drawer--compose {
-    height: 58vh;
+    height: 45vh;
   }
 
   .drawer--compose.is-expanded {
@@ -576,8 +577,9 @@
     height: 68vh;
   }
 
+  /* Repeated: the rule above comes later and would make the form taller again. */
   .drawer--compose {
-    height: 56vh;
+    height: 45vh;
   }
 
   .map-controls {
@@ -635,7 +637,7 @@
   }
 
   .drawer--compose {
-    height: 70vh;
+    height: 56vh;
   }
 
   .drawer.is-expanded,
