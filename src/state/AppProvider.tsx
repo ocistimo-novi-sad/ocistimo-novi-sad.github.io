@@ -27,7 +27,9 @@ import {
   deleteReportRecord,
   fetchMyReports,
   fetchReport,
+  keepFlaggedReport as keepFlaggedReportRecord,
   rejectReport as rejectReportRecord,
+  removeFlaggedReport as removeFlaggedReportRecord,
   rejectResolution,
   resolveDroppedImages,
   resolveKind,
@@ -38,6 +40,7 @@ import {
   updateOwnReportAuthorName,
   updateReportAsModerator,
   updateReportStatus,
+  type RemovedReport,
   type ResolveKind,
 } from '../services/reports';
 import {
@@ -876,6 +879,48 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [auth.publicName, auth.user],
   );
 
+  const removeFlaggedReport = useCallback(
+    async (reportId: string, reason: string) => {
+      let removed: RemovedReport;
+      try {
+        removed = await removeFlaggedReportRecord(reportId, reason);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Prijavu nije moguće ukloniti sa mape.'));
+        throw error;
+      }
+
+      if (!removed.found) {
+        dropReport(reportId);
+        notify('info', 'Prijava je već obrisana. Oznake su zatvorene.');
+        return;
+      }
+
+      // A report outside the loaded pages has nothing to update here.
+      const report = knownReports.find((item) => item.id === reportId);
+      if (report) {
+        applyReport({ ...report, ...removed.changes, ...moderatorStamp() });
+      }
+      void removeImages(removed.droppedImages);
+      if (removed.editClosed) setEditCount((count) => Math.max(0, count - 1));
+      if (removed.proofDropped) setResolutionCount((count) => Math.max(0, count - 1));
+      notify('success', 'Prijava je uklonjena sa mape. Autor vidi razlog u aplikaciji.');
+    },
+    [applyReport, dropReport, knownReports, moderatorStamp, notify],
+  );
+
+  const keepFlaggedReport = useCallback(
+    async (flagIds: string[]) => {
+      try {
+        await keepFlaggedReportRecord(flagIds);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Oznake nije moguće zatvoriti.'));
+        throw error;
+      }
+      notify('success', 'Oznake su zatvorene. Prijava ostaje na mapi.');
+    },
+    [notify],
+  );
+
   const submitReportEdit = useCallback(
     async (report: Report, content: ReportContent) => {
       let next: Report;
@@ -1344,6 +1389,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       rejectPendingReport,
       acceptReportEdit,
       revertReportEdit,
+      removeFlaggedReport,
+      keepFlaggedReport,
       resolutionCount,
       submitReportResolution,
       approveReportResolution,
@@ -1431,6 +1478,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       rejectPendingReport,
       acceptReportEdit,
       revertReportEdit,
+      removeFlaggedReport,
+      keepFlaggedReport,
       resolutionCount,
       submitReportResolution,
       approveReportResolution,

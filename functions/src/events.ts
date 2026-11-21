@@ -6,7 +6,7 @@ export type ReportEvent =
   | { kind: 'edited' }
   | { kind: 'edit-reverted' }
   | { kind: 'approved' }
-  | { kind: 'rejected'; reason: string }
+  | { kind: 'rejected'; reason: string; unpublished: boolean }
   | { kind: 'status-changed'; status: string }
   | { kind: 'proof-submitted' }
   | { kind: 'proof-approved'; byModerator: boolean }
@@ -60,8 +60,13 @@ export function reportEvents(
   if (previous && moderation === 'approved' && previous !== 'approved') {
     events.push({ kind: 'approved' });
   }
+  // A published report that is rejected was taken off the map (flagged content).
   if (previous && moderation === 'rejected' && previous !== 'rejected') {
-    events.push({ kind: 'rejected', reason: asString(after.rejectionReason) });
+    events.push({
+      kind: 'rejected',
+      reason: asString(after.rejectionReason),
+      unpublished: previous === 'approved',
+    });
   }
   if (after.editReview === 'pending' && before?.editReview !== 'pending') {
     events.push({ kind: 'edited' });

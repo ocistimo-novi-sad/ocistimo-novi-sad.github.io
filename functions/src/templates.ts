@@ -125,9 +125,11 @@ export function reportMessage(event: ReportEvent, report: ReportSummary): Messag
       );
     case 'rejected':
       return compose(
-        'Prijava nije objavljena',
+        event.unpublished ? 'Prijava je uklonjena sa mape' : 'Prijava nije objavljena',
         [
-          `Tvoja prijava ${title} nije odobrena.`,
+          event.unpublished
+            ? `Tvoja prijava ${title} je uklonjena sa mape.`
+            : `Tvoja prijava ${title} nije odobrena.`,
           `Razlog: ${event.reason || 'nije naveden'}`,
           'Prijavu možeš da ispraviš u odeljku „Moje prijave” i ponovo pošalješ na pregled.',
         ],

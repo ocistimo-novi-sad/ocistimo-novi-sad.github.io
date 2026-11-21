@@ -88,7 +88,7 @@ export function ModerationPanel() {
           className={`admin-tab${tab === 'flags' ? ' is-active' : ''}`}
           onClick={() => setTab('flags')}
         >
-          Označen sadržaj
+          Sporan sadržaj
         </button>
       </div>
 

@@ -370,6 +370,14 @@
   border-radius: var(--radius-md);
 }
 
+.admin-box--alert {
+  border-color: var(--alert);
+}
+
+.admin-box--alert .admin-box__title {
+  color: var(--alert);
+}
+
 .admin-box__title {
   display: flex;
   align-items: center;

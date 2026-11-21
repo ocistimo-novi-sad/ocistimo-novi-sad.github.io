@@ -3,10 +3,10 @@ import {
   doc,
   getDocs,
   limit,
+  orderBy,
   query,
   serverTimestamp,
   setDoc,
-  updateDoc,
   where,
   Timestamp,
   type DocumentData,
@@ -59,31 +59,36 @@ export async function createFlag(
   });
 }
 
-export async function fetchOpenFlags(): Promise<ContentFlag[]> {
-  const db = requireDb();
-  const snapshot = await getDocs(
-    query(collection(db, 'flags'), where('status', '==', 'open'), limit(50)),
-  );
-
-  return snapshot.docs
+function mapFlags(docs: { id: string; data: () => DocumentData }[]): ContentFlag[] {
+  return docs
     .map((document) => mapFlag(document.id, document.data()))
     .filter((flag): flag is ContentFlag => flag !== null)
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
 
-export async function resolveFlag(
-  flagId: string,
-  status: 'dismissed' | 'resolved',
-): Promise<void> {
+/** Moderators: the 50 newest open flags, newest first. */
+export async function fetchOpenFlags(): Promise<ContentFlag[]> {
   const db = requireDb();
-  const user = requireAuth().currentUser;
-  if (!user) {
-    throw new AppError('unauthenticated', 'Uloguj se kao moderator.');
-  }
+  const snapshot = await getDocs(
+    query(
+      collection(db, 'flags'),
+      where('status', '==', 'open'),
+      orderBy('createdAt', 'desc'),
+      limit(50),
+    ),
+  );
+  return mapFlags(snapshot.docs);
+}
 
-  await updateDoc(doc(db, 'flags', flagId), {
-    status,
-    reviewedAt: serverTimestamp(),
-    reviewedBy: user.uid,
-  });
+/** Moderators: open flags on one report, newest first. */
+export async function fetchOpenFlagsForReport(reportId: string): Promise<ContentFlag[]> {
+  const db = requireDb();
+  const snapshot = await getDocs(
+    query(
+      collection(db, 'flags'),
+      where('reportId', '==', reportId),
+      where('status', '==', 'open'),
+    ),
+  );
+  return mapFlags(snapshot.docs);
 }

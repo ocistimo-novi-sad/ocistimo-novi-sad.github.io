@@ -198,6 +198,9 @@ async function stageReportStatusUpdates(
   for (const snapshot of await reportSnapshots(db, reportIds)) {
     const data = snapshot.data();
     if (!data || data.status === status) continue;
+    // A report on review or taken off the map is not part of the action until
+    // it is published (again); the next save of the action picks it up.
+    if ((data.moderation ?? 'approved') !== 'approved') continue;
     if (
       SETTLED_REPORT_STATUSES.includes(data.status as ReportStatus) &&
       data.statusActionId !== actionId

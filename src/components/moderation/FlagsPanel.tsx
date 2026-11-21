@@ -1,20 +1,28 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ExternalLink, RefreshCw, ShieldAlert, TriangleAlert } from 'lucide-react';
-import { FLAG_REASONS } from '../../config';
-import { formatRelativeTime } from '../../lib/format';
 import { withTimeout } from '../../lib/timeout';
 import { toSerbianError } from '../../services/errors';
-import { fetchOpenFlags, resolveFlag } from '../../services/flags';
+import { fetchOpenFlags } from '../../services/flags';
 import { useApp } from '../../state/app-context';
 import type { ContentFlag } from '../../types';
 import { EmptyState, Spinner } from '../ui/EmptyState';
+import { FlagDecision, formatFlagCount } from './FlagDecision';
+
+/** Open flags grouped by report, the most recently flagged report first. */
+function groupByReport(flags: ContentFlag[]): { reportId: string; flags: ContentFlag[] }[] {
+  const groups = new Map<string, ContentFlag[]>();
+  for (const flag of flags) {
+    groups.set(flag.reportId, [...(groups.get(flag.reportId) ?? []), flag]);
+  }
+  return [...groups].map(([reportId, items]) => ({ reportId, flags: items }));
+}
 
 export function FlagsPanel() {
   const { reports, selectReport, closeModal, notify } = useApp();
   const [flags, setFlags] = useState<ContentFlag[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const groups = useMemo(() => groupByReport(flags ?? []), [flags]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -23,7 +31,7 @@ export function FlagsPanel() {
       const result = await withTimeout(fetchOpenFlags());
       setFlags(result);
     } catch (loadError) {
-      setError(toSerbianError(loadError, 'Oznake spornog sadržaja nisu učitane.'));
+      setError(toSerbianError(loadError, 'Sporan sadržaj nije učitan.'));
     } finally {
       setLoading(false);
     }
@@ -33,26 +41,12 @@ export function FlagsPanel() {
     void load();
   }, [load]);
 
-  const resolve = async (flag: ContentFlag, status: 'dismissed' | 'resolved') => {
-    setBusyId(flag.id);
-    try {
-      await resolveFlag(flag.id, status);
-      setFlags((current) => (current ?? []).filter((item) => item.id !== flag.id));
-      notify(
-        'success',
-        status === 'resolved'
-          ? 'Oznaka je rešena.'
-          : 'Oznaka je odbijena.',
-      );
-    } catch (resolveError) {
-      notify('error', toSerbianError(resolveError, 'Oznaku nije moguće rešiti.'));
-    } finally {
-      setBusyId(null);
-    }
+  const closeGroup = (reportId: string) => {
+    setFlags((current) => (current ?? []).filter((item) => item.reportId !== reportId));
   };
 
-  const openReport = (flag: ContentFlag) => {
-    const report = reports.find((item) => item.id === flag.reportId);
+  const openReport = (reportId: string) => {
+    const report = reports.find((item) => item.id === reportId);
     if (!report) {
       notify('info', 'Ova prijava nije učitana na mapi. Osveži prijave u panelu.');
       return;
@@ -65,7 +59,7 @@ export function FlagsPanel() {
     return (
       <div className="admin-loading" role="status">
         <Spinner size={16} />
-        Učitavanje označenog sadržaja…
+        Učitavanje spornog sadržaja…
       </div>
     );
   }
@@ -74,7 +68,7 @@ export function FlagsPanel() {
     return (
       <EmptyState
         icon={<TriangleAlert size={20} />}
-        title="Oznake spornog sadržaja nisu učitane"
+        title="Sporan sadržaj nije učitan"
         description={error}
         action={
           <button type="button" className="btn btn--quiet btn--sm" onClick={() => void load()}>
@@ -85,11 +79,11 @@ export function FlagsPanel() {
     );
   }
 
-  if (!flags || flags.length === 0) {
+  if (groups.length === 0) {
     return (
       <EmptyState
         icon={<ShieldAlert size={20} />}
-        title="Nema označenog sadržaja"
+        title="Nema spornog sadržaja"
         description="Kada neko označi prijavu kao netačnu, uvredljivu ili duplu, pojaviće se ovde."
         action={
           <button type="button" className="btn btn--quiet btn--sm" onClick={() => void load()}>
@@ -103,54 +97,38 @@ export function FlagsPanel() {
   return (
     <div className="flags">
       <div className="flags__head">
-        <span className="eyebrow">Otvorene oznake</span>
+        <span className="eyebrow">Sporne prijave</span>
         <button type="button" className="link-btn" onClick={() => void load()} disabled={loading}>
           <RefreshCw size={12} aria-hidden="true" /> Osveži
         </button>
       </div>
 
       <ul className="flag-list">
-        {flags.map((flag) => {
-          const report = reports.find((item) => item.id === flag.reportId);
-          const reason =
-            FLAG_REASONS.find((option) => option.id === flag.reason)?.label ?? 'Drugo';
+        {groups.map((group) => {
+          const report = reports.find((item) => item.id === group.reportId);
           return (
-            <li key={flag.id} className="flag-row">
+            <li key={group.reportId} className="flag-row">
               <div className="flag-row__head">
-                <span className="flag-row__reason">{reason}</span>
-                <span className="flag-row__time">{formatRelativeTime(flag.createdAt)}</span>
+                <p className="flag-row__report">
+                  {report?.title ?? `Prijava ${group.reportId.slice(0, 10)}…`}
+                </p>
+                <span className="flag-row__count">{formatFlagCount(group.flags.length)}</span>
               </div>
-              <p className="flag-row__report">
-                {report?.title ?? `Prijava ${flag.reportId.slice(0, 10)}…`}
-              </p>
-              {flag.note ? <p className="flag-row__note">„{flag.note}”</p> : null}
-              <div className="flag-row__actions">
-                <button
-                  type="button"
-                  className="btn btn--quiet btn--sm"
-                  onClick={() => openReport(flag)}
-                  disabled={!report}
-                >
-                  <ExternalLink size={12} aria-hidden="true" /> Otvori prijavu
-                </button>
-                <button
-                  type="button"
-                  className="btn btn--quiet btn--sm"
-                  onClick={() => void resolve(flag, 'dismissed')}
-                  disabled={busyId === flag.id}
-                >
-                  Odbij
-                </button>
-                <button
-                  type="button"
-                  className="btn btn--primary btn--sm"
-                  onClick={() => void resolve(flag, 'resolved')}
-                  disabled={busyId === flag.id}
-                >
-                  {busyId === flag.id ? <Spinner size={12} /> : null}
-                  Rešeno
-                </button>
-              </div>
+              <FlagDecision
+                reportId={group.reportId}
+                flags={group.flags}
+                onDone={() => closeGroup(group.reportId)}
+                extraAction={
+                  <button
+                    type="button"
+                    className="btn btn--quiet btn--sm"
+                    onClick={() => openReport(group.reportId)}
+                    disabled={!report}
+                  >
+                    <ExternalLink size={12} aria-hidden="true" /> Otvori prijavu
+                  </button>
+                }
+              />
             </li>
           );
         })}
