@@ -63,7 +63,7 @@ export function UsersPanel() {
     return (users ?? []).filter((user) => {
       if (roleFilter !== 'all' && user.role !== roleFilter) return false;
       if (!needle) return true;
-      return `${user.displayName} ${user.email ?? ''}`
+      return `${user.displayName} ${user.publicName ?? ''} ${user.email ?? ''}`
         .toLocaleLowerCase('sr-Latn')
         .includes(needle);
     });
@@ -186,7 +186,15 @@ export function UsersPanel() {
                       {user.displayName}
                       {isSelf ? <span className="user-row__self">ti</span> : null}
                     </strong>
-                    <span className="user-row__email">{user.email ?? 'mejl nije sačuvan'}</span>
+                    <span className="user-row__email">
+                      {user.email ?? 'mejl nije sačuvan'}
+                      {user.publicName ? (
+                        <>
+                          {' '}
+                          · javno: <strong>{user.publicName}</strong>
+                        </>
+                      ) : null}
+                    </span>
                   </span>
                 </div>
 

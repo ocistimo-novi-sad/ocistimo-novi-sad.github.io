@@ -134,7 +134,7 @@ Sama prijava ne znači da je problem zvanično potvrđen, niti da je nadležna s
 
 ## Uloga zajednice i moderacija
 
-Prijave i akcije može da pregleda svako, bez naloga. Za slanje prijave i prijavljivanje neprikladnog sadržaja potrebno je prijavljivanje Google nalogom (kada je aplikacija povezana sa Firebaseom). Uz prijavu se javno prikazuje ime iz naloga, ali ne i adresa e-pošte.
+Prijave i akcije može da pregleda svako, bez naloga. Za slanje prijave i prijavljivanje neprikladnog sadržaja potrebno je prijavljivanje Google nalogom (kada je aplikacija povezana sa Firebaseom). Pri prvom prijavljivanju korisnik bira javno ime koje se prikazuje uz njegove prijave i akcije, a kasnije ga menja u meniju naloga pod „Lični podaci“. Adresa e-pošte nije javna.
 
 Svaki prijavljeni korisnik može da označi objavljenu prijavu kao sporan sadržaj, jednom po prijavi, uz jedan od razloga: spam ili reklama, dupla prijava, netačna ili obmanjujuća prijava, neprimeren sadržaj ili drugo.
 

@@ -150,6 +150,8 @@ export interface ContentFlag {
 export interface UserProfile {
   uid: string;
   displayName: string;
+  /** The name shown publicly with this person's reports and actions (#161). */
+  publicName?: string;
   email?: string;
   photoURL?: string;
   createdAt: Date | null;

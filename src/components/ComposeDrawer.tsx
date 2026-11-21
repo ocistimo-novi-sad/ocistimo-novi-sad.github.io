@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Check,
   Clock3,
@@ -30,6 +30,8 @@ import { CategoryGlyph } from './ui/CategoryGlyph';
 import { ConfirmSheet } from './ui/ConfirmSheet';
 import { Spinner } from './ui/EmptyState';
 import { PhotoPicker } from './ui/PhotoPicker';
+
+const NAME_REQUIRED = 'Prvo izaberi javno ime u „Ličnim podacima“.';
 
 type FieldKey =
   | 'location'
@@ -138,6 +140,7 @@ export function ComposeDrawer() {
     flyTo,
     notify,
     auth,
+    openModal,
     mapRef,
     locating,
     locateForCompose,
@@ -171,6 +174,12 @@ export function ComposeDrawer() {
   const [submitting, setSubmitting] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
   const [collapseSignal, setCollapseSignal] = useState(0);
+
+  // Once a name is chosen, the "choose a public name" error no longer applies.
+  useEffect(() => {
+    if (!auth.publicName) return;
+    setSubmitError((current) => (current === NAME_REQUIRED ? null : current));
+  }, [auth.publicName]);
 
   const outsideArea = composeLocation !== null && !isInServiceArea(composeLocation);
   const locationMoved = editing
@@ -297,6 +306,29 @@ export function ComposeDrawer() {
       return;
     }
 
+    // Never publish a new report under the Google name. The first-login
+    // dialog normally prevents this. If the profile read at sign-in failed,
+    // read it again first: the person may already have a name, and asking
+    // for a new one would overwrite it.
+    let authorName = auth.publicName;
+    if (isFirebaseConfigured && !editing && !authorName) {
+      if (!auth.profileReady) {
+        setSubmitting(true);
+        const loaded = await auth.reloadProfile();
+        setSubmitting(false);
+        if (loaded === undefined) {
+          setSubmitError('Profil trenutno nije dostupan. Proveri internet vezu i pokušaj ponovo.');
+          return;
+        }
+        authorName = loaded;
+      }
+      if (!authorName) {
+        setSubmitError(NAME_REQUIRED);
+        openModal({ kind: 'profile', mode: 'first' });
+        return;
+      }
+    }
+
     setSubmitting(true);
     setSubmitError(null);
     setConfirmClose(false);
@@ -320,7 +352,7 @@ export function ComposeDrawer() {
       latitude: composeLocation.latitude,
       longitude: composeLocation.longitude,
       address: address.trim() || undefined,
-      createdByName: auth.user?.displayName ?? undefined,
+      createdByName: authorName ?? undefined,
     };
 
     try {

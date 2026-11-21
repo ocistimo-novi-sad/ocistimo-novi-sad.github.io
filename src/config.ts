@@ -210,6 +210,22 @@ export const RESOLUTION_REJECT_REASONS = [
   'Rešen je samo deo problema.',
 ];
 
+/**
+ * Public names nobody may pick, compared case-insensitively (#161). They match
+ * the fallback moderation stamps ("Odobrio: Moderator") and staff titles, so a
+ * member cannot pass as staff. Mirrored in firestore.rules (validPublicName).
+ */
+export const RESERVED_PUBLIC_NAMES = [
+  'admin',
+  'administrator',
+  'administratorka',
+  'administracija',
+  'moderator',
+  'moderatorka',
+  'moderacija',
+  'kuka i motika',
+];
+
 export const LIMITS = {
   titleMin: 5,
   titleMax: 90,
@@ -221,6 +237,8 @@ export const LIMITS = {
   rejectReasonMax: 500,
   resolutionNoteMax: 500,
   addressMax: 160,
+  publicNameMin: 2,
+  publicNameMax: 40,
   imagesMax: 3,
   /** Largest original accepted; photos are shrunk in the browser before upload. */
   imageMaxBytes: 20 * 1024 * 1024,

@@ -112,8 +112,8 @@ export function AuthDialog({
         ) : null}
 
         <p className="auth-card__privacy">
-          Od Google naloga preuzimamo ime i profilnu sliku. Mejl adresa nije javno prikazana uz
-          prijave. Detalji su u odeljku „O projektu”.
+          Od Google naloga preuzimamo mejl, ime i profilnu sliku. Javno ime biraš sam i ono je
+          jedino prikazano uz tvoje prijave i akcije. Detalji su u odeljku „O projektu”.
         </p>
       </div>
     </Modal>
