@@ -132,15 +132,9 @@ export function AccountMenu() {
       {open ? (
         <div className="account__menu" role="menu">
           <div className="account__identity">
-            <span className="account__email">
-              {auth.user.email}
-              {publicName ? (
-                <>
-                  {' '}
-                  (<strong>{publicName}</strong>)
-                </>
-              ) : null}
-            </span>
+            {/* On its own line: the e-mail line is cut off with an ellipsis. */}
+            {publicName ? <span className="account__name">{publicName}</span> : null}
+            <span className="account__email">{auth.user.email}</span>
             {auth.role !== 'user' ? (
               <span className={`account__role account__role--${auth.role}`}>
                 {ROLE_LABELS[auth.role]}

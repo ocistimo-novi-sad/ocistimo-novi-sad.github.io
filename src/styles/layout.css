@@ -188,9 +188,11 @@
   white-space: nowrap;
 }
 
-.account__email strong {
+.account__name {
   color: var(--ink-2);
+  font-size: var(--text-xs);
   font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .account__role {

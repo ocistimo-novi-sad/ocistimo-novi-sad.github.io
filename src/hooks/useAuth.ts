@@ -13,10 +13,19 @@ import {
   ensureProfile,
   savePublicName as savePublicNameRecord,
   setActivePublicName,
+  type ProfileIdentity,
 } from '../services/profile';
 import { fetchRole } from '../services/roles';
 import { AppError, errorCode, toSerbianError } from '../services/errors';
 import type { UserRole } from '../types';
+
+function identityOf(user: User): ProfileIdentity {
+  return {
+    displayName: user.displayName ?? 'Član zajednice',
+    email: user.email,
+    photoURL: user.photoURL,
+  };
+}
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -58,12 +67,7 @@ export function useAuth() {
         void fetchRole(nextUser.uid).then((nextRole) => {
           if (stillCurrent()) setRole(nextRole);
         });
-        void ensureProfile(
-          nextUser.uid,
-          nextUser.displayName ?? 'Član zajednice',
-          nextUser.email,
-          nextUser.photoURL,
-        ).then((profile) => {
+        void ensureProfile(nextUser.uid, identityOf(nextUser)).then((profile) => {
           // A slow reply for user A must not overwrite user B after a switch.
           if (!stillCurrent()) return;
           const name = profile?.publicName ?? null;
@@ -119,13 +123,31 @@ export function useAuth() {
     }
   }, []);
 
+  /**
+   * Reads the profile again, for example when the read at sign-in failed.
+   * Returns the public name (null if none is chosen yet), or undefined if the
+   * profile still cannot be read.
+   */
+  const reloadProfile = useCallback(async (): Promise<string | null | undefined> => {
+    const current = auth?.currentUser;
+    if (!current) return undefined;
+    const profile = await ensureProfile(current.uid, identityOf(current));
+    if (!profile || auth?.currentUser?.uid !== current.uid) return undefined;
+    setPublicName(profile.publicName);
+    setActivePublicName(profile.publicName);
+    setProfileReady(true);
+    return profile.publicName;
+  }, []);
+
   /** Saves the public author name and returns the stored value. */
   const updatePublicName = useCallback(
     async (value: string): Promise<string> => {
       if (!user) throw new AppError('unauthenticated', 'Uloguj se ponovo.');
-      const name = await savePublicNameRecord(user.uid, value);
+      const name = await savePublicNameRecord(user.uid, value, identityOf(user));
       setPublicName(name);
       setActivePublicName(name);
+      // A saved name also proves the profile exists now.
+      setProfileReady(true);
       return name;
     },
     [user],
@@ -145,6 +167,7 @@ export function useAuth() {
     ready,
     publicName,
     profileReady,
+    reloadProfile,
     updatePublicName,
     signingIn,
     signInError,

@@ -21,7 +21,7 @@ import { requireAuth, requireDb } from './firebase';
 import { AppError } from './errors';
 import { removeImages } from './images';
 import { currentPublicName } from './profile';
-import { resolveChanges, resolveDroppedImages, resolveKind } from './reports';
+import { fetchAllOwnedBy, resolveChanges, resolveDroppedImages, resolveKind } from './reports';
 import type { ActionStatus, CleanupAction, NewActionInput, ReportStatus } from '../types';
 
 const STATUS_VALUES: ActionStatus[] = [
@@ -108,11 +108,8 @@ export async function syncActionOrganizerName(
   previousNames: string[],
   publicName: string,
 ): Promise<ActionNameSync> {
-  const db = requireDb();
-  const snapshot = await getDocs(
-    query(collection(db, 'actions'), where('createdBy', '==', uid), limit(100)),
-  );
-  const targets = snapshot.docs.filter((document) => {
+  const documents = await fetchAllOwnedBy('actions', 'createdBy', uid);
+  const targets = documents.filter((document) => {
     const organizer = asString(document.get('organizerName'));
     return organizer !== publicName && previousNames.includes(organizer);
   });

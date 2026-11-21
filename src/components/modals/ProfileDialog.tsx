@@ -2,7 +2,11 @@ import { useState } from 'react';
 import { UserRound } from 'lucide-react';
 import { LIMITS } from '../../config';
 import { toSerbianError } from '../../services/errors';
-import { cleanPublicName, publicNameLength } from '../../services/profile';
+import {
+  cleanPublicName,
+  isReservedPublicName,
+  publicNameLength,
+} from '../../services/profile';
 import { useApp } from '../../state/app-context';
 import { Spinner } from '../ui/EmptyState';
 import { Modal } from './Modal';
@@ -21,7 +25,6 @@ export function ProfileDialog({ mode }: { mode: 'first' | 'edit' }) {
   const [canClose, setCanClose] = useState(false);
 
   const first = mode === 'first';
-  const label = first ? 'Javno ime' : 'Korisničko ime';
   const clean = cleanPublicName(name);
 
   const submit = async () => {
@@ -32,6 +35,11 @@ export function ProfileDialog({ mode }: { mode: 'first' | 'edit' }) {
     }
     if (publicNameLength(clean) < LIMITS.publicNameMin) {
       setError(`Javno ime mora imati najmanje ${LIMITS.publicNameMin} znaka.`);
+      document.getElementById('public-name')?.focus();
+      return;
+    }
+    if (isReservedPublicName(clean)) {
+      setError('Ovo ime je rezervisano. Izaberi drugo.');
       document.getElementById('public-name')?.focus();
       return;
     }
@@ -90,7 +98,7 @@ export function ProfileDialog({ mode }: { mode: 'first' | 'edit' }) {
 
       <div className={`field${error ? ' has-error' : ''}`}>
         <div className="field__top">
-          <label htmlFor="public-name">{label}</label>
+          <label htmlFor="public-name">Javno ime</label>
           <span className="field__counter">
             {publicNameLength(clean)}/{LIMITS.publicNameMax}
           </span>

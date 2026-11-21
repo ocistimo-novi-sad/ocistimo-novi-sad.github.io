@@ -4,6 +4,7 @@ import {
   deleteDoc,
   deleteField,
   doc,
+  documentId,
   getCountFromServer,
   getDoc,
   getDocs,
@@ -18,6 +19,7 @@ import {
   writeBatch,
   type DocumentData,
   type QueryDocumentSnapshot,
+  type QuerySnapshot,
   type WriteBatch,
 } from 'firebase/firestore';
 import { requireAuth, requireDb } from './firebase';
@@ -301,6 +303,58 @@ export async function fetchMyReports(uid: string): Promise<Report[]> {
   return mapSnapshots(snapshot.docs);
 }
 
+const RENAME_PAGE = 200;
+
+/**
+ * Every document of a collection whose `field` is the person's uid, read page
+ * by page, so a rename after a public name change (#161) reaches all of them
+ * and not only the first page.
+ */
+export async function fetchAllOwnedBy(
+  collectionName: string,
+  field: string,
+  uid: string,
+): Promise<QueryDocumentSnapshot<DocumentData>[]> {
+  const base = query(
+    collection(requireDb(), collectionName),
+    where(field, '==', uid),
+    orderBy(documentId()),
+    limit(RENAME_PAGE),
+  );
+  const all: QueryDocumentSnapshot<DocumentData>[] = [];
+  let last: QueryDocumentSnapshot<DocumentData> | null = null;
+  for (;;) {
+    const page: QuerySnapshot<DocumentData> = await getDocs(
+      last ? query(base, startAfter(last)) : base,
+    );
+    all.push(...page.docs);
+    if (page.size < RENAME_PAGE) return all;
+    last = page.docs[page.docs.length - 1];
+  }
+}
+
+/**
+ * Writes one field on many reports. Each write costs a profile lookup in the
+ * rules, and a failed rule may also evaluate the moderator rule's two
+ * existence checks. Five writes per batch stay below Firestore's limit of
+ * twenty access calls for a batched write.
+ */
+async function renameInChunks(
+  documents: QueryDocumentSnapshot<DocumentData>[],
+  field: 'createdByName' | 'moderatedByName',
+  publicName: string,
+): Promise<void> {
+  const db = requireDb();
+  const CHUNK = 5;
+  for (let start = 0; start < documents.length; start += CHUNK) {
+    const batch = writeBatch(db);
+    for (const document of documents.slice(start, start + CHUNK)) {
+      batch.update(document.ref, { [field]: publicName });
+    }
+    await batch.commit();
+  }
+}
+
 /**
  * Rewrites the stored author snapshot after a public name change (#161), so
  * older reports show the new name too. Firestore rules allow an author to
@@ -310,24 +364,29 @@ export async function updateOwnReportAuthorName(
   uid: string,
   publicName: string,
 ): Promise<void> {
-  const db = requireDb();
-  const snapshot = await getDocs(
-    query(collection(db, 'reports'), where('createdBy', '==', uid), limit(500)),
-  );
-  const changed = snapshot.docs.filter(
+  const documents = await fetchAllOwnedBy('reports', 'createdBy', uid);
+  const changed = documents.filter(
     (document) => document.get('createdByName') !== publicName,
   );
-  // Each report costs a profile lookup, and a failed author rule may also
-  // evaluate the moderator rule's two existence checks. Five writes per batch
-  // stay below Firestore's twenty-access-call limit for batched writes.
-  const CHUNK = 5;
-  for (let start = 0; start < changed.length; start += CHUNK) {
-    const batch = writeBatch(db);
-    for (const document of changed.slice(start, start + CHUNK)) {
-      batch.update(document.ref, { createdByName: publicName });
-    }
-    await batch.commit();
-  }
+  await renameInChunks(changed, 'createdByName', publicName);
+}
+
+/**
+ * Rewrites the "Odobrio/Pregledao" stamp on reports the person moderated, so
+ * an older Google name or the "Moderator" fallback does not stay visible
+ * (#161). Who decided and when stay as they were. Reports without a stamp
+ * name are left alone.
+ */
+export async function updateOwnModeratorName(
+  uid: string,
+  publicName: string,
+): Promise<void> {
+  const documents = await fetchAllOwnedBy('reports', 'moderatedBy', uid);
+  const changed = documents.filter((document) => {
+    const current: unknown = document.get('moderatedByName');
+    return typeof current === 'string' && current !== publicName;
+  });
+  await renameInChunks(changed, 'moderatedByName', publicName);
 }
 
 const QUEUE_LIMIT = 50;

@@ -71,7 +71,7 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 - **Uloga se proverava pri prijavi i pri učitavanju stranice.** Ako administrator nekome dodeli ili oduzme ulogu moderatora, ta osoba novi meni vidi kada ponovo učita stranicu. Oduzeta prava prestaju da rade odmah, čak i ako je stari meni još na ekranu.
 - **Administrator je u spisku korisnika zaključan** (ikonica katanca). Ne može mu se promeniti uloga iz aplikacije.
 - **Moderatori ne vide spisak korisnika** niti tuđe adrese e-pošte.
-- **Javno se prikazuje samo javno ime** koje korisnik izabere pri prvom logovanju. Adresa e-pošte se nikada ne prikazuje javno; vide je samo vlasnik naloga i administratori.
+- **Javno se prikazuje samo javno ime** koje korisnik izabere pri prvom logovanju. Adresa e-pošte se nikada ne prikazuje javno; vide je samo vlasnik naloga i administratori. Nova prijava ne može da se pošalje bez javnog imena. Kad se ime promeni, menja se i na svim ranijim prijavama, akcijama i oznakama moderatora („Odobrio: …“).
 - **Moderator i administrator nisu iznad pravila za sopstvene prijave**: i njihova nova prijava ide na pregled. Mogu je, međutim, sami odobriti.
 - **Izmena moderatora ne ide na pregled, ni za sopstvenu prijavu.** Kao i kod tuđih prijava (UC-19), izmena se primenjuje odmah. Prijava koja je na pregledu ili odbijena ostaje u tom stanju dok je neko ne odobri; UC-08 i UC-09 važe samo za članove zajednice.
 
@@ -92,7 +92,7 @@ Aplikacija ima četiri nivoa pristupa. Svaki viši nivo ima sva prava nižih.
 
 | Stavka | Ko je vidi | Šta otvara |
 |---|---|---|
-| Javno ime, e-pošta (javno ime je boldovano u zagradi), oznaka uloge | Svi prijavljeni (oznaka samo za moderatora/administratora) | — |
+| Javno ime (podebljano), ispod njega e-pošta, oznaka uloge | Svi prijavljeni (oznaka samo za moderatora/administratora) | — |
 | **Lični podaci** | Svi prijavljeni | Dijalog za promenu javnog imena koje se prikazuje uz prijave i akcije. |
 | **Moje prijave** | Svi prijavljeni | Lista sopstvenih prijava i njihovog stanja. Crveni broj = prijave koje treba ispraviti. |
 | **Moderacija** | Moderator, administrator | Redovi za pregled: Nove prijave, Izmene, Sanacije, Sporan sadržaj. Broj = nove prijave, izmene i sanacije koje čekaju (sporan sadržaj se ne broji). |
@@ -263,7 +263,7 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
   1. Otvara se prozor „Uloguj se da nastaviš“ sa objašnjenjem zašto je nalog potreban.
   2. „Nastavi sa Google“ → izbor Google naloga.
   3. Aplikacija čuva Google ime, profilnu sliku i adresu e-pošte. Na tu adresu stižu obaveštenja.
-  4. Pri prvom logovanju otvara se dijalog „Lični podaci“ sa poljem „Javno ime“. Ime je obavezno i koristi se kao ime autora svih prijava i akcija; kasnije se menja iz menija naloga.
+  4. Pri prvom logovanju otvara se dijalog „Lični podaci“ sa poljem „Javno ime“. Ime je obavezno i koristi se kao ime autora svih prijava i akcija; kasnije se menja iz menija naloga. Imena koja liče na oznake tima („Moderator“, „Administrator“, „Admin“, „Moderacija“, „Administracija“, „Kuka i Motika“) nisu dozvoljena.
   5. Ako je prijava pokrenuta iz neke radnje, ta radnja se nastavlja (otvara se forma za prijavu ili prozor za prijavu sadržaja).
 - **Alternativno:** ako pregledač blokira iskačući prozor, prijava se obavlja preusmeravanjem na Google stranicu.
 
@@ -364,7 +364,7 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
 
 ## 8. Slučajevi korišćenja — moderator
 
-Moderator ima sve što i član zajednice, plus stavku **Moderacija** u meniju naloga. Moderacija ima četiri taba; uz Nove prijave, Izmene i Sanacije stoji broj stavki koje čekaju. Svaka odluka moderatora beleži se uz njegovo ime i vreme (vidljivo moderatorima u dnu detalja: „Odobrio: … · datum“).
+Moderator ima sve što i član zajednice, plus stavku **Moderacija** u meniju naloga. Moderacija ima četiri taba; uz Nove prijave, Izmene i Sanacije stoji broj stavki koje čekaju. Svaka odluka moderatora beleži se uz njegovo javno ime i vreme (vidljivo moderatorima u dnu detalja: „Odobrio: … · datum“).
 
 ### UC-14 Pregled novih prijava
 

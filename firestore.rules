@@ -40,6 +40,30 @@ service cloud.firestore {
       return !('email' in data) || data.email == request.auth.token.email;
     }
 
+    // A public name (#161): 2 to 40 characters. The staff titles and fallback
+    // stamps are reserved, so a member cannot pass as staff. Mirrored in
+    // src/config.ts (RESERVED_PUBLIC_NAMES); the client also trims it.
+    function validPublicName(data) {
+      return !('publicName' in data)
+        || (data.publicName is string
+            && data.publicName.size() >= 2
+            && data.publicName.size() <= 40);
+    }
+
+    function reservedPublicName(name) {
+      return name.lower() in [
+        'admin', 'administrator', 'administratorka', 'administracija',
+        'moderator', 'moderatorka', 'moderacija', 'kuka i motika'
+      ];
+    }
+
+    // The signed-in person's current public name, as stored in their profile.
+    // Name stamps on reports must use it instead of any string a client sends.
+    function ownPublicName() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid))
+        .data.get('publicName', '');
+    }
+
     // Which e-mails the person wants (#79). Only an explicit false turns a
     // kind off; the Cloud Functions read it in functions/src/recipients.ts.
     function validMailPrefs(data) {
@@ -225,10 +249,9 @@ service cloud.firestore {
            ])
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() <= 80
+        && validPublicName(request.resource.data)
         && (!('publicName' in request.resource.data)
-            || (request.resource.data.publicName is string
-                && request.resource.data.publicName.size() >= 2
-                && request.resource.data.publicName.size() <= 40))
+            || !reservedPublicName(request.resource.data.publicName))
         && request.resource.data.createdAt == request.time
         && request.resource.data.lastSeenAt == request.time
         && validProfileEmail(request.resource.data)
@@ -243,10 +266,11 @@ service cloud.firestore {
              ])
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() <= 80
-        && (!('publicName' in request.resource.data)
-            || (request.resource.data.publicName is string
-                && request.resource.data.publicName.size() >= 2
-                && request.resource.data.publicName.size() <= 40))
+        && validPublicName(request.resource.data)
+        // Checked only when the name changes, so a name stored before the
+        // list existed does not block the sign-in write (lastSeenAt).
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['publicName'])
+            || !reservedPublicName(request.resource.data.publicName))
         && request.resource.data.lastSeenAt == request.time
         && validProfileEmail(request.resource.data)
         && validMailPrefs(request.resource.data)
@@ -278,12 +302,11 @@ service cloud.firestore {
         && request.resource.data.moderation == 'pending'
         && request.resource.data.createdAt == request.time
         && request.resource.data.createdBy == request.auth.uid
+        // The author name shown in public is the profile's public name, never
+        // the Google name or any other string the client sends (#161).
         && (
              !('createdByName' in request.resource.data)
-             || (
-               request.resource.data.createdByName is string
-               && request.resource.data.createdByName.size() <= 60
-             )
+             || request.resource.data.createdByName == ownPublicName()
            );
 
       // Author, case 1: fixing a report before it is published. It goes back
@@ -340,9 +363,16 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['createdByName'])
         && request.resource.data.createdByName is string
         && request.resource.data.createdByName.size() >= 2
-        && request.resource.data.createdByName
-             == get(/databases/$(database)/documents/users/$(request.auth.uid))
-                  .data.get('publicName', '');
+        && request.resource.data.createdByName == ownPublicName();
+
+      // A moderator's own "Odobrio/Pregledao" stamp follows their public name
+      // (#161). Only the name changes; who decided and when stay as they were.
+      allow update: if signedIn()
+        && resource.data.get('moderatedBy', '') == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['moderatedByName'])
+        && request.resource.data.moderatedByName is string
+        && request.resource.data.moderatedByName.size() >= 2
+        && request.resource.data.moderatedByName == ownPublicName();
 
       // Moderators may change anything except authorship and creation time,
       // and every change is attributed to them.

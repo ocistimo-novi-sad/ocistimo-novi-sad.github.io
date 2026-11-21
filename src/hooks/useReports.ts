@@ -102,12 +102,10 @@ export function useReports() {
     setReports((current) => current.filter((report) => report.id !== reportId));
   }, []);
 
-  /** Keeps the author's public name visible without reloading the map (#161). */
-  const renameAuthor = useCallback((uid: string, publicName: string) => {
+  /** Keeps the person's public name visible without reloading the map (#161). */
+  const renamePerson = useCallback((uid: string, publicName: string, scope: RenameScope) => {
     setReports((current) =>
-      current.map((report) =>
-        report.createdBy === uid ? { ...report, createdByName: publicName } : report,
-      ),
+      current.map((report) => renamedReport(report, uid, publicName, scope)),
     );
   }, []);
 
@@ -123,6 +121,33 @@ export function useReports() {
     updateReport,
     upsertReport,
     removeReport,
-    renameAuthor,
+    renamePerson,
+  };
+}
+
+/** Which of the person's name stamps were renamed in the database. */
+export interface RenameScope {
+  author: boolean;
+  moderator: boolean;
+}
+
+/**
+ * The report with the person's new public name in the stamps that were
+ * renamed: "Autor prijave" and "Odobrio/Pregledao" (#161).
+ */
+export function renamedReport(
+  report: Report,
+  uid: string,
+  publicName: string,
+  scope: RenameScope,
+): Report {
+  const author = scope.author && report.createdBy === uid;
+  const moderator =
+    scope.moderator && report.moderatedBy === uid && report.moderatedByName !== undefined;
+  if (!author && !moderator) return report;
+  return {
+    ...report,
+    ...(author ? { createdByName: publicName } : {}),
+    ...(moderator ? { moderatedByName: publicName } : {}),
   };
 }
