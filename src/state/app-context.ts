@@ -38,6 +38,9 @@ export type ModalState =
 
 export type MobileTab = 'map' | 'list';
 
+/** What the compose drawer is creating or editing. */
+export type ComposeKind = 'report' | 'action';
+
 export interface AppContextValue {
   auth: ReturnType<typeof useAuth>;
 
@@ -100,12 +103,18 @@ export interface AppContextValue {
   setMobileTab: (tab: MobileTab) => void;
 
   composeOpen: boolean;
-  /** The form is open and the map picks the report location (false on "Hvala!"). */
+  /** The form is open and the map picks its location (false on "Hvala!"). */
   composePicking: boolean;
+  /** The report location, or the action meeting point. */
   composeLocation: Coordinates | null;
   /** The report being edited in the compose drawer, or null for a new one. */
   composeEditing: Report | null;
+  composeKind: ComposeKind;
+  /** The action being edited in the compose drawer, or null for a new one. */
+  composeEditingAction: CleanupAction | null;
   startCompose: () => void;
+  /** Moderators: the action form over the map; others see why they cannot. */
+  startActionCompose: (action?: CleanupAction) => void;
   cancelCompose: () => void;
   setComposeLocation: (coordinates: Coordinates) => void;
   editReport: (report: Report) => void;

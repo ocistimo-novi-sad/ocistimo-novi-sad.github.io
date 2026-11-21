@@ -1,3 +1,4 @@
+import { ActionComposeDrawer } from './components/ActionComposeDrawer';
 import { ActionsPanel } from './components/ActionsPanel';
 import { ActionDetail } from './components/ActionDetail';
 import { AdminPanel } from './components/admin/AdminPanel';
@@ -58,8 +59,16 @@ function ModalHost() {
 }
 
 function AppShell() {
-  const { layer, mobileTab, selectedReport, selectedAction, composeOpen, composeEditing } =
-    useApp();
+  const {
+    layer,
+    mobileTab,
+    selectedReport,
+    selectedAction,
+    composeOpen,
+    composeKind,
+    composeEditing,
+    composeEditingAction,
+  } = useApp();
   const drawerOpen = composeOpen || Boolean(selectedReport) || Boolean(selectedAction);
 
   return (
@@ -75,7 +84,9 @@ function AppShell() {
           <MapCanvas />
         </div>
 
-        {composeOpen ? (
+        {composeOpen && composeKind === 'action' ? (
+          <ActionComposeDrawer key={composeEditingAction?.id ?? 'new-action'} />
+        ) : composeOpen ? (
           // Keyed so switching between a new report and an edit starts fresh.
           <ComposeDrawer key={composeEditing?.id ?? 'new'} />
         ) : selectedReport ? (

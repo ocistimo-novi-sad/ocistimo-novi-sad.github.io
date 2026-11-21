@@ -27,6 +27,17 @@ function snapHeight(drawer: HTMLElement, snap: Snap): number {
   return measured;
 }
 
+/**
+ * Phone: how tall the open drawer is once it settles. A lowered drawer stays
+ * lowered; otherwise it is measured at its normal height, which is where it
+ * goes back to when the form asks to show the map. Null when no drawer is open.
+ */
+export function settledDrawerHeight(): number | null {
+  const drawer = document.querySelector<HTMLElement>('.drawer');
+  if (!drawer) return null;
+  return snapHeight(drawer, drawer.classList.contains('is-peek') ? 'peek' : 'normal');
+}
+
 interface DragState {
   startY: number;
   startHeight: number;
