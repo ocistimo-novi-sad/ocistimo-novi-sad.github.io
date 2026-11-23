@@ -113,6 +113,8 @@ Na avataru se pojavljuje **crvena tačka** kada nešto čeka korisnika: odbijena
 
 Na dnu ekrana je traka: **Mapa**, **＋ Prijavi** (u sredini), **Lista**. Mapa i Lista prikazuju ono što je izabrano prekidačem **Prijave | Akcije**. „＋ Prijavi“ otvara formu za novu prijavu; moderatoru i administratoru nudi izbor „Prijavi problem“ ili „Nova akcija“. Detalji i forme se otvaraju kao list koji se izvlači odozdo; dok je list otvoren, donja traka se ne prikazuje.
 
+Svi listovi (detalji prijave i akcije, forma za prijavu i forma za akciju) otvaraju se na istoj visini, oko donje polovine ekrana (45%; na niskim ekranima 56%), tako da se iznad njih vidi mapa. Mapa se pomera tako da pin izabrane prijave ili akcije bude na sredini vidljivog dela mape, i kada se otvori iz liste i kada se klikne na pin. Dok su detalji otvoreni, traka iznad mape (prekidač **Prijave | Akcije**, pretraga i „Filteri“) se ne prikazuje i vraća se kada se detalji zatvore. List se povlačenjem nagore ili dodirom na „^“ širi skoro na ceo ekran, a povlačenjem nadole spušta ili zatvara.
+
 Pri prvom dolasku na telefonu pojavljuje se **kratak vodič** u tri koraka: „＋ Prijavi“, prekidač „Prijave | Akcije“ i „Lista“. Može da se preskoči, a ponovo se pokreće iz „O projektu“ → „Pokreni kratak vodič kroz aplikaciju“.
 
 ---
@@ -277,7 +279,7 @@ Akcije menjaju moderatori i administratori; status može da se postavi na bilo k
 - **Gde:** „Prijavi problem“ u zaglavlju (računar) ili „＋ Prijavi“ u donjoj traci (telefon); „Nova prijava“ u praznoj listi „Moje prijave“
 - **Preduslov:** korisnik je prijavljen (inače se prvo traži prijava, UC-05)
 - **Tok:**
-  1. **Lokacija:** korisnik klikne na mapu ili koristi svoju lokaciju. Tačka mora biti u Novom Sadu. Na telefonu forma zauzima donjih oko 45% ekrana, a traka na vrhu mape ima jedan red („Klikni na mapu da postaviš lokaciju“), tako da je mapa za biranje što veća. Kada se tačka izabere preko „Koristi moju lokaciju“ ili klikom na karticu lokacije, mapa se pomera tako da marker bude na sredini vidljivog dela mape (između trake i forme).
+  1. **Lokacija:** korisnik klikne na mapu ili koristi svoju lokaciju. Tačka mora biti u Novom Sadu. Na telefonu forma zauzima donjih oko 45% ekrana, kao i detalji (vidi 3.4), a traka na vrhu mape ima jedan red („Klikni na mapu da postaviš lokaciju“), tako da je mapa za biranje što veća. Kada se tačka izabere preko „Koristi moju lokaciju“ ili klikom na karticu lokacije, mapa se pomera tako da marker bude na sredini vidljivog dela mape (između trake i forme).
   2. **Detalji:** naslov, kategorija, opis, adresa ili orijentir (opciono).
   3. **Kako možemo da rešimo:** „Šta zajednica može sama“ i „Za šta nam treba pomoć“ — oba opciona, mogu se popuniti brzim izborom ponuđenih odgovora.
   4. **Fotografije:** do 3, opciono. Aplikacija ih smanjuje i uklanja podatke iz fotografije (uključujući GPS lokaciju telefona) pre slanja.

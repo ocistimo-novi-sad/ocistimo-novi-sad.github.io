@@ -366,7 +366,8 @@ export function MapCanvas() {
         ) : null}
       </MapContainer>
 
-      {isMobile && !composeOpen ? (
+      {/* Hidden while a detail is open, so its pin has room above the sheet (#188). */}
+      {isMobile && !composeOpen && !selectedReport && !selectedAction ? (
         <div className="map-mobile-bar">
           <LayerSwitch />
           <div className="filters__row">

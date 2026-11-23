@@ -157,7 +157,9 @@
     width: 100%;
     max-width: none;
     max-height: calc(100dvh - var(--header-h) - env(safe-area-inset-top, 0px));
-    height: 64vh;
+    /* One height for every sheet, details and forms alike: the map above it
+       keeps room for the pin (#184, #188). */
+    height: 45vh;
     border-top: 1px solid var(--line);
     border-left: 0;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
@@ -167,15 +169,6 @@
   }
 
   .drawer.is-expanded {
-    height: 92vh;
-  }
-
-  /* Lower than a detail: the map above it is where the location is picked (#184). */
-  .drawer--compose {
-    height: 45vh;
-  }
-
-  .drawer--compose.is-expanded {
     height: 92vh;
   }
 
@@ -573,15 +566,6 @@
     font-size: 1.3125rem;
   }
 
-  .drawer {
-    height: 68vh;
-  }
-
-  /* Repeated: the rule above comes later and would make the form taller again. */
-  .drawer--compose {
-    height: 45vh;
-  }
-
   .map-controls {
     top: 10px;
   }
@@ -633,15 +617,10 @@
 
 @media (max-height: 640px) and (max-width: 900px) {
   .drawer {
-    height: 74vh;
-  }
-
-  .drawer--compose {
     height: 56vh;
   }
 
-  .drawer.is-expanded,
-  .drawer--compose.is-expanded {
+  .drawer.is-expanded {
     height: 96vh;
   }
 }
