@@ -21,16 +21,12 @@ export function errorCode(error: unknown): string {
 }
 
 const MESSAGES: Record<string, string> = {
-  'permission-denied':
-    'Pristup bazi je odbijen. Proveri da li je korisnik ulogovan i da li su Firestore pravila objavljena.',
+  'permission-denied': 'Nemaš dozvolu za ovu radnju. Osveži stranicu i pokušaj ponovo.',
   unauthenticated: 'Uloguj se da nastaviš.',
   'auth/requires-recent-login': 'Uloguj se ponovo da nastaviš.',
-  unavailable:
-    'Baza trenutno nije dostupna. Proveri internet vezu i da li je Cloud Firestore omogućen.',
-  timeout:
-    'Baza ne odgovara. Proveri da li je Cloud Firestore kreiran u Firebase konzoli, da li je API omogućen i da li su pravila objavljena.',
-  'failed-precondition':
-    'Baza nije pravilno pripremljena. Proveri da li su pravila i indeksi primenjeni.',
+  unavailable: 'Baza trenutno nije dostupna. Proveri internet vezu i pokušaj ponovo.',
+  timeout: 'Veza sa bazom je spora ili prekinuta. Proveri internet vezu i pokušaj ponovo.',
+  'failed-precondition': 'Došlo je do greške na sajtu. Pokušaj ponovo kasnije.',
   'invalid-argument': 'Poslati podaci nisu ispravni.',
   'resource-exhausted': 'Prekoračen je dozvoljeni broj zahteva. Pokušaj kasnije.',
   'deadline-exceeded': 'Zahtev je istekao. Pokušaj ponovo.',
@@ -40,9 +36,10 @@ const MESSAGES: Record<string, string> = {
   'auth/cancelled-popup-request': 'Logovanje je otkazano.',
   'auth/popup-blocked':
     'Pregledač je blokirao prozor za logovanje. Dozvoli iskačuće prozore za ovaj sajt.',
-  'auth/operation-not-allowed': 'Logovanje Google nalogom nije omogućeno u Firebase konzoli.',
+  'auth/operation-not-allowed':
+    'Logovanje Google nalogom trenutno nije dostupno. Pokušaj kasnije.',
   'auth/unauthorized-domain':
-    'Ovaj domen nije autorizovan u Firebase konzoli (Authentication → Settings → Authorized domains).',
+    'Logovanje trenutno nije dostupno na ovoj adresi sajta. Pokušaj kasnije.',
   'auth/network-request-failed': 'Logovanje nije uspelo zbog mreže. Pokušaj ponovo.',
   'auth/account-exists-with-different-credential':
     'Nalog sa ovom mejl adresom već koristi drugi način logovanja.',
@@ -56,7 +53,7 @@ const MESSAGES: Record<string, string> = {
   'storage/processing':
     'Fotografiju nije moguće obraditi. Probaj drugu fotografiju (JPG, PNG ili WebP).',
   'storage/unauthorized':
-    'Otpremanje je odbijeno. Proveri da li je korisnik ulogovan i da li su Storage pravila objavljena.',
+    'Otpremanje fotografije je odbijeno. Osveži stranicu i pokušaj ponovo.',
   'storage/unauthenticated': 'Uloguj se da dodaš fotografiju.',
   'storage/retry-limit-exceeded':
     'Otpremanje fotografije nije uspelo zbog mreže. Pokušaj ponovo.',
@@ -64,9 +61,17 @@ const MESSAGES: Record<string, string> = {
   'storage/canceled': 'Otpremanje fotografije je prekinuto.',
 };
 
+/** User-facing text for a Firestore request that never answered. */
+export const TIMEOUT_MESSAGE = MESSAGES.timeout;
+
+/**
+ * Messages are written for the people using the site. The technical cause
+ * (code and original error) goes to the console for developers.
+ */
 export function toSerbianError(error: unknown, fallback: string): string {
-  if (error instanceof AppError) return error.message;
   const code = errorCode(error);
+  console.error(`[Kuka i Motika] ${code}`, error);
+  if (error instanceof AppError) return error.message;
   if (MESSAGES[code]) return MESSAGES[code];
 
   if (code.startsWith('auth/')) {
