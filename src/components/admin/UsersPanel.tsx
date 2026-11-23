@@ -211,7 +211,7 @@ export function UsersPanel() {
                   {user.role === 'admin' ? (
                     <span
                       className="role-lock"
-                      title="Administratori se dodeljuju u Firebase konzoli."
+                      title="Ulogu administratora nije moguće promeniti ovde."
                     >
                       <LockKeyhole size={12} aria-hidden="true" /> {ROLE_LABELS.admin}
                     </span>
@@ -264,8 +264,7 @@ export function UsersPanel() {
       )}
 
       <p className="users__note">
-        Administratori se dodaju samo u Firebase konzoli (kolekcija <code>admins</code>).
-        Moderatori ne vide spisak korisnika.
+        Nove administratore dodaje tim koji održava sajt. Moderatori ne vide spisak korisnika.
       </p>
     </div>
   );

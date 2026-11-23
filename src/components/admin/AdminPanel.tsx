@@ -138,7 +138,7 @@ export function AdminPanel() {
       footer={
         <div className="modal-actions">
           <span className="modal-foot-note">
-            <ShieldCheck size={12} aria-hidden="true" /> Pristup je ograničen Firestore pravilima.
+            <ShieldCheck size={12} aria-hidden="true" /> Ovaj deo vide samo moderatori i administratori.
           </span>
           <button type="button" className="btn btn--quiet btn--sm" onClick={closeModal}>
             Zatvori
