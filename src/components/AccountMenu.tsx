@@ -105,7 +105,8 @@ export function AccountMenu() {
     );
   }
 
-  const name = auth.user.displayName ?? 'Član zajednice';
+  const publicName = auth.publicName;
+  const name = publicName ?? auth.user.displayName ?? 'Član zajednice';
 
   return (
     <div className="account" ref={wrapperRef}>
@@ -131,7 +132,8 @@ export function AccountMenu() {
       {open ? (
         <div className="account__menu" role="menu">
           <div className="account__identity">
-            <span className="account__name">{name}</span>
+            {/* On its own line: the e-mail line is cut off with an ellipsis. */}
+            {publicName ? <span className="account__name">{publicName}</span> : null}
             <span className="account__email">{auth.user.email}</span>
             {auth.role !== 'user' ? (
               <span className={`account__role account__role--${auth.role}`}>
@@ -139,6 +141,18 @@ export function AccountMenu() {
               </span>
             ) : null}
           </div>
+          <button
+            type="button"
+            role="menuitem"
+            className="account__item"
+            onClick={() => {
+              setOpen(false);
+              openModal({ kind: 'profile', mode: 'edit' });
+            }}
+          >
+            <UserRound size={15} aria-hidden="true" />
+            Lični podaci
+          </button>
           <button
             type="button"
             role="menuitem"

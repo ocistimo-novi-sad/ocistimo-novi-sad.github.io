@@ -1,11 +1,5 @@
 import { getApp, getApps, initializeApp, type FirebaseApp } from 'firebase/app';
-import {
-  getFirestore,
-  initializeFirestore,
-  persistentLocalCache,
-  persistentMultipleTabManager,
-  type Firestore,
-} from 'firebase/firestore';
+import { initializeFirestore, memoryLocalCache, type Firestore } from 'firebase/firestore';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getStorage, type FirebaseStorage } from 'firebase/storage';
 
@@ -39,16 +33,11 @@ let storage: FirebaseStorage | null = null;
 if (isFirebaseConfigured) {
   try {
     app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-    try {
-      db = initializeFirestore(app, {
-        localCache: persistentLocalCache({
-          tabManager: persistentMultipleTabManager(),
-        }),
-      });
-    } catch {
-      // IndexedDB may be unavailable (private browsing). Fall back to memory.
-      db = getFirestore(app);
-    }
+    // Memory cache, not IndexedDB: on iOS Safari the IndexedDB connection can
+    // get stuck (a tab back from the background, the site open in two tabs),
+    // and Firestore then waits on it forever without reaching the network.
+    // The app only makes one-off reads, so it loses nothing without it (#186).
+    db = initializeFirestore(app, { localCache: memoryLocalCache() });
     auth = getAuth(app);
     // Photos live in Cloud Storage for Firebase; without a bucket the app
     // simply runs without photo uploads.

@@ -14,7 +14,10 @@ import type {
   NewActionInput,
   Report,
 } from '../../types';
+import { Drawer } from '../Drawer';
+import { MapLocationField, useDrawerMapFocus } from '../MapLocationField';
 import { CategoryGlyph } from '../ui/CategoryGlyph';
+import { ConfirmSheet } from '../ui/ConfirmSheet';
 import { Spinner } from '../ui/EmptyState';
 import { PhotoPicker } from '../ui/PhotoPicker';
 import { StatusDot } from '../ui/StatusBadge';
@@ -49,18 +52,29 @@ function defaultDate(): Date {
   return date;
 }
 
+const SHEET_FORM_ID = 'action-sheet-form';
+
+/**
+ * `modal`: inside the admin panel, with a small map of its own.
+ * `drawer`: over the main map like the report form; the meeting point is
+ * picked on the big map, where the reports around it are visible (#184).
+ */
 export function ActionForm({
   action,
   reports,
   onCancel,
   onSaved,
+  variant = 'modal',
 }: {
   action: CleanupAction | null;
   reports: Report[];
   onCancel: () => void;
   onSaved: () => void;
+  variant?: 'modal' | 'drawer';
 }) {
-  const { auth, notify } = useApp();
+  const { auth, notify, composeLocation } = useApp();
+  const inDrawer = variant === 'drawer';
+  const { collapseSignal, focusMap, locateMe } = useDrawerMapFocus();
 
   const [title, setTitle] = useState(action?.title ?? '');
   const [description, setDescription] = useState(action?.description ?? '');
@@ -76,7 +90,7 @@ export function ActionForm({
   const [status, setStatus] = useState<ActionStatus>(action?.status ?? 'planned');
   const [suppliesText, setSuppliesText] = useState(action?.supplies.join('\n') ?? '');
   const [organizerName, setOrganizerName] = useState(
-    action?.organizerName ?? auth.user?.displayName ?? '',
+    action?.organizerName ?? auth.publicName ?? '',
   );
   const [organizerNote, setOrganizerNote] = useState(action?.organizerNote ?? '');
   const [selectedReports, setSelectedReports] = useState<string[]>(action?.reportIds ?? []);
@@ -95,6 +109,32 @@ export function ActionForm({
   const [errors, setErrors] = useState<Errors>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  // Drawer only: a swipe down must not throw away a half-filled form.
+  const [touched, setTouched] = useState(false);
+  const [confirmClose, setConfirmClose] = useState(false);
+
+  // In the drawer the big map holds the point; in the modal, the small one.
+  const location: Coordinates | null = inDrawer ? composeLocation : point;
+  const outsideArea =
+    location !== null &&
+    (location.latitude < APP.bounds.south ||
+      location.latitude > APP.bounds.north ||
+      location.longitude < APP.bounds.west ||
+      location.longitude > APP.bounds.east);
+  const locationMoved = action
+    ? location?.latitude !== action.latitude || location?.longitude !== action.longitude
+    : location !== null;
+  // `touched` is set by any change event inside the form, photos included.
+  const dirty = touched || locationMoved;
+
+  const requestClose = () => {
+    if (saving) return;
+    if (inDrawer && dirty) {
+      setConfirmClose(true);
+      return;
+    }
+    onCancel();
+  };
 
   const toggleReport = (reportId: string) => {
     setSelectedReports((current) =>
@@ -121,12 +161,9 @@ export function ActionForm({
     if (!meetingPoint.trim()) {
       next.meetingPoint = 'Unesi mesto okupljanja.';
     }
-    if (
-      point.latitude < APP.bounds.south ||
-      point.latitude > APP.bounds.north ||
-      point.longitude < APP.bounds.west ||
-      point.longitude > APP.bounds.east
-    ) {
+    if (!location) {
+      next.coordinates = 'Izaberi mesto okupljanja na mapi.';
+    } else if (outsideArea) {
       next.coordinates = 'Mesto okupljanja mora biti unutar područja Novog Sada.';
     }
     if (!organizerName.trim()) {
@@ -147,10 +184,13 @@ export function ActionForm({
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     const nextErrors = validate();
-    if (Object.keys(nextErrors).length > 0) {
+    if (Object.keys(nextErrors).length > 0 || !location) {
       setErrors(nextErrors);
+      // A long form: in the drawer the first error may be far below the fold.
+      if (inDrawer) setSubmitError('Proveri označena polja.');
       return;
     }
+    setConfirmClose(false);
 
     const supplies = suppliesText
       .split('\n')
@@ -179,8 +219,8 @@ export function ActionForm({
       description: description.trim(),
       date: new Date(dateValue),
       meetingPoint: meetingPoint.trim(),
-      latitude: point.latitude,
-      longitude: point.longitude,
+      latitude: location.latitude,
+      longitude: location.longitude,
       status,
       reportIds: selectedReports,
       supplies,
@@ -213,170 +253,366 @@ export function ActionForm({
     }
   };
 
+  const formAlert = submitError ? (
+    <div className="form-alert" role="alert">
+      <TriangleAlert size={15} aria-hidden="true" />
+      <p>{submitError}</p>
+    </div>
+  ) : null;
+
+  const basicsSection = (
+    <div className="admin-form__section">
+      <p className="eyebrow">Osnovno</p>
+
+      <div className={`field${errors.title ? ' has-error' : ''}`}>
+        <div className="field__top">
+          <label htmlFor="action-title">Naziv akcije</label>
+          <span className="field__counter">
+            {title.trim().length}/{TITLE_MAX}
+          </span>
+        </div>
+        <input
+          id="action-title"
+          type="text"
+          value={title}
+          maxLength={TITLE_MAX}
+          onChange={(event) => setTitle(event.target.value)}
+          placeholder="Na primer: Jesenje čišćenje Futoškog parka"
+          disabled={saving}
+        />
+        {errors.title ? <p className="field__error">{errors.title}</p> : null}
+      </div>
+
+      <div className={`field${errors.description ? ' has-error' : ''}`}>
+        <div className="field__top">
+          <label htmlFor="action-description">Opis i plan rada</label>
+          <span className="field__counter">
+            {description.trim().length}/{DESCRIPTION_MAX}
+          </span>
+        </div>
+        <textarea
+          id="action-description"
+          rows={4}
+          value={description}
+          maxLength={DESCRIPTION_MAX}
+          onChange={(event) => setDescription(event.target.value)}
+          placeholder="Šta se radi, kako je organizovano, šta učesnici treba da znaju."
+          disabled={saving}
+        />
+        {errors.description ? <p className="field__error">{errors.description}</p> : null}
+      </div>
+
+      <div className="field">
+        <label htmlFor="action-status">Status akcije</label>
+        <select
+          id="action-status"
+          value={status}
+          onChange={(event) => setStatus(event.target.value as ActionStatus)}
+          disabled={saving}
+        >
+          {ACTION_STATUSES.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <p className="field__hint">Status menjaj kada se termin potvrdi ili akcija završi.</p>
+      </div>
+    </div>
+  );
+
+  const photosSection = (
+    <div className="admin-form__section">
+      <p className="eyebrow">Fotografije</p>
+
+      {!imagesEnabled ? (
+        <div className="notice notice--warn">
+          <TriangleAlert size={14} aria-hidden="true" />
+          <p>Otpremanje fotografija nije podešeno. Akcija može biti sačuvana i bez njih.</p>
+        </div>
+      ) : (
+        <>
+          <div className="field">
+            <span className="field__label">
+              Naslovna slika <span className="field__optional">opciono</span>
+            </span>
+            <PhotoPicker
+              photos={cover.photos}
+              onAdd={(files) => setPhotoError(cover.addFiles(files))}
+              onRemove={cover.removePhoto}
+              disabled={saving}
+              max={cover.max}
+              addLabel="Dodaj"
+            />
+            <p className="field__hint">
+              Vidi se na kartici akcije i na vrhu njenog opisa. Na primer mesto pre čišćenja.
+            </p>
+          </div>
+
+          {status === 'completed' || results.photos.length > 0 ? (
+            <div className="field">
+              <span className="field__label">
+                Fotografije sa akcije <span className="field__optional">opciono</span>
+              </span>
+              <PhotoPicker
+                photos={results.photos}
+                onAdd={(files) => setPhotoError(results.addFiles(files))}
+                onRemove={results.removePhoto}
+                disabled={saving}
+                max={results.max}
+              />
+              <p className="field__hint">
+                Do {LIMITS.actionResultsMax} fotografija koje pokazuju šta je urađeno. Vide se u
+                opisu završene akcije.
+              </p>
+            </div>
+          ) : (
+            <p className="field__hint">
+              Fotografije sa akcije možeš dodati kada status promeniš u „Završeno”.
+            </p>
+          )}
+
+          {photoError ? (
+            <p className="field__error" role="alert">
+              {photoError}
+            </p>
+          ) : null}
+        </>
+      )}
+    </div>
+  );
+
+  const dateField = (
+    <div className={`field${errors.date ? ' has-error' : ''}`}>
+      <label htmlFor="action-date">Datum i vreme</label>
+      <input
+        id="action-date"
+        type="datetime-local"
+        value={dateValue}
+        onChange={(event) => setDateValue(event.target.value)}
+        disabled={saving}
+      />
+      {errors.date ? <p className="field__error">{errors.date}</p> : null}
+    </div>
+  );
+
+  const meetingField = (
+    <div className={`field${errors.meetingPoint ? ' has-error' : ''}`}>
+      <div className="field__top">
+        <label htmlFor="action-meeting">Mesto okupljanja</label>
+        <span className="field__counter">
+          {meetingPoint.trim().length}/{MEETING_MAX}
+        </span>
+      </div>
+      <input
+        id="action-meeting"
+        type="text"
+        value={meetingPoint}
+        maxLength={MEETING_MAX}
+        onChange={(event) => setMeetingPoint(event.target.value)}
+        placeholder="Ulaz u park, kod spomenika…"
+        disabled={saving}
+      />
+      {errors.meetingPoint ? <p className="field__error">{errors.meetingPoint}</p> : null}
+    </div>
+  );
+
+  const reportsSection = (
+    <div className="admin-form__section">
+      <p className="eyebrow">Povezane prijave</p>
+      <p className="admin-form__hint">
+        Izaberi prijave koje ova akcija rešava. Veza je vidljiva na obe strane.
+      </p>
+      {reports.length === 0 ? (
+        <p className="field__hint">Nema učitanih prijava za povezivanje.</p>
+      ) : (
+        <div className="report-picker" role="group" aria-label="Povezane prijave">
+          {reports.map((report) => {
+            const checked = selectedReports.includes(report.id);
+            return (
+              <label key={report.id} className={`report-pick${checked ? ' is-selected' : ''}`}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggleReport(report.id)}
+                  disabled={saving}
+                />
+                <span className="report-pick__glyph" data-category={report.category}>
+                  <CategoryGlyph category={report.category} size={12} />
+                </span>
+                <span className="report-pick__title">{report.title}</span>
+                <StatusDot status={report.status} />
+              </label>
+            );
+          })}
+        </div>
+      )}
+      <p className="field__hint">
+        Izabrano {selectedReports.length} od najviše {MAX_REPORTS} prijava.
+      </p>
+    </div>
+  );
+
+  const organizerSection = (
+    <div className="admin-form__section">
+      <p className="eyebrow">Oprema i organizator</p>
+
+      <div className={`field${errors.supplies ? ' has-error' : ''}`}>
+        <label htmlFor="action-supplies">Šta je potrebno poneti</label>
+        <textarea
+          id="action-supplies"
+          rows={4}
+          value={suppliesText}
+          onChange={(event) => setSuppliesText(event.target.value)}
+          placeholder={'Rukavice\nVreće za otpad\nGrablje i metle'}
+          disabled={saving}
+        />
+        <p className="field__hint">
+          Jedna stavka po redu, do {SUPPLY_MAX} karaktera. Najviše {MAX_SUPPLIES} stavki.
+        </p>
+        {errors.supplies ? <p className="field__error">{errors.supplies}</p> : null}
+      </div>
+
+      <div className={`field${errors.organizer ? ' has-error' : ''}`}>
+        <div className="field__top">
+          <label htmlFor="action-organizer">Organizator</label>
+          <span className="field__counter">
+            {organizerName.trim().length}/{ORGANIZER_MAX}
+          </span>
+        </div>
+        <input
+          id="action-organizer"
+          type="text"
+          value={organizerName}
+          maxLength={ORGANIZER_MAX}
+          onChange={(event) => setOrganizerName(event.target.value)}
+          placeholder="Udruženje, mesna zajednica ili ime organizatora"
+          disabled={saving}
+        />
+        {errors.organizer ? <p className="field__error">{errors.organizer}</p> : null}
+      </div>
+
+      <div className="field">
+        <div className="field__top">
+          <label htmlFor="action-note">
+            Napomena za učesnike <span className="field__optional">opciono</span>
+          </label>
+          <span className="field__counter">
+            {organizerNote.trim().length}/{NOTE_MAX}
+          </span>
+        </div>
+        <textarea
+          id="action-note"
+          rows={3}
+          value={organizerNote}
+          maxLength={NOTE_MAX}
+          onChange={(event) => setOrganizerNote(event.target.value)}
+          placeholder="Kontakt, pravila, šta učesnici treba da znaju."
+          disabled={saving}
+        />
+      </div>
+    </div>
+  );
+
+  const submitLabel = saving ? 'Čuvanje…' : action ? 'Sačuvaj izmene' : 'Objavi akciju';
+
+  if (inDrawer) {
+    return (
+      <Drawer
+        label={action ? 'Uređivanje akcije' : 'Nova akcija'}
+        onClose={requestClose}
+        className="drawer--compose"
+        collapseSignal={collapseSignal}
+        footer={
+          <div className="compose-foot">
+            {formAlert}
+            <div className="compose-foot__row">
+              <button
+                type="button"
+                className="btn btn--quiet"
+                onClick={requestClose}
+                disabled={saving}
+              >
+                Otkaži
+              </button>
+              <button
+                type="submit"
+                form={SHEET_FORM_ID}
+                className="btn btn--primary"
+                disabled={saving}
+              >
+                {saving ? <Spinner size={15} /> : null}
+                {submitLabel}
+              </button>
+            </div>
+            <p className="compose-foot__note">
+              Akcija je javna čim se sačuva. Sačuvaj tek kada su termin i mesto potvrđeni.
+            </p>
+          </div>
+        }
+      >
+        <h2 className="compose-title">{action ? 'Uredi akciju' : 'Nova akcija'}</h2>
+
+        {/* Any change inside marks the form as touched, so closing asks first. */}
+        <form
+          id={SHEET_FORM_ID}
+          onSubmit={(event) => void submit(event)}
+          onChange={() => setTouched(true)}
+        >
+          {/* The location first, as in the report form: it is picked on the map above. */}
+          <div className="admin-form__section">
+            <p className="eyebrow">Lokacija</p>
+            <MapLocationField
+              buttonId="action-map-button"
+              location={location}
+              outsideArea={outsideArea}
+              error={errors.coordinates}
+              disabled={saving}
+              onFocusMap={focusMap}
+              onLocateMe={locateMe}
+            />
+            {meetingField}
+          </div>
+
+          {basicsSection}
+
+          <div className="admin-form__section">
+            <p className="eyebrow">Termin</p>
+            {dateField}
+          </div>
+
+          {photosSection}
+          {reportsSection}
+          {organizerSection}
+        </form>
+
+        {confirmClose && !saving ? (
+          <ConfirmSheet
+            title={action ? 'Odbaciti izmene?' : 'Odbaciti novu akciju?'}
+            message={action ? 'Akcija ostaje kakva je bila.' : 'Uneti podaci neće biti sačuvani.'}
+            keepLabel="Nastavi unos"
+            confirmLabel={action ? 'Odbaci izmene' : 'Odbaci akciju'}
+            onKeep={() => setConfirmClose(false)}
+            onConfirm={onCancel}
+          />
+        ) : null}
+      </Drawer>
+    );
+  }
+
   return (
     <form className="admin-form" onSubmit={(event) => void submit(event)}>
       <div className="admin-form__scroll">
-        {submitError ? (
-          <div className="form-alert" role="alert">
-            <TriangleAlert size={15} aria-hidden="true" />
-            <p>{submitError}</p>
-          </div>
-        ) : null}
-
-        <div className="admin-form__section">
-          <p className="eyebrow">Osnovno</p>
-
-          <div className={`field${errors.title ? ' has-error' : ''}`}>
-            <div className="field__top">
-              <label htmlFor="action-title">Naziv akcije</label>
-              <span className="field__counter">
-                {title.trim().length}/{TITLE_MAX}
-              </span>
-            </div>
-            <input
-              id="action-title"
-              type="text"
-              value={title}
-              maxLength={TITLE_MAX}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="Na primer: Jesenje čišćenje Futoškog parka"
-              disabled={saving}
-            />
-            {errors.title ? <p className="field__error">{errors.title}</p> : null}
-          </div>
-
-          <div className={`field${errors.description ? ' has-error' : ''}`}>
-            <div className="field__top">
-              <label htmlFor="action-description">Opis i plan rada</label>
-              <span className="field__counter">
-                {description.trim().length}/{DESCRIPTION_MAX}
-              </span>
-            </div>
-            <textarea
-              id="action-description"
-              rows={4}
-              value={description}
-              maxLength={DESCRIPTION_MAX}
-              onChange={(event) => setDescription(event.target.value)}
-              placeholder="Šta se radi, kako je organizovano, šta učesnici treba da znaju."
-              disabled={saving}
-            />
-            {errors.description ? <p className="field__error">{errors.description}</p> : null}
-          </div>
-
-          <div className="field">
-            <label htmlFor="action-status">Status akcije</label>
-            <select
-              id="action-status"
-              value={status}
-              onChange={(event) => setStatus(event.target.value as ActionStatus)}
-              disabled={saving}
-            >
-              {ACTION_STATUSES.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <p className="field__hint">Status menjaj kada se termin potvrdi ili akcija završi.</p>
-          </div>
-        </div>
-
-        <div className="admin-form__section">
-          <p className="eyebrow">Fotografije</p>
-
-          {!imagesEnabled ? (
-            <div className="notice notice--warn">
-              <TriangleAlert size={14} aria-hidden="true" />
-              <p>Otpremanje fotografija nije podešeno. Akcija može biti sačuvana i bez njih.</p>
-            </div>
-          ) : (
-            <>
-              <div className="field">
-                <span className="field__label">
-                  Naslovna slika <span className="field__optional">opciono</span>
-                </span>
-                <PhotoPicker
-                  photos={cover.photos}
-                  onAdd={(files) => setPhotoError(cover.addFiles(files))}
-                  onRemove={cover.removePhoto}
-                  disabled={saving}
-                  max={cover.max}
-                  addLabel="Dodaj"
-                />
-                <p className="field__hint">
-                  Vidi se na kartici akcije i na vrhu njenog opisa. Na primer mesto pre čišćenja.
-                </p>
-              </div>
-
-              {status === 'completed' || results.photos.length > 0 ? (
-                <div className="field">
-                  <span className="field__label">
-                    Fotografije sa akcije <span className="field__optional">opciono</span>
-                  </span>
-                  <PhotoPicker
-                    photos={results.photos}
-                    onAdd={(files) => setPhotoError(results.addFiles(files))}
-                    onRemove={results.removePhoto}
-                    disabled={saving}
-                    max={results.max}
-                  />
-                  <p className="field__hint">
-                    Do {LIMITS.actionResultsMax} fotografija koje pokazuju šta je urađeno. Vide se u
-                    opisu završene akcije.
-                  </p>
-                </div>
-              ) : (
-                <p className="field__hint">
-                  Fotografije sa akcije možeš dodati kada status promeniš u „Završeno”.
-                </p>
-              )}
-
-              {photoError ? (
-                <p className="field__error" role="alert">
-                  {photoError}
-                </p>
-              ) : null}
-            </>
-          )}
-        </div>
+        {formAlert}
+        {basicsSection}
+        {photosSection}
 
         <div className="admin-form__section">
           <p className="eyebrow">Termin i mesto</p>
 
           <div className="form-row">
-            <div className={`field${errors.date ? ' has-error' : ''}`}>
-              <label htmlFor="action-date">Datum i vreme</label>
-              <input
-                id="action-date"
-                type="datetime-local"
-                value={dateValue}
-                onChange={(event) => setDateValue(event.target.value)}
-                disabled={saving}
-              />
-              {errors.date ? <p className="field__error">{errors.date}</p> : null}
-            </div>
-
-            <div className={`field${errors.meetingPoint ? ' has-error' : ''}`}>
-              <div className="field__top">
-                <label htmlFor="action-meeting">Mesto okupljanja</label>
-                <span className="field__counter">
-                  {meetingPoint.trim().length}/{MEETING_MAX}
-                </span>
-              </div>
-              <input
-                id="action-meeting"
-                type="text"
-                value={meetingPoint}
-                maxLength={MEETING_MAX}
-                onChange={(event) => setMeetingPoint(event.target.value)}
-                placeholder="Ulaz u park, kod spomenika…"
-                disabled={saving}
-              />
-              {errors.meetingPoint ? (
-                <p className="field__error">{errors.meetingPoint}</p>
-              ) : null}
-            </div>
+            {dateField}
+            {meetingField}
           </div>
 
           <div className={`field${errors.coordinates ? ' has-error' : ''}`}>
@@ -386,107 +622,12 @@ export function ActionForm({
               longitude={point.longitude}
               onChange={setPoint}
             />
-            {errors.coordinates ? (
-              <p className="field__error">{errors.coordinates}</p>
-            ) : null}
+            {errors.coordinates ? <p className="field__error">{errors.coordinates}</p> : null}
           </div>
         </div>
 
-        <div className="admin-form__section">
-          <p className="eyebrow">Povezane prijave</p>
-          <p className="admin-form__hint">
-            Izaberi prijave koje ova akcija rešava. Veza je vidljiva na obe strane.
-          </p>
-          {reports.length === 0 ? (
-            <p className="field__hint">Nema učitanih prijava za povezivanje.</p>
-          ) : (
-            <div className="report-picker" role="group" aria-label="Povezane prijave">
-              {reports.map((report) => {
-                const checked = selectedReports.includes(report.id);
-                return (
-                  <label
-                    key={report.id}
-                    className={`report-pick${checked ? ' is-selected' : ''}`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleReport(report.id)}
-                      disabled={saving}
-                    />
-                    <span className="report-pick__glyph" data-category={report.category}>
-                      <CategoryGlyph category={report.category} size={12} />
-                    </span>
-                    <span className="report-pick__title">{report.title}</span>
-                    <StatusDot status={report.status} />
-                  </label>
-                );
-              })}
-            </div>
-          )}
-          <p className="field__hint">
-            Izabrano {selectedReports.length} od najviše {MAX_REPORTS} prijava.
-          </p>
-        </div>
-
-        <div className="admin-form__section">
-          <p className="eyebrow">Oprema i organizator</p>
-
-          <div className={`field${errors.supplies ? ' has-error' : ''}`}>
-            <label htmlFor="action-supplies">Šta je potrebno poneti</label>
-            <textarea
-              id="action-supplies"
-              rows={4}
-              value={suppliesText}
-              onChange={(event) => setSuppliesText(event.target.value)}
-              placeholder={'Rukavice\nVreće za otpad\nGrablje i metle'}
-              disabled={saving}
-            />
-            <p className="field__hint">
-              Jedna stavka po redu, do {SUPPLY_MAX} karaktera. Najviše {MAX_SUPPLIES} stavki.
-            </p>
-            {errors.supplies ? <p className="field__error">{errors.supplies}</p> : null}
-          </div>
-
-          <div className={`field${errors.organizer ? ' has-error' : ''}`}>
-            <div className="field__top">
-              <label htmlFor="action-organizer">Organizator</label>
-              <span className="field__counter">
-                {organizerName.trim().length}/{ORGANIZER_MAX}
-              </span>
-            </div>
-            <input
-              id="action-organizer"
-              type="text"
-              value={organizerName}
-              maxLength={ORGANIZER_MAX}
-              onChange={(event) => setOrganizerName(event.target.value)}
-              placeholder="Udruženje, mesna zajednica ili ime organizatora"
-              disabled={saving}
-            />
-            {errors.organizer ? <p className="field__error">{errors.organizer}</p> : null}
-          </div>
-
-          <div className="field">
-            <div className="field__top">
-              <label htmlFor="action-note">
-                Napomena za učesnike <span className="field__optional">opciono</span>
-              </label>
-              <span className="field__counter">
-                {organizerNote.trim().length}/{NOTE_MAX}
-              </span>
-            </div>
-            <textarea
-              id="action-note"
-              rows={3}
-              value={organizerNote}
-              maxLength={NOTE_MAX}
-              onChange={(event) => setOrganizerNote(event.target.value)}
-              placeholder="Kontakt, pravila, šta učesnici treba da znaju."
-              disabled={saving}
-            />
-          </div>
-        </div>
+        {reportsSection}
+        {organizerSection}
       </div>
 
       <div className="admin-form__actions">
@@ -495,7 +636,7 @@ export function ActionForm({
         </button>
         <button type="submit" className="btn btn--primary" disabled={saving}>
           {saving ? <Spinner size={15} /> : null}
-          {saving ? 'Čuvanje…' : action ? 'Sačuvaj izmene' : 'Objavi akciju'}
+          {submitLabel}
         </button>
       </div>
     </form>

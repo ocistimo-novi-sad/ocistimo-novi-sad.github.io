@@ -88,7 +88,7 @@ function changesOf(before: ReportContent, after: ReportContent): FieldChange[] {
 }
 
 export function EditsQueue() {
-  const { acceptReportEdit, revertReportEdit, refreshModerationCounts, selectReport, closeModal } =
+  const { acceptReportEdit, revertReportEdit, refreshModerationCounts, openReport, closeModal } =
     useApp();
   const isMobile = useIsMobile();
 
@@ -277,7 +277,7 @@ export function EditsQueue() {
               type="button"
               className="btn btn--quiet btn--sm"
               onClick={() => {
-                selectReport(active);
+                openReport(active);
                 closeModal();
               }}
             >

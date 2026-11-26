@@ -30,12 +30,16 @@ export type ModalState =
   | { kind: 'admin'; editActionId?: string }
   | { kind: 'action-form'; action?: CleanupAction }
   | { kind: 'moderation' }
+  | { kind: 'profile'; mode: 'first' | 'edit' }
   | { kind: 'my-reports' }
   | { kind: 'resolve'; reportId: string }
   | { kind: 'lightbox'; images: string[]; index: number }
   | null;
 
 export type MobileTab = 'map' | 'list';
+
+/** What the compose drawer is creating or editing. */
+export type ComposeKind = 'report' | 'action';
 
 export interface AppContextValue {
   auth: ReturnType<typeof useAuth>;
@@ -76,15 +80,22 @@ export interface AppContextValue {
   resetFilters: () => void;
 
   selectedReport: Report | null;
+  /** Phones: the report "Prikaži na mapi" closed, still drawn as a highlighted pin. */
+  focusedReport: Report | null;
   selectedAction: CleanupAction | null;
   relatedAction: CleanupAction | null;
   actionReports: Report[];
-  selectReport: (report: Report, options?: { fly?: boolean }) => void;
+
+  selectReport: (report: Report, options?: { fly?: boolean; fromDetail?: boolean }) => void;
   showReportOnMap: (report: Report) => void;
-  selectAction: (action: CleanupAction, options?: { fly?: boolean }) => void;
-  showActionOnMap: (action: CleanupAction) => void;
+  selectAction: (action: CleanupAction, options?: { fly?: boolean; fromDetail?: boolean }) => void;
   clearSelection: () => void;
+  openReport: (report: Report) => void;
+  showActionOnMap: (action: CleanupAction) => void;
+  
   closeSelection: () => void;
+  /** The open detail was opened from the mobile list and closing it goes back there. */
+  detailFromList: boolean;
 
   layer: Layer;
   setLayer: (layer: Layer) => void;
@@ -92,18 +103,27 @@ export interface AppContextValue {
   setMobileTab: (tab: MobileTab) => void;
 
   composeOpen: boolean;
-  /** The form is open and the map picks the report location (false on "Hvala!"). */
+  /** The form is open and the map picks its location (false on "Hvala!"). */
   composePicking: boolean;
+  /** The report location, or the action meeting point. */
   composeLocation: Coordinates | null;
   /** The report being edited in the compose drawer, or null for a new one. */
   composeEditing: Report | null;
+  composeKind: ComposeKind;
+  /** The action being edited in the compose drawer, or null for a new one. */
+  composeEditingAction: CleanupAction | null;
   startCompose: () => void;
+  /** Moderators: the action form over the map; others see why they cannot. */
+  startActionCompose: (action?: CleanupAction) => void;
   cancelCompose: () => void;
   setComposeLocation: (coordinates: Coordinates) => void;
   editReport: (report: Report) => void;
   /** Saves an edit; throws so the form can show the error. */
   submitReportEdit: (report: Report, content: ReportContent) => Promise<void>;
   deleteReport: (report: Report) => Promise<void>;
+
+  /** Saves the public author name and renames the person's existing entries. */
+  savePublicName: (name: string) => Promise<void>;
 
   /** The signed-in author's reports, published or not. */
   myReports: Report[];
@@ -134,6 +154,10 @@ export interface AppContextValue {
   rejectPendingReport: (report: Report, reason: string) => Promise<void>;
   acceptReportEdit: (report: Report) => Promise<void>;
   revertReportEdit: (report: Report) => Promise<void>;
+  /** Flags were right: the report leaves the map with a reason, its flags close. */
+  removeFlaggedReport: (reportId: string, reason: string) => Promise<void>;
+  /** Flags were wrong: the report stays published, the flags shown close. */
+  keepFlaggedReport: (flagIds: string[]) => Promise<void>;
 
   /** Proofs of a fix waiting for confirmation (moderators only). */
   resolutionCount: number;

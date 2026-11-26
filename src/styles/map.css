@@ -194,15 +194,6 @@
   line-height: 1.35;
 }
 
-.pick-banner__text span {
-  color: rgba(244, 243, 237, 0.72);
-  /* Sans at 14px, so the hint reads below the bold title (#92). */
-  font-family: var(--font-sans);
-  font-size: var(--text-xs);
-  line-height: 1.4;
-  white-space: normal;
-}
-
 .pick-banner .btn {
   flex: 0 0 auto;
   border-color: rgba(255, 255, 255, 0.28);

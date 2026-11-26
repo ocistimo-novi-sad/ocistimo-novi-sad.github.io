@@ -29,10 +29,12 @@ export function ActionDetail() {
     selectedAction: action,
     actionReports,
     closeSelection,
+    detailFromList,
     selectReport,
     showActionOnMap,
     auth,
     openModal,
+    startActionCompose,
     reloadActions,
     reloadReports,
     deleteAction,
@@ -77,6 +79,7 @@ export function ActionDetail() {
     <Drawer
       label={`Akcija: ${action.title}`}
       onClose={closeSelection}
+      onBack={detailFromList ? closeSelection : undefined}
       className="drawer--action"
       footer={
         <div className="detail-foot">
@@ -220,7 +223,7 @@ export function ActionDetail() {
                 <button
                   type="button"
                   className="linked-report"
-                  onClick={() => selectReport(report)}
+                  onClick={() => selectReport(report, { fromDetail: true })}
                 >
                   <span className="linked-report__glyph" data-category={report.category}>
                     <CategoryGlyph category={report.category} size={13} />
@@ -302,7 +305,7 @@ export function ActionDetail() {
               <button
                 type="button"
                 className="btn btn--quiet btn--sm"
-                onClick={() => openModal({ kind: 'action-form', action })}
+                onClick={() => startActionCompose(action)}
               >
                 <Pencil size={13} aria-hidden="true" /> Uredi akciju
               </button>

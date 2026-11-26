@@ -129,12 +129,14 @@ export function MapCanvas() {
     toggleCategory,
     resetFilters,
     selectedReport,
+    focusedReport,
     selectedAction,
     actionReports,
     selectReport,
     selectAction,
     clearSelection,
     composeOpen,
+    composeKind,
     composePicking,
     composeLocation,
     setComposeLocation,
@@ -146,6 +148,12 @@ export function MapCanvas() {
     locateForCompose,
     locating,
   } = app;
+  // The open report, or on phones the one "Prikaži na mapi" just closed.
+  const highlightedReport = selectedReport ?? focusedReport;
+  const composeMarkerLabel =
+    composeKind === 'action'
+      ? 'Mesto okupljanja. Pomeri marker.'
+      : 'Nova prijava. Pomeri marker.';
 
   const [zoom, setZoom] = useState<number>(APP.initialZoom);
   const [pointer, setPointer] = useState<{ lat: number; lng: number } | null>(null);
@@ -300,17 +308,18 @@ export function MapCanvas() {
           </>
         ) : null}
 
-        {layer === 'reports' ? (
+        {/* Picking an action's meeting point shows the reports it can resolve. */}
+        {layer === 'reports' || (composeOpen && composeKind === 'action') ? (
           <>
             <DraftMarkers
               reports={myUnpublishedReports}
-              selectedReportId={selectedReport?.id ?? null}
+              selectedReportId={highlightedReport?.id ?? null}
               onSelect={handleReportSelect}
               interactive={!composeOpen}
             />
             <ReportMarkers
               reports={filteredReports}
-              selectedReport={selectedReport}
+              selectedReport={highlightedReport}
               onSelect={handleReportSelect}
               interactive={!composeOpen}
             />
@@ -334,7 +343,7 @@ export function MapCanvas() {
 
         {composeLocation ? (
           <NamedMarker
-            label="Nova prijava. Pomeri marker."
+            label={composeMarkerLabel}
             position={[composeLocation.latitude, composeLocation.longitude]}
             icon={tempIcon()}
             draggable
@@ -351,13 +360,14 @@ export function MapCanvas() {
             }}
           >
             <Tooltip direction="top" offset={[0, -26]} className="ns-tooltip">
-              Nova prijava. Pomeri marker.
+              {composeMarkerLabel}
             </Tooltip>
           </NamedMarker>
         ) : null}
       </MapContainer>
 
-      {isMobile && !composeOpen ? (
+      {/* Hidden while a detail is open, so its pin has room above the sheet (#188). */}
+      {isMobile && !composeOpen && !selectedReport && !selectedAction ? (
         <div className="map-mobile-bar">
           <LayerSwitch />
           <div className="filters__row">
@@ -445,14 +455,12 @@ export function MapCanvas() {
         <div className="pick-banner" role="status">
           <Crosshair size={16} aria-hidden="true" />
           <div className="pick-banner__text">
+            {/* One line, so the banner covers as little of the map as possible (#184). */}
             <strong>
               {composeLocation
                 ? 'Dodirni mapu da promeniš lokaciju.'
                 : 'Klikni na mapu da postaviš lokaciju'}
             </strong>
-            {composeLocation ? null : (
-              <span>Možeš i da prevučeš marker radi preciznijeg položaja.</span>
-            )}
           </div>
         </div>
       ) : null}

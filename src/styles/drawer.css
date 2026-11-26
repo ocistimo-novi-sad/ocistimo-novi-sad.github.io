@@ -370,6 +370,14 @@
   border-radius: var(--radius-md);
 }
 
+.admin-box--alert {
+  border-color: var(--alert);
+}
+
+.admin-box--alert .admin-box__title {
+  color: var(--alert);
+}
+
 .admin-box__title {
   display: flex;
   align-items: center;
@@ -878,23 +886,10 @@
 
 /* --- Compose ------------------------------------------------------------- */
 
-.compose-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-right: 34px;
-}
-
-.compose-head__hint {
-  color: var(--muted-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-
+/* The title is the first line of the form, so it keeps clear of the X (#184). */
 .compose-title {
-  margin: 9px 0 5px;
+  margin: 2px 0 12px;
+  padding-right: 34px;
   color: var(--ink);
   font-family: var(--font-display);
   font-size: 1.4375rem;

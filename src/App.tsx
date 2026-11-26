@@ -1,3 +1,4 @@
+import { ActionComposeDrawer } from './components/ActionComposeDrawer';
 import { ActionsPanel } from './components/ActionsPanel';
 import { ActionDetail } from './components/ActionDetail';
 import { AdminPanel } from './components/admin/AdminPanel';
@@ -16,6 +17,7 @@ import { AuthDialog } from './components/modals/AuthDialog';
 import { FlagDialog } from './components/modals/FlagDialog';
 import { InfoDialog } from './components/modals/InfoDialog';
 import { Lightbox } from './components/modals/Lightbox';
+import { ProfileDialog } from './components/modals/ProfileDialog';
 import { ResolveDialog } from './components/modals/ResolveDialog';
 import { AppProvider } from './state/AppProvider';
 import { useApp } from './state/app-context';
@@ -37,6 +39,8 @@ function ModalHost() {
       return <ActionFormDialog />;
     case 'moderation':
       return <ModerationPanel />;
+    case 'profile':
+      return <ProfileDialog mode={modal.mode} />;
     case 'my-reports':
       return <MyReportsPanel />;
     case 'resolve':
@@ -55,8 +59,16 @@ function ModalHost() {
 }
 
 function AppShell() {
-  const { layer, mobileTab, selectedReport, selectedAction, composeOpen, composeEditing } =
-    useApp();
+  const {
+    layer,
+    mobileTab,
+    selectedReport,
+    selectedAction,
+    composeOpen,
+    composeKind,
+    composeEditing,
+    composeEditingAction,
+  } = useApp();
   const drawerOpen = composeOpen || Boolean(selectedReport) || Boolean(selectedAction);
 
   return (
@@ -72,7 +84,9 @@ function AppShell() {
           <MapCanvas />
         </div>
 
-        {composeOpen ? (
+        {composeOpen && composeKind === 'action' ? (
+          <ActionComposeDrawer key={composeEditingAction?.id ?? 'new-action'} />
+        ) : composeOpen ? (
           // Keyed so switching between a new report and an edit starts fresh.
           <ComposeDrawer key={composeEditing?.id ?? 'new'} />
         ) : selectedReport ? (

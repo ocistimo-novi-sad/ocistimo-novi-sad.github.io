@@ -7,16 +7,17 @@ import {
   type ReactNode,
 } from 'react';
 import type { Map as LeafletMap } from 'leaflet';
+import { settledDrawerHeight } from '../components/Drawer';
 import { APP, CATEGORY_MAP, DEFAULT_FILTERS, STATUS_MAP } from '../config';
 import { useAuth } from '../hooks/useAuth';
-import { useReports } from '../hooks/useReports';
+import { renamedReport, useReports, type RenameScope } from '../hooks/useReports';
 import { useActions } from '../hooks/useActions';
 import { isUpcomingAction } from '../lib/counts';
 import { isInServiceArea, isWithinBounds } from '../lib/geo';
 import { distanceInMeters } from '../lib/geo';
-import { toSerbianError } from '../services/errors';
+import { AppError, toSerbianError } from '../services/errors';
 import { isFirebaseConfigured } from '../services/firebase';
-import { deleteActionRecord } from '../services/actions';
+import { deleteActionRecord, syncActionOrganizerName } from '../services/actions';
 import { droppedImages, removeImages } from '../services/images';
 import {
   acceptEdit,
@@ -27,7 +28,9 @@ import {
   deleteReportRecord,
   fetchMyReports,
   fetchReport,
+  keepFlaggedReport as keepFlaggedReportRecord,
   rejectReport as rejectReportRecord,
+  removeFlaggedReport as removeFlaggedReportRecord,
   rejectResolution,
   resolveDroppedImages,
   resolveKind,
@@ -35,13 +38,17 @@ import {
   revertEdit,
   submitResolution,
   updateOwnReport,
+  updateOwnModeratorName,
+  updateOwnReportAuthorName,
   updateReportAsModerator,
   updateReportStatus,
+  type RemovedReport,
   type ResolveKind,
 } from '../services/reports';
 import {
   AppContext,
   type AppContextValue,
+  type ComposeKind,
   type MobileTab,
   type ModalState,
   type Toast,
@@ -62,6 +69,30 @@ import type {
 
 type PendingIntent = { kind: 'create' } | { kind: 'flag'; reportId: string };
 type PositionFix = Coordinates & { accuracy: number };
+
+/** Used when no drawer can be measured, roughly half of a phone drawer. */
+const FALLBACK_DRAWER_SHIFT = 220;
+
+/**
+ * Phone: how many pixels the map center must move down so that a point at the
+ * center ends up in the middle of the part of the map that is still visible:
+ * below the location banner or the search bar, above the drawer.
+ */
+function visibleCenterShift(map: LeafletMap): number {
+  const drawerHeight = settledDrawerHeight();
+  if (drawerHeight === null) return FALLBACK_DRAWER_SHIFT;
+
+  const rect = map.getContainer().getBoundingClientRect();
+  let top = rect.top;
+  for (const selector of ['.pick-banner', '.map-mobile-bar']) {
+    const overlay = document.querySelector(selector);
+    if (overlay) top = Math.max(top, overlay.getBoundingClientRect().bottom);
+  }
+  const bottom = Math.min(rect.bottom, window.innerHeight - drawerHeight);
+  if (bottom - top < 40) return FALLBACK_DRAWER_SHIFT;
+
+  return rect.top + rect.height / 2 - (top + bottom) / 2;
+}
 
 const RESOLVE_MESSAGES: Record<ResolveKind, { error: string; success: string }> = {
   'confirm-proof': {
@@ -110,6 +141,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     updateReport,
     upsertReport,
     removeReport,
+    renamePerson,
   } = useReports();
 
   // The signed-in author's own reports, published or not. Kept apart from the
@@ -139,6 +171,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const [layer, setLayerState] = useState<Layer>('reports');
   const [mobileTab, setMobileTabState] = useState<MobileTab>('map');
+  // A detail opened from the mobile list goes back to the list when it closes (#156).
+  const [detailFromList, setDetailFromList] = useState(false);
+  const mobileTabRef = useRef<MobileTab>(mobileTab);
+  mobileTabRef.current = mobileTab;
   const [actionScope, setActionScope] = useState<ActionScope>('upcoming');
   const [actionQuery, setActionQuery] = useState('');
   const [actionsNearest, setActionsNearestState] = useState(false);
@@ -150,9 +186,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }));
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
+  // On phones "Prikaži na mapi" closes the detail so the sheet does not cover
+  // the pin. This keeps that pin drawn even when the public layer would not
+  // show it (a pending report, or one hidden by the filters).
+  const [focusedReportId, setFocusedReportId] = useState<string | null>(null);
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeLocation, setComposeLocationState] = useState<Coordinates | null>(null);
   const [composeEditing, setComposeEditing] = useState<Report | null>(null);
+  // The same drawer and map picking serve a report and a cleanup action (#184).
+  const [composeKind, setComposeKind] = useState<ComposeKind>('report');
+  const [composeEditingAction, setComposeEditingAction] = useState<CleanupAction | null>(null);
   const [composeSubmitted, setComposeSubmitted] = useState(false);
   const composePicking = composeOpen && !composeSubmitted;
   const [modal, setModal] = useState<ModalState>(null);
@@ -170,6 +213,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const composeOpenRef = useRef(false);
   const positionRequestRef = useRef<Promise<PositionFix | null> | null>(null);
   const pendingIntentRef = useRef<PendingIntent | null>(null);
+  // The first-login name dialog is offered once per session; a person who
+  // closes it is asked again on the next sign-in.
+  const namePromptedRef = useRef(false);
   const toastTimers = useRef<Map<string, number>>(new Map());
   const toastCounter = useRef(0);
   const deepLinkRef = useRef<string | null>(
@@ -202,6 +248,86 @@ export function AppProvider({ children }: { children: ReactNode }) {
     toastTimers.current.delete(id);
   }, []);
 
+  /**
+   * Saves the public author name and rewrites the name snapshot on the
+   * person's existing reports, moderation stamps and actions (#161), so an
+   * older Google name does not stay visible next to their content.
+   */
+  const savePublicName = useCallback(
+    async (value: string): Promise<void> => {
+      const user = auth.user;
+      if (!user) throw new AppError('unauthenticated', 'Uloguj se ponovo.');
+
+      const previousNames = [auth.publicName, user.displayName].filter(
+        (item): item is string => Boolean(item),
+      );
+      const name = await auth.updatePublicName(value);
+
+      // Rename the local copies only after the database write succeeded, or
+      // the UI would show a name that a reload takes away again.
+      const renamed: RenameScope = { author: true, moderator: false };
+      try {
+        await updateOwnReportAuthorName(user.uid, name);
+      } catch {
+        renamed.author = false;
+      }
+      // Moderators also have "Odobrio/Pregledao" stamps on reports they
+      // reviewed. Only moderators may query reports by moderatedBy.
+      let stampsSynced = true;
+      if (auth.isModerator) {
+        try {
+          await updateOwnModeratorName(user.uid, name);
+          renamed.moderator = true;
+        } catch {
+          stampsSynced = false;
+        }
+      }
+      if (renamed.author || renamed.moderator) {
+        renamePerson(user.uid, name, renamed);
+        setMyReports((current) =>
+          current.map((report) => renamedReport(report, user.uid, name, renamed)),
+        );
+      }
+
+      let actionsSynced = true;
+      if (auth.isModerator) {
+        try {
+          const result = await syncActionOrganizerName(user.uid, previousNames, name);
+          actionsSynced = result.failed === 0;
+          if (result.updated > 0) await loadActions();
+        } catch {
+          actionsSynced = false;
+        }
+      }
+
+      if (!renamed.author) {
+        notify('error', 'Ime je sačuvano, ali starije prijave nisu ažurirane.');
+      } else if (!stampsSynced) {
+        notify('info', 'Ime je sačuvano. Ime uz ranije moderirane prijave možda nije ažurirano.');
+      } else if (!actionsSynced) {
+        notify('info', 'Ime je sačuvano. Starije akcije možda nisu ažurirane.');
+      } else {
+        notify('success', 'Lični podaci su sačuvani.');
+      }
+    },
+    [auth, loadActions, notify, renamePerson],
+  );
+
+  // First sign-in: ask for the public name before the person creates anything.
+  // While another dialog is open (for example a flag from the sign-in intent),
+  // wait instead of replacing it.
+  useEffect(() => {
+    if (!isFirebaseConfigured) return;
+    if (!auth.user) {
+      namePromptedRef.current = false;
+      return;
+    }
+    if (modal !== null) return;
+    if (!auth.profileReady || auth.publicName || namePromptedRef.current) return;
+    namePromptedRef.current = true;
+    setModal({ kind: 'profile', mode: 'first' });
+  }, [auth.profileReady, auth.publicName, auth.user, modal]);
+
   const flyTo = useCallback(
     (
       coordinates: Coordinates,
@@ -211,17 +337,27 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const map = mapRef.current;
       if (!map) return;
 
+      const target: [number, number] = [coordinates.latitude, coordinates.longitude];
+
       // The detail/compose drawer overlays part of the map. Shift the target so
       // the pin stays in the area that is still visible: to the left on desktop,
-      // above the bottom sheet on mobile.
-      let projected = map.project([coordinates.latitude, coordinates.longitude], zoom);
+      // between the banner and the drawer on mobile.
+      if (options?.accountForDrawer && window.innerWidth <= 900) {
+        // Wait a frame, so a drawer that is just opening or changing height is
+        // measured where it comes to rest (#184).
+        window.requestAnimationFrame(() => {
+          const current = mapRef.current;
+          if (!current) return;
+          const projected = current.project(target, zoom).add([0, visibleCenterShift(current)]);
+          current.flyTo(current.unproject(projected, zoom), zoom, { duration: 0.65 });
+        });
+        return;
+      }
+
+      let projected = map.project(target, zoom);
       if (options?.accountForDrawer) {
-        if (window.innerWidth > 900) {
-          const drawerWidth = window.innerWidth > 1150 ? 428 : 384;
-          projected = projected.add([drawerWidth / 2, 0]);
-        } else {
-          projected = projected.add([0, 220]);
-        }
+        const drawerWidth = window.innerWidth > 1150 ? 428 : 384;
+        projected = projected.add([drawerWidth / 2, 0]);
       }
 
       map.flyTo(map.unproject(projected, zoom), zoom, { duration: 0.65 });
@@ -229,9 +365,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  /**
+   * Phone: a form opening over the map would cover what was in the middle of
+   * it. Move the map so that point is in the visible part instead.
+   */
+  const keepCenterVisible = useCallback(() => {
+    if (window.innerWidth > 900) return;
+    window.requestAnimationFrame(() => {
+      const map = mapRef.current;
+      if (!map) return;
+      map.panBy([0, visibleCenterShift(map)], { duration: 0.4 });
+    });
+  }, []);
+
   const selectedReport = useMemo(
     () => knownReports.find((report) => report.id === selectedReportId) ?? null,
     [knownReports, selectedReportId],
+  );
+  const focusedReport = useMemo(
+    () => knownReports.find((report) => report.id === focusedReportId) ?? null,
+    [knownReports, focusedReportId],
   );
   const selectedAction = useMemo(
     () => actions.find((action) => action.id === selectedActionId) ?? null,
@@ -397,10 +550,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setMobileTabState(tab);
   }, []);
 
+  // From the list: remember it. From anywhere else: forget it, unless a link
+  // inside the open detail opens another one (a report from its action).
+  const rememberWhereDetailOpened = useCallback((fromDetail?: boolean) => {
+    if (mobileTabRef.current === 'list') setDetailFromList(true);
+    else if (!fromDetail) setDetailFromList(false);
+  }, []);
+
   const selectReport = useCallback(
-    (report: Report, options?: { fly?: boolean }) => {
+    (report: Report, options?: { fly?: boolean; fromDetail?: boolean }) => {
+      rememberWhereDetailOpened(options?.fromDetail);
       setSelectedReportId(report.id);
       setSelectedActionId(null);
+      setFocusedReportId(null);
       // On mobile this makes the map the surface behind the detail sheet, and
       // it also makes sure report markers (not action markers) are rendered.
       setLayerState('reports');
@@ -410,26 +572,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const zoom = Math.max(mapRef.current?.getZoom() ?? 0, APP.focusZoom);
       if (options?.fly !== false) flyTo(report, zoom, { accountForDrawer: true });
     },
-    [flyTo],
+    [flyTo, rememberWhereDetailOpened],
   );
 
   const selectAction = useCallback(
-    (action: CleanupAction, options?: { fly?: boolean }) => {
+    (action: CleanupAction, options?: { fly?: boolean; fromDetail?: boolean }) => {
+      rememberWhereDetailOpened(options?.fromDetail);
       setSelectedActionId(action.id);
       setSelectedReportId(null);
+      setFocusedReportId(null);
       setLayerState('actions');
       // Keep the map behind the mobile sheet so the meeting point is visible.
       setMobileTabState('map');
       if (options?.fly !== false) flyTo(action, APP.focusZoom, { accountForDrawer: true });
     },
-    [flyTo],
+    [flyTo, rememberWhereDetailOpened],
   );
 
   const clearSelection = useCallback(() => {
     setSelectedReportId(null);
     setSelectedActionId(null);
+    setDetailFromList(false);
   }, []);
 
+  // The close button, Escape and a swipe down: back to the list if the detail came from it.
+  const closeSelection = useCallback(() => {
+    if (detailFromList) setMobileTabState('list');
+    clearSelection();
+  }, [clearSelection, detailFromList]);
+
+  /**
+   * ova funkcija sluzi da bi se nakon zahtjeva da se prikaze gdje je prijava izvrsena, 
+   * dok na telefonu gasi prijavu i (nadam se) prikaze na mapi gdje je prijava.
+   */
   const showReportOnMap = useCallback(
     (report: Report) => {
       if (window.innerWidth > 900) {
@@ -438,6 +613,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
 
       clearSelection();
+      setFocusedReportId(report.id);
       window.requestAnimationFrame(() => flyTo(report, APP.focusZoom));
     },
     [clearSelection, flyTo],
@@ -465,13 +641,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     composeOpenRef.current = true;
     setSelectedReportId(null);
     setSelectedActionId(null);
+    setFocusedReportId(null);
     setComposeOpen(true);
     setComposeSubmitted(false);
+    setComposeKind('report');
     setComposeEditing(null);
+    setComposeEditingAction(null);
     setComposeLocationState(null);
     setLayerState('reports');
     setMobileTabState('map');
-  }, []);
+    keepCenterVisible();
+  }, [keepCenterVisible]);
 
   const startCompose = useCallback(() => {
     if (composeOpen) return;
@@ -488,23 +668,79 @@ export function AppProvider({ children }: { children: ReactNode }) {
     composeOpenRef.current = false;
     setComposeOpen(false);
     setComposeEditing(null);
+    setComposeEditingAction(null);
     setComposeLocationState(null);
-  }, []);
+    // An action is edited from its detail; closing the form goes back there.
+    if (composeKind === 'action' && composeEditingAction) {
+      setSelectedActionId(composeEditingAction.id);
+    }
+  }, [composeEditingAction, composeKind]);
 
   /** Opens the report form prefilled with an existing report. */
-  const editReport = useCallback((report: Report) => {
-    composeSessionRef.current += 1;
-    composeOpenRef.current = true;
-    setSelectedReportId(null);
-    setSelectedActionId(null);
-    setModal(null);
-    setComposeEditing(report);
-    setComposeLocationState({ latitude: report.latitude, longitude: report.longitude });
-    setComposeOpen(true);
-    setComposeSubmitted(false);
-    setLayerState('reports');
-    setMobileTabState('map');
-  }, []);
+  const editReport = useCallback(
+    (report: Report) => {
+      composeSessionRef.current += 1;
+      composeOpenRef.current = true;
+      setSelectedReportId(null);
+      setSelectedActionId(null);
+      setModal(null);
+      setComposeKind('report');
+      setComposeEditing(report);
+      setComposeEditingAction(null);
+      setComposeLocationState({ latitude: report.latitude, longitude: report.longitude });
+      setComposeOpen(true);
+      setComposeSubmitted(false);
+      setLayerState('reports');
+      setMobileTabState('map');
+      // The form is lower than the detail, so the pin moves to the new visible middle.
+      const zoom = Math.max(mapRef.current?.getZoom() ?? 0, APP.focusZoom);
+      flyTo(report, zoom, { accountForDrawer: true });
+    },
+    [flyTo],
+  );
+
+  /**
+   * Opens the action form in the same drawer as a report, with the meeting
+   * point picked on the big map (#184). The layer stays as it is, so the list
+   * beside the map does not switch; the map shows reports while picking.
+   */
+  const startActionCompose = useCallback(
+    (action?: CleanupAction) => {
+      // Shows the "no access" message instead of the form.
+      if (!auth.isModerator) {
+        setModal({ kind: 'action-form', action });
+        return;
+      }
+      // On a computer "Nova akcija" stays visible beside an open report form;
+      // switching would silently drop what was typed there.
+      if (composeOpenRef.current) {
+        notify('info', 'Prvo pošalji ili zatvori formu koja je otvorena.');
+        return;
+      }
+      composeSessionRef.current += 1;
+      composeOpenRef.current = true;
+      setSelectedReportId(null);
+      setSelectedActionId(null);
+      setFocusedReportId(null);
+      setModal(null);
+      setComposeKind('action');
+      setComposeEditing(null);
+      setComposeEditingAction(action ?? null);
+      setComposeLocationState(
+        action ? { latitude: action.latitude, longitude: action.longitude } : null,
+      );
+      setComposeOpen(true);
+      setComposeSubmitted(false);
+      setMobileTabState('map');
+      if (action) {
+        const zoom = Math.max(mapRef.current?.getZoom() ?? 0, APP.focusZoom);
+        flyTo(action, zoom, { accountForDrawer: true });
+      } else {
+        keepCenterVisible();
+      }
+    },
+    [auth.isModerator, flyTo, keepCenterVisible, notify],
+  );
 
   const setComposeLocation = useCallback((coordinates: Coordinates) => {
     setComposeLocationState(coordinates);
@@ -574,6 +810,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     },
     [signedInUid, upsertReport],
+  );
+
+  /**
+   * Opens a report that may come from outside the loaded map pages, such as a
+   * moderation queue. Without storing it first the selection points at nothing:
+   * no detail opens, no pin is drawn, and the map still shifts for a drawer.
+   */
+  const openReport = useCallback(
+    (report: Report) => {
+      applyReport(report);
+      selectReport(report);
+    },
+    [applyReport, selectReport],
   );
 
   const dropReport = useCallback(
@@ -655,14 +904,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     async (reportId: string, status: ReportStatus) => {
       try {
         await updateReportStatus(reportId, status);
-        updateReport(reportId, { status, moderatedAt: new Date() });
+        updateReport(reportId, {
+          status,
+          moderatedAt: new Date(),
+          moderatedBy: auth.user?.uid,
+          moderatedByName: auth.publicName ?? 'Moderator',
+        });
         notify('success', 'Status prijave je ažuriran.');
       } catch (error) {
         notify('error', toSerbianError(error, 'Status nije moguće sačuvati.'));
         throw error;
       }
     },
-    [notify, updateReport],
+    [auth.publicName, auth.user, notify, updateReport],
   );
 
   const refreshModerationCounts = useCallback(async () => {
@@ -704,14 +958,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
         rejectionReason: undefined,
         moderatedAt: new Date(),
         moderatedBy: auth.user?.uid,
-        moderatedByName: auth.user?.displayName ?? undefined,
+        moderatedByName: auth.publicName ?? 'Moderator',
       });
       if (report.moderation === 'pending') {
         setPendingCount((count) => Math.max(0, count - 1));
       }
       notify('success', 'Prijava je odobrena i objavljena na mapi.');
     },
-    [applyReport, auth.user, notify],
+    [applyReport, auth.publicName, auth.user, notify],
   );
 
   const rejectPendingReport = useCallback(
@@ -729,23 +983,65 @@ export function AppProvider({ children }: { children: ReactNode }) {
         rejectionReason: reason,
         moderatedAt: new Date(),
         moderatedBy: auth.user?.uid,
-        moderatedByName: auth.user?.displayName ?? undefined,
+        moderatedByName: auth.publicName ?? 'Moderator',
       });
       if (report.moderation === 'pending') {
         setPendingCount((count) => Math.max(0, count - 1));
       }
       notify('success', 'Prijava je odbijena. Autor vidi razlog u aplikaciji.');
     },
-    [applyReport, auth.user, notify],
+    [applyReport, auth.publicName, auth.user, notify],
   );
 
   const moderatorStamp = useCallback(
     (): Partial<Report> => ({
       moderatedAt: new Date(),
       moderatedBy: auth.user?.uid,
-      moderatedByName: auth.user?.displayName ?? undefined,
+      moderatedByName: auth.publicName ?? 'Moderator',
     }),
-    [auth.user],
+    [auth.publicName, auth.user],
+  );
+
+  const removeFlaggedReport = useCallback(
+    async (reportId: string, reason: string) => {
+      let removed: RemovedReport;
+      try {
+        removed = await removeFlaggedReportRecord(reportId, reason);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Prijavu nije moguće ukloniti sa mape.'));
+        throw error;
+      }
+
+      if (!removed.found) {
+        dropReport(reportId);
+        notify('info', 'Prijava je već obrisana. Oznake su zatvorene.');
+        return;
+      }
+
+      // A report outside the loaded pages has nothing to update here.
+      const report = knownReports.find((item) => item.id === reportId);
+      if (report) {
+        applyReport({ ...report, ...removed.changes, ...moderatorStamp() });
+      }
+      void removeImages(removed.droppedImages);
+      if (removed.editClosed) setEditCount((count) => Math.max(0, count - 1));
+      if (removed.proofDropped) setResolutionCount((count) => Math.max(0, count - 1));
+      notify('success', 'Prijava je uklonjena sa mape. Autor vidi razlog u aplikaciji.');
+    },
+    [applyReport, dropReport, knownReports, moderatorStamp, notify],
+  );
+
+  const keepFlaggedReport = useCallback(
+    async (flagIds: string[]) => {
+      try {
+        await keepFlaggedReportRecord(flagIds);
+      } catch (error) {
+        notify('error', toSerbianError(error, 'Oznake nije moguće zatvoriti.'));
+        throw error;
+      }
+      notify('success', 'Oznake su zatvorene. Prijava ostaje na mapi.');
+    },
+    [notify],
   );
 
   const submitReportEdit = useCallback(
@@ -1168,15 +1464,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleCategory,
       resetFilters,
       selectedReport,
+      focusedReport,
       selectedAction,
       relatedAction,
       actionReports,
       selectReport,
+      openReport,
       showReportOnMap,
       selectAction,
       showActionOnMap,
       clearSelection,
-      closeSelection: clearSelection,
+      closeSelection,
+      detailFromList,
       layer,
       setLayer,
       mobileTab,
@@ -1185,12 +1484,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       composePicking,
       composeLocation,
       composeEditing,
+      composeKind,
+      composeEditingAction,
       startCompose,
+      startActionCompose,
       cancelCompose,
       setComposeLocation,
       editReport,
       submitReportEdit,
       deleteReport,
+      savePublicName,
       myReports,
       myUnpublishedReports,
       reloadMyReports,
@@ -1212,6 +1515,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       rejectPendingReport,
       acceptReportEdit,
       revertReportEdit,
+      removeFlaggedReport,
+      keepFlaggedReport,
       resolutionCount,
       submitReportResolution,
       approveReportResolution,
@@ -1252,14 +1557,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleCategory,
       resetFilters,
       selectedReport,
+      focusedReport,
       selectedAction,
       relatedAction,
       actionReports,
       selectReport,
+      openReport,
       showReportOnMap,
       selectAction,
       showActionOnMap,
       clearSelection,
+      closeSelection,
+      detailFromList,
       layer,
       setLayer,
       mobileTab,
@@ -1268,12 +1577,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
       composePicking,
       composeLocation,
       composeEditing,
+      composeKind,
+      composeEditingAction,
       startCompose,
+      startActionCompose,
       cancelCompose,
       setComposeLocation,
       editReport,
       submitReportEdit,
       deleteReport,
+      savePublicName,
       myReports,
       myUnpublishedReports,
       reloadMyReports,
@@ -1294,6 +1607,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       rejectPendingReport,
       acceptReportEdit,
       revertReportEdit,
+      removeFlaggedReport,
+      keepFlaggedReport,
       resolutionCount,
       submitReportResolution,
       approveReportResolution,

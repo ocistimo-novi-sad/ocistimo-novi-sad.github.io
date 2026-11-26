@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { LIMITS } from '../../config';
 import { Spinner } from '../ui/EmptyState';
 
@@ -12,16 +12,27 @@ export function RejectForm({
   busy,
   onCancel,
   onSubmit,
+  hint = 'Autor će videti razlog uz svoju prijavu.',
+  label = 'Razlog odbijanja',
+  placeholder = 'Šta autor treba da ispravi da bi prijava bila objavljena?',
+  submitLabel = 'Odbij',
 }: {
   heading: string;
   presets: string[];
   busy: boolean;
   onCancel: () => void;
   onSubmit: (reason: string) => void;
+  hint?: string;
+  label?: string;
+  placeholder?: string;
+  submitLabel?: string;
 }) {
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
   const fieldRef = useRef<HTMLTextAreaElement>(null);
+  // Several forms can be open at once (one per flagged report, or beside the
+  // proof review), so each label needs its own field id.
+  const fieldId = useId();
 
   useEffect(() => {
     fieldRef.current?.focus();
@@ -40,7 +51,7 @@ export function RejectForm({
   return (
     <div className="reject-form">
       <p className="reject-form__title">{heading}</p>
-      <p className="reject-form__hint">Autor će videti razlog uz svoju prijavu.</p>
+      <p className="reject-form__hint">{hint}</p>
 
       <div className="preset-row" role="group" aria-label="Česti razlozi">
         {presets.map((preset) => (
@@ -61,18 +72,18 @@ export function RejectForm({
 
       <div className={`field${error ? ' has-error' : ''}`}>
         <div className="field__top">
-          <label htmlFor="reject-reason">Razlog odbijanja</label>
+          <label htmlFor={fieldId}>{label}</label>
           <span className="field__counter">
             {reason.trim().length}/{LIMITS.rejectReasonMax}
           </span>
         </div>
         <textarea
-          id="reject-reason"
+          id={fieldId}
           ref={fieldRef}
           rows={3}
           value={reason}
           maxLength={LIMITS.rejectReasonMax}
-          placeholder="Šta autor treba da ispravi da bi prijava bila objavljena?"
+          placeholder={placeholder}
           onChange={(event) => {
             setReason(event.target.value);
             if (error) setError(null);
@@ -93,7 +104,7 @@ export function RejectForm({
         </button>
         <button type="button" className="btn btn--danger btn--sm" onClick={submit} disabled={busy}>
           {busy ? <Spinner size={12} /> : null}
-          Odbij
+          {submitLabel}
         </button>
       </div>
     </div>

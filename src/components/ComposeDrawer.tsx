@@ -1,15 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Check, Clock3, Info, Plus, TriangleAlert } from 'lucide-react';
 import {
-  Check,
-  Clock3,
-  Crosshair,
-  Info,
-  Navigation,
-  Plus,
-  TriangleAlert,
-} from 'lucide-react';
-import {
-  APP,
   CATEGORIES,
   COMMUNITY_CAN_PRESETS,
   DEFAULT_CATEGORY,
@@ -26,10 +17,13 @@ import { createReportRecord } from '../services/reports';
 import { useApp } from '../state/app-context';
 import type { Category, NewReportInput, Report } from '../types';
 import { Drawer } from './Drawer';
+import { MapLocationField, useDrawerMapFocus } from './MapLocationField';
 import { CategoryGlyph } from './ui/CategoryGlyph';
 import { ConfirmSheet } from './ui/ConfirmSheet';
 import { Spinner } from './ui/EmptyState';
 import { PhotoPicker } from './ui/PhotoPicker';
+
+const NAME_REQUIRED = 'Prvo izaberi javno ime u „Ličnim podacima“.';
 
 type FieldKey =
   | 'location'
@@ -135,13 +129,11 @@ export function ComposeDrawer() {
     addCreatedReport,
     storeCreatedReport,
     submitReportEdit,
-    flyTo,
     notify,
     auth,
-    mapRef,
-    locating,
-    locateForCompose,
+    openModal,
   } = useApp();
+  const { collapseSignal, focusMap, locateMe } = useDrawerMapFocus();
 
   // The drawer is keyed by the edited report, so these initial values are
   // read once per report.
@@ -170,7 +162,12 @@ export function ComposeDrawer() {
   const [triedUnchanged, setTriedUnchanged] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [confirmClose, setConfirmClose] = useState(false);
-  const [collapseSignal, setCollapseSignal] = useState(0);
+
+  // Once a name is chosen, the "choose a public name" error no longer applies.
+  useEffect(() => {
+    if (!auth.publicName) return;
+    setSubmitError((current) => (current === NAME_REQUIRED ? null : current));
+  }, [auth.publicName]);
 
   const outsideArea = composeLocation !== null && !isInServiceArea(composeLocation);
   const locationMoved = editing
@@ -297,6 +294,29 @@ export function ComposeDrawer() {
       return;
     }
 
+    // Never publish a new report under the Google name. The first-login
+    // dialog normally prevents this. If the profile read at sign-in failed,
+    // read it again first: the person may already have a name, and asking
+    // for a new one would overwrite it.
+    let authorName = auth.publicName;
+    if (isFirebaseConfigured && !editing && !authorName) {
+      if (!auth.profileReady) {
+        setSubmitting(true);
+        const loaded = await auth.reloadProfile();
+        setSubmitting(false);
+        if (loaded === undefined) {
+          setSubmitError('Profil trenutno nije dostupan. Proveri internet vezu i pokušaj ponovo.');
+          return;
+        }
+        authorName = loaded;
+      }
+      if (!authorName) {
+        setSubmitError(NAME_REQUIRED);
+        openModal({ kind: 'profile', mode: 'first' });
+        return;
+      }
+    }
+
     setSubmitting(true);
     setSubmitError(null);
     setConfirmClose(false);
@@ -320,7 +340,7 @@ export function ComposeDrawer() {
       latitude: composeLocation.latitude,
       longitude: composeLocation.longitude,
       address: address.trim() || undefined,
-      createdByName: auth.user?.displayName ?? undefined,
+      createdByName: authorName ?? undefined,
     };
 
     try {
@@ -359,22 +379,6 @@ export function ComposeDrawer() {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  const focusMap = () => {
-    setCollapseSignal((value) => value + 1);
-    if (composeLocation) {
-      flyTo(composeLocation, undefined, { accountForDrawer: true });
-      return;
-    }
-    const map = mapRef.current;
-    map?.flyTo([APP.center.latitude, APP.center.longitude], 14, { duration: 0.5 });
-  };
-
-  const useMyLocation = () => {
-    void locateForCompose().then((found) => {
-      if (found) setCollapseSignal((value) => value + 1);
-    });
   };
 
   if (submitted) {
@@ -491,29 +495,11 @@ export function ComposeDrawer() {
       className="drawer--compose"
       collapseSignal={collapseSignal}
     >
-      <div className="compose-head">
-        <span className="eyebrow">{editing ? 'Izmena prijave' : 'Nova prijava'}</span>
-        <span className="compose-head__hint">
-          {editing
-            ? isModeratorEdit
-              ? 'Izmena moderatora'
-              : editsPublished
-                ? 'Ostaje javna'
-                : 'Vraća se na pregled'
-            : isFirebaseConfigured
-              ? 'Objavljuje se posle pregleda'
-              : 'Demo režim'}
-        </span>
-      </div>
-
+      {/* No eyebrow or subtitle: on a phone they pushed the map away, and the
+          footer note already says what happens after sending (#184). */}
       <h2 className="compose-title">
         {editing ? 'Izmeni prijavu' : 'Prijavi problem na mapi'}
       </h2>
-      <p className="compose-sub">
-        {editing
-          ? 'Promeni ono što nije tačno ili nedostaje. Lokaciju pomeraš klikom na mapu.'
-          : 'Izaberi tačnu lokaciju, opiši šta nedostaje i dodaj fotografiju ako je imaš.'}
-      </p>
 
       {editing && isModeratorEdit ? (
         <div className="notice notice--info">
@@ -569,47 +555,15 @@ export function ComposeDrawer() {
           ) : null}
         </div>
 
-        {/* The whole card opens the map, so the form needs no extra button (#38). */}
-        <button
-          type="button"
-          id="compose-map-button"
-          className={`location-pick${composeLocation ? ' is-set' : ''}${outsideArea ? ' is-error' : ''}`}
-          onClick={focusMap}
+        <MapLocationField
+          buttonId="compose-map-button"
+          location={composeLocation}
+          outsideArea={outsideArea}
+          error={errors.location}
           disabled={submitting}
-        >
-          <span className="location-pick__icon" aria-hidden="true">
-            <Crosshair size={16} />
-          </span>
-          <span className="location-pick__body">
-            <strong>
-              {composeLocation ? 'Lokacija je izabrana' : 'Lokacija nije izabrana'}
-            </strong>
-            {composeLocation ? null : <span>Klikni na mapu da postaviš lokaciju</span>}
-          </span>
-        </button>
-
-        <div className="location-actions">
-          <button
-            type="button"
-            className="link-btn"
-            onClick={useMyLocation}
-            disabled={locating}
-          >
-            {locating ? <Spinner size={13} /> : <Navigation size={13} aria-hidden="true" />}
-            {locating ? 'Traženje lokacije…' : 'Koristi moju lokaciju'}
-          </button>
-        </div>
-
-        {errors.location ? (
-          <p className="field__error" role="alert">
-            {errors.location}
-          </p>
-        ) : null}
-        {outsideArea && !errors.location ? (
-          <p className="field__error" role="alert">
-            Izabrana tačka je izvan Novog Sada.
-          </p>
-        ) : null}
+          onFocusMap={focusMap}
+          onLocateMe={locateMe}
+        />
 
         {/* Address next to the map point, so the place is described in one spot (#38). */}
         <div className="field">

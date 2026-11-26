@@ -9,6 +9,7 @@ import {
   Flag,
   MapPin,
   Pencil,
+  ShieldAlert,
   ShieldCheck,
   Undo2,
   UserRound,
@@ -25,6 +26,7 @@ import { openStreetMapUrl } from '../lib/geo';
 import { useApp } from '../state/app-context';
 import { Drawer } from './Drawer';
 import { PhotoGallery } from './PhotoGallery';
+import { fetchOpenFlagsForReport } from '../services/flags';
 import { imagesEnabled } from '../services/images';
 import { resolveKind } from '../services/reports';
 import { CategoryTag } from './ui/CategoryGlyph';
@@ -35,8 +37,9 @@ import { ModerationBadge } from './ui/ModerationBadge';
 import { ReportPlan } from './ui/ReportPlan';
 import { ReportProgress } from './ui/ReportProgress';
 import { StatusBadge } from './ui/StatusBadge';
+import { FlagDecision, formatFlagCount } from './moderation/FlagDecision';
 import { RejectForm } from './moderation/RejectForm';
-import type { ActionStatus, Report, ReportStatus } from '../types';
+import type { ActionStatus, ContentFlag, Report, ReportStatus } from '../types';
 
 /** Eyebrow on the linked-action card, e.g. "Akcija planirana". */
 const RELATED_ACTION_LABEL: Record<ActionStatus, string> = {
@@ -148,6 +151,40 @@ function EditReviewBox({ report }: { report: Report }) {
       <p className="admin-box__hint">
         Razlike po poljima vidiš u Moderaciji, na tabu „Izmene”.
       </p>
+    </div>
+  );
+}
+
+/**
+ * Open content flags on a published report, with the same decision as the
+ * "Sporan sadržaj" tab. Stays hidden while loading, on error and without flags.
+ */
+function FlaggedContentBox({ reportId }: { reportId: string }) {
+  const [flags, setFlags] = useState<ContentFlag[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    fetchOpenFlagsForReport(reportId)
+      .then((result) => {
+        if (active) setFlags(result);
+      })
+      .catch(() => {
+        // The "Sporan sadržaj" tab still lists these flags.
+      });
+    return () => {
+      active = false;
+    };
+  }, [reportId]);
+
+  if (flags.length === 0) return null;
+
+  return (
+    <div className="admin-box admin-box--alert">
+      <p className="admin-box__title">
+        <ShieldAlert size={14} aria-hidden="true" />
+        Sporan sadržaj · {formatFlagCount(flags.length)}
+      </p>
+      <FlagDecision reportId={reportId} flags={flags} onDone={() => setFlags([])} />
     </div>
   );
 }
@@ -271,6 +308,7 @@ export function ReportDetail() {
     selectedReport: report,
     relatedAction,
     closeSelection,
+    detailFromList,
     requestFlag,
     auth,
     setReportStatus,
@@ -330,6 +368,7 @@ export function ReportDetail() {
     <Drawer
       label={`Prijava: ${report.title}`}
       onClose={closeSelection}
+      onBack={detailFromList ? closeSelection : undefined}
       footer={
         <div className="detail-foot">
           {published ? (
@@ -434,7 +473,7 @@ export function ReportDetail() {
         <button
           type="button"
           className="related-action"
-          onClick={() => selectAction(relatedAction)}
+          onClick={() => selectAction(relatedAction, { fromDetail: true })}
         >
           <CalendarDays size={18} aria-hidden="true" className="related-action__icon" />
           <span className="related-action__body">
@@ -556,6 +595,10 @@ export function ReportDetail() {
           </div>
         </div>
       </section>
+
+      {auth.isModerator && published && report.source === 'firestore' ? (
+        <FlaggedContentBox key={`flags-${report.id}`} reportId={report.id} />
+      ) : null}
 
       {auth.isModerator && report.source === 'firestore' ? (
         published ? (

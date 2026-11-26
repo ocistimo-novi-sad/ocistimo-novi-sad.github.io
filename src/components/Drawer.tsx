@@ -5,7 +5,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react';
-import { ChevronDown, ChevronUp, X } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronUp, X } from 'lucide-react';
 import { useIsMobile } from '../hooks/useMediaQuery';
 
 /** The three heights of the drawer on a phone. CSS owns the actual values. */
@@ -27,6 +27,17 @@ function snapHeight(drawer: HTMLElement, snap: Snap): number {
   return measured;
 }
 
+/**
+ * Phone: how tall the open drawer is once it settles. A lowered drawer stays
+ * lowered; otherwise it is measured at its normal height, which is where it
+ * goes back to when the form asks to show the map. Null when no drawer is open.
+ */
+export function settledDrawerHeight(): number | null {
+  const drawer = document.querySelector<HTMLElement>('.drawer');
+  if (!drawer) return null;
+  return snapHeight(drawer, drawer.classList.contains('is-peek') ? 'peek' : 'normal');
+}
+
 interface DragState {
   startY: number;
   startHeight: number;
@@ -45,6 +56,7 @@ export function Drawer({
   footer,
   className = '',
   collapseSignal,
+  onBack,
 }: {
   label: string;
   onClose: () => void;
@@ -52,6 +64,8 @@ export function Drawer({
   footer?: ReactNode;
   className?: string;
   collapseSignal?: number;
+  /** Phone only: a "Lista" button that closes the drawer back to the list. */
+  onBack?: () => void;
 }) {
   const isMobile = useIsMobile();
   const [snap, setSnap] = useState<Snap>('normal');
@@ -154,7 +168,7 @@ export function Drawer({
   return (
     <aside
       ref={drawerRef}
-      className={`drawer${SNAP_CLASS[snap]}${className ? ` ${className}` : ''}`}
+      className={`drawer${SNAP_CLASS[snap]}${isMobile && onBack ? ' has-back' : ''}${className ? ` ${className}` : ''}`}
       role="dialog"
       aria-label={label}
     >
@@ -175,6 +189,13 @@ export function Drawer({
           ) : (
             <ChevronUp size={14} aria-hidden="true" />
           )}
+        </button>
+      ) : null}
+
+      {isMobile && onBack ? (
+        <button type="button" className="drawer__back" onClick={onBack}>
+          <ChevronLeft size={16} aria-hidden="true" />
+          Lista
         </button>
       ) : null}
 

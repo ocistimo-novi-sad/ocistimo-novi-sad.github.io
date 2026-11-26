@@ -2,6 +2,7 @@ import type {
   ActionStatus,
   Category,
   Coordinates,
+  FlagReason,
   ModerationState,
   ReportStatus,
   SortMode,
@@ -189,11 +190,40 @@ export const REJECT_REASONS = [
   'Problem nije u javnom prostoru.',
 ];
 
+/** Reason offered when a flagged report is removed, matched to the flag reason. */
+export const REMOVE_REASON_BY_FLAG: Record<Exclude<FlagReason, 'other'>, string> = {
+  spam: 'Prijava je spam ili reklama.',
+  duplicate: 'Dupla prijava, problem je već prijavljen.',
+  misleading: 'Prijava je netačna ili obmanjujuća.',
+  inappropriate: 'Prijava sadrži neprimeren sadržaj.',
+};
+
+export const REMOVE_REASONS = [
+  ...Object.values(REMOVE_REASON_BY_FLAG),
+  'Prijava sadrži lične podatke.',
+];
+
 export const RESOLUTION_REJECT_REASONS = [
   'Fotografija ne prikazuje isto mesto.',
   'Problem se na fotografiji još vidi.',
   'Fotografija nije dovoljno jasna.',
   'Rešen je samo deo problema.',
+];
+
+/**
+ * Public names nobody may pick, compared case-insensitively (#161). They match
+ * the fallback moderation stamps ("Odobrio: Moderator") and staff titles, so a
+ * member cannot pass as staff. Mirrored in firestore.rules (validPublicName).
+ */
+export const RESERVED_PUBLIC_NAMES = [
+  'admin',
+  'administrator',
+  'administratorka',
+  'administracija',
+  'moderator',
+  'moderatorka',
+  'moderacija',
+  'kuka i motika',
 ];
 
 export const LIMITS = {
@@ -207,6 +237,8 @@ export const LIMITS = {
   rejectReasonMax: 500,
   resolutionNoteMax: 500,
   addressMax: 160,
+  publicNameMin: 2,
+  publicNameMax: 40,
   imagesMax: 3,
   /** Largest original accepted; photos are shrunk in the browser before upload. */
   imageMaxBytes: 20 * 1024 * 1024,

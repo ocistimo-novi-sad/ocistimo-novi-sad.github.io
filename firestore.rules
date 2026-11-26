@@ -40,6 +40,30 @@ service cloud.firestore {
       return !('email' in data) || data.email == request.auth.token.email;
     }
 
+    // A public name (#161): 2 to 40 characters. The staff titles and fallback
+    // stamps are reserved, so a member cannot pass as staff. Mirrored in
+    // src/config.ts (RESERVED_PUBLIC_NAMES); the client also trims it.
+    function validPublicName(data) {
+      return !('publicName' in data)
+        || (data.publicName is string
+            && data.publicName.size() >= 2
+            && data.publicName.size() <= 40);
+    }
+
+    function reservedPublicName(name) {
+      return name.lower() in [
+        'admin', 'administrator', 'administratorka', 'administracija',
+        'moderator', 'moderatorka', 'moderacija', 'kuka i motika'
+      ];
+    }
+
+    // The signed-in person's current public name, as stored in their profile.
+    // Name stamps on reports must use it instead of any string a client sends.
+    function ownPublicName() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid))
+        .data.get('publicName', '');
+    }
+
     // Which e-mails the person wants (#79). Only an explicit false turns a
     // kind off; the Cloud Functions read it in functions/src/recipients.ts.
     function validMailPrefs(data) {
@@ -221,10 +245,13 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.auth.uid == uid
         && request.resource.data.keys().hasOnly([
-             'displayName', 'email', 'photoURL', 'createdAt', 'lastSeenAt'
+             'displayName', 'publicName', 'email', 'photoURL', 'createdAt', 'lastSeenAt'
            ])
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() <= 80
+        && validPublicName(request.resource.data)
+        && (!('publicName' in request.resource.data)
+            || !reservedPublicName(request.resource.data.publicName))
         && request.resource.data.createdAt == request.time
         && request.resource.data.lastSeenAt == request.time
         && validProfileEmail(request.resource.data)
@@ -234,9 +261,16 @@ service cloud.firestore {
       allow update: if signedIn()
         && request.auth.uid == uid
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['displayName', 'email', 'photoURL', 'lastSeenAt', 'mailPrefs'])
+             .hasOnly([
+               'displayName', 'publicName', 'email', 'photoURL', 'lastSeenAt', 'mailPrefs'
+             ])
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() <= 80
+        && validPublicName(request.resource.data)
+        // Checked only when the name changes, so a name stored before the
+        // list existed does not block the sign-in write (lastSeenAt).
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['publicName'])
+            || !reservedPublicName(request.resource.data.publicName))
         && request.resource.data.lastSeenAt == request.time
         && validProfileEmail(request.resource.data)
         && validMailPrefs(request.resource.data)
@@ -268,12 +302,11 @@ service cloud.firestore {
         && request.resource.data.moderation == 'pending'
         && request.resource.data.createdAt == request.time
         && request.resource.data.createdBy == request.auth.uid
+        // The author name shown in public is the profile's public name, never
+        // the Google name or any other string the client sends (#161).
         && (
              !('createdByName' in request.resource.data)
-             || (
-               request.resource.data.createdByName is string
-               && request.resource.data.createdByName.size() <= 60
-             )
+             || request.resource.data.createdByName == ownPublicName()
            );
 
       // Author, case 1: fixing a report before it is published. It goes back
@@ -322,6 +355,25 @@ service cloud.firestore {
         && request.resource.data.resolution.submittedAt == request.time
         && request.resource.data.resolution.submittedBy == request.auth.uid;
 
+      // Author, case 4: the public author name changed in "Lični podaci"
+      // (#161). It is only a display snapshot, so content and the moderation
+      // state stay untouched. The value must be the profile's current name,
+      // not any string the client sends.
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['createdByName'])
+        && request.resource.data.createdByName is string
+        && request.resource.data.createdByName.size() >= 2
+        && request.resource.data.createdByName == ownPublicName();
+
+      // A moderator's own "Odobrio/Pregledao" stamp follows their public name
+      // (#161). Only the name changes; who decided and when stay as they were.
+      allow update: if signedIn()
+        && resource.data.get('moderatedBy', '') == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['moderatedByName'])
+        && request.resource.data.moderatedByName is string
+        && request.resource.data.moderatedByName.size() >= 2
+        && request.resource.data.moderatedByName == ownPublicName();
+
       // Moderators may change anything except authorship and creation time,
       // and every change is attributed to them.
       allow update: if isModerator()
@@ -353,7 +405,29 @@ service cloud.firestore {
     // Content flags: one flag per user per report, moderators handle them.
     // ---------------------------------------------------------------------
     match /flags/{flagId} {
-      allow create: if signedIn()
+      allow create: if newFlag(flagId);
+
+      // The id keeps one flag per user per report, so flagging a report again
+      // after a moderator closed the first flag (e.g. the report was fixed and
+      // published again) overwrites the closed flag with a new open one.
+      allow update: if resource.data.createdBy == request.auth.uid
+        && resource.data.status != 'open'
+        && newFlag(flagId);
+
+      allow read: if isModerator();
+      // Closing a flag: the report stays as it is (dismissed) or was handled
+      // (resolved), attributed to the moderator.
+      allow update: if isModerator()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['status', 'reviewedAt', 'reviewedBy'])
+        && request.resource.data.status in ['dismissed', 'resolved']
+        && request.resource.data.reviewedAt == request.time
+        && request.resource.data.reviewedBy == request.auth.uid;
+      allow delete: if isModerator();
+    }
+
+    function newFlag(flagId) {
+      return signedIn()
         && request.resource.data.keys().hasOnly([
              'reportId', 'reason', 'note', 'status', 'createdBy', 'createdAt'
            ])
@@ -367,10 +441,6 @@ service cloud.firestore {
         && request.resource.data.status == 'open'
         && request.resource.data.createdBy == request.auth.uid
         && request.resource.data.createdAt == request.time;
-
-      allow read: if isModerator();
-      allow update: if isModerator();
-      allow delete: if isModerator();
     }
 
     // ---------------------------------------------------------------------

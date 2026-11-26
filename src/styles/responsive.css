@@ -157,7 +157,9 @@
     width: 100%;
     max-width: none;
     max-height: calc(100dvh - var(--header-h) - env(safe-area-inset-top, 0px));
-    height: 64vh;
+    /* One height for every sheet, details and forms alike: the map above it
+       keeps room for the pin (#184, #188). */
+    height: 45vh;
     border-top: 1px solid var(--line);
     border-left: 0;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
@@ -167,14 +169,6 @@
   }
 
   .drawer.is-expanded {
-    height: 92vh;
-  }
-
-  .drawer--compose {
-    height: 58vh;
-  }
-
-  .drawer--compose.is-expanded {
     height: 92vh;
   }
 
@@ -218,6 +212,35 @@
 
   .drawer__scroll {
     padding: 26px 16px 16px;
+  }
+
+  /* Back to the list the detail was opened from (#156), opposite the X. */
+  .drawer__back {
+    position: absolute;
+    top: 8px;
+    left: 10px;
+    z-index: 5;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    height: 32px;
+    padding: 0 10px 0 4px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink-2);
+    border-radius: var(--radius);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .drawer__back:hover {
+    background: var(--surface-2);
+    color: var(--ink);
+  }
+
+  .drawer.has-back .drawer__scroll {
+    padding-top: 48px;
   }
 
   .drawer__foot {
@@ -543,14 +566,6 @@
     font-size: 1.3125rem;
   }
 
-  .drawer {
-    height: 68vh;
-  }
-
-  .drawer--compose {
-    height: 56vh;
-  }
-
   .map-controls {
     top: 10px;
   }
@@ -602,15 +617,10 @@
 
 @media (max-height: 640px) and (max-width: 900px) {
   .drawer {
-    height: 74vh;
+    height: 56vh;
   }
 
-  .drawer--compose {
-    height: 70vh;
-  }
-
-  .drawer.is-expanded,
-  .drawer--compose.is-expanded {
+  .drawer.is-expanded {
     height: 96vh;
   }
 }

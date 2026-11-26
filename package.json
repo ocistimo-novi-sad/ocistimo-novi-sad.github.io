@@ -5,8 +5,9 @@
   "type": "module",
   "description": "Kuka i Motika: mapa problema i akcija čišćenja u Novom Sadu",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --mode staging",
     "dev:staging": "vite --mode staging",
+    "dev:prod": "vite --mode production",
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview"
